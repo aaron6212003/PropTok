@@ -12,6 +12,21 @@ export default function SettingsPage() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    // Admin Modal State
+    const [showAdminModal, setShowAdminModal] = useState(false);
+    const [adminPassword, setAdminPassword] = useState("");
+    const [adminError, setAdminError] = useState(false);
+
+    const handleAdminLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (adminPassword === "123456") {
+            router.push('/profile/admin');
+        } else {
+            setAdminError(true);
+            setAdminPassword("");
+        }
+    };
+
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => {
             if (!data.user) {
@@ -140,19 +155,58 @@ export default function SettingsPage() {
                             <X size={18} className="text-destructive" />
                         </button>
                     </div>
-                    {/* Admin Link */}
-                    <Link
-                        href="/profile/admin"
+                    {/* Admin Link (Password Protected) */}
+                    <button
+                        onClick={() => setShowAdminModal(true)}
                         className="mt-3 flex w-full items-center justify-between rounded-xl border border-brand/20 bg-brand/10 p-4 text-left transition-all hover:bg-brand/20"
                     >
                         <div>
                             <p className="font-bold text-brand">Open Admin Oracle</p>
                             <p className="text-xs text-zinc-500 uppercase tracking-widest">Create props & resolve markets</p>
                         </div>
-                        <HelpCircle size={18} className="text-brand" />
-                    </Link>
+                        <Lock size={18} className="text-brand" />
+                    </button>
                 </div>
             </div>
+
+            {/* Admin Password Modal */}
+            {showAdminModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h3 className="text-lg font-bold">Admin Access</h3>
+                            <button onClick={() => setShowAdminModal(false)} className="rounded-full bg-white/5 p-2 text-zinc-400 hover:text-white">
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAdminLogin} className="space-y-4">
+                            <div>
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-zinc-500">Enter Password</label>
+                                <input
+                                    type="password"
+                                    value={adminPassword}
+                                    onChange={(e) => {
+                                        setAdminPassword(e.target.value);
+                                        setAdminError(false);
+                                    }}
+                                    className={`w-full rounded-xl border bg-black p-4 text-center text-lg font-bold tracking-widest text-white focus:outline-none ${adminError ? 'border-destructive' : 'border-white/10 focus:border-brand'}`}
+                                    placeholder="••••••"
+                                    autoFocus
+                                />
+                                {adminError && <p className="mt-2 text-xs font-bold text-destructive">Incorrect Password</p>}
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full rounded-xl bg-white py-4 text-sm font-black uppercase tracking-widest text-black transition-transform active:scale-[0.98]"
+                            >
+                                Unlock
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Account Info */}
             <div className="mt-8 rounded-xl border border-white/5 bg-white/5 p-4">

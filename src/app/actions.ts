@@ -272,14 +272,22 @@ export async function adminHardReset() {
     return { success: true };
 }
 
+// Hard Reset Tools (Bypass RLS)
 export async function clearDatabase() {
-    const supabase = await createClient();
+    const supabase = await createClient(); // Standard client for auth check
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("User not authenticated");
 
+    // Create Service Role Client to bypass RLS
+    const { createClient: createServiceClient } = require('@supabase/supabase-js');
+    const adminClient = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
     // Clear all Predictions (Cascades to Votes, Bundles)
-    const { error } = await supabase.from("predictions").delete().neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+    const { error } = await adminClient.from("predictions").delete().neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
 
     if (error) {
         console.error("Clear DB Error:", error);
