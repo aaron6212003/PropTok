@@ -284,6 +284,7 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
         .from("votes")
         .select(`
             *,
+            tournament:tournaments(name),
             predictions:prediction_id (*)
         `)
         .eq("user_id", user.id)
@@ -317,6 +318,7 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
         .from("bundles")
         .select(`
             *,
+            tournament:tournaments(name),
             legs:bundle_legs (
                 *,
                 prediction:predictions (

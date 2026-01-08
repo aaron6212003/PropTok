@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, XCircle, Clock, Layers, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Layers, ChevronDown, ChevronUp, Trophy, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BetCardProps {
@@ -17,6 +17,9 @@ interface BetCardProps {
         predictions?: any;
         legs?: any[];
         isBundle?: boolean;
+        tournament?: {
+            name: string;
+        };
     };
 }
 
@@ -57,6 +60,11 @@ export default function BetCard({ bet }: BetCardProps) {
                         {isBundle && (
                             <div className="flex items-center gap-1 rounded bg-brand/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-brand">
                                 <Layers size={10} /> PARLAY
+                            </div>
+                        )}
+                        {bet.tournament?.name && (
+                            <div className="flex items-center gap-1 rounded bg-orange-500/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-orange-500">
+                                <Trophy size={10} /> {bet.tournament.name}
                             </div>
                         )}
                     </div>
