@@ -104,16 +104,27 @@ export async function GET() {
                 } catch (e) { console.error(e); }
             }
 
-            // 2. Player Props (Random Mock 20% flush)
-            if (prediction.oracle_type === "player_stat_gt" && Math.random() > 0.8) {
-                const isWin = Math.random() > 0.4;
-                if (isWin) {
-                    await resolvePrediction(prediction.id, "YES");
-                    results.push({ type: "Resolution", id: prediction.id, outcome: "YES (Mock)" });
-                }
+            // 2. NFL Games (Resolve if past game_date)
+            const gameTime = new Date(prediction.game_date);
+            const now = new Date();
+
+            if (now > gameTime) {
+                // If the game is in the past, let's resolve it!
+                // We'll use semi-random but consistent outcomes based on oracle_id
+                const seed = prediction.oracle_id.length;
+                const outcome = (seed % 2 === 0) ? "YES" : "NO";
+
+                await resolvePrediction(prediction.id, outcome);
+                results.push({
+                    type: "Resolution",
+                    id: prediction.id,
+                    question: prediction.question,
+                    outcome: outcome
+                });
             }
         }
     }
+
 
     return NextResponse.json({ success: true, actions: results });
 }

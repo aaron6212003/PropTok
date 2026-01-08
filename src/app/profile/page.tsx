@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
-import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins } from 'lucide-react';
+import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getUserVotes } from '@/app/actions';
 
 function StatCard({
     label,
@@ -42,11 +43,14 @@ export default async function ProfilePage() {
         .eq('id', user.id)
         .single();
 
+    // Fetch betting history
+    const votes = await getUserVotes();
+
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-24 text-white">
             {/* Header */}
             <div className="flex items-center justify-between p-6">
-                <h1 className="text-xl font-bold">Profile</h1>
+                <h1 className="text-xl font-bold uppercase tracking-widest">My Account</h1>
                 <div className="flex gap-2">
                     <form action={async () => {
                         'use server';
@@ -81,68 +85,103 @@ export default async function ProfilePage() {
                         #?
                     </div>
                 </div>
-                <h2 className="mt-4 text-2xl font-bold">{profile?.username || user.email?.split('@')[0]}</h2>
-                <p className="text-sm text-zinc-500">Joined {new Date(user.created_at).toLocaleDateString()}</p>
+                <h2 className="mt-4 text-2xl font-bold tracking-tight lowercase">@{profile?.username || user.email?.split('@')[0]}</h2>
+                <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Member since {new Date(user.created_at).getFullYear()}</p>
             </div>
 
             {/* Bankroll Highlights */}
             <div className="mt-6 px-6">
-                <div className="flex flex-col items-center rounded-3xl border border-brand/20 bg-brand/5 p-8 text-center backdrop-blur-xl">
+                <div className="flex flex-col items-center rounded-3xl border border-brand/20 bg-brand/5 p-8 text-center backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(37,99,235,0.1)]">
                     <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-brand/20">
                         <Coins className="h-6 w-6 text-brand" />
                     </div>
-                    <span className="text-sm font-bold uppercase tracking-widest text-brand/80">Available Bankroll</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-brand/80">Available PropCash</span>
                     <h2 className="mt-1 text-5xl font-black tracking-tighter text-white">
                         ${(profile?.bankroll || 0).toLocaleString()}
                     </h2>
-                    <p className="mt-2 text-xs font-medium text-zinc-500 uppercase tracking-widest">In PropCash</p>
+                    <div className="mt-4 flex gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wins</span>
+                            <span className="text-sm font-bold text-success">{profile?.wins || 0}</span>
+                        </div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Return</span>
+                            <span className="text-sm font-bold text-brand">+--%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Main Stats Grid */}
-            <div className="mt-8 grid grid-cols-2 gap-4 px-6">
-                <StatCard
-                    label="Win Rate"
-                    value={`${profile?.win_rate || 0}%`}
-                    icon={TrendingUp}
-                    colorClass="text-brand"
-                />
-                <StatCard
-                    label="Current Streak"
-                    value={profile?.streak || 0}
-                    icon={Flame}
-                    colorClass="text-destructive"
-                />
-                <StatCard
-                    label="Best Streak"
-                    value={profile?.best_streak || 0}
-                    icon={Trophy}
-                    colorClass="text-yellow-500"
-                />
-                <StatCard
-                    label="Active Bets"
-                    value="-"
-                    icon={Coins}
-                    colorClass="text-success"
-                />
+            {/* Stat Grid */}
+            <div className="mt-6 grid grid-cols-2 gap-4 px-6 md:grid-cols-4">
+                <StatCard label="Win Rate" value={`${profile?.win_rate || 0}%`} icon={TrendingUp} colorClass="text-brand" />
+                <StatCard label="Streak" value={profile?.streak || 0} icon={Flame} colorClass="text-destructive" />
             </div>
 
-            {/* Recent Activity / Categories */}
-            <div className="mt-8 px-6">
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-500">Your Categories</h3>
+            {/* Betting History */}
+            <div className="mt-10 px-6">
+                <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Active & Past Bets</h3>
+                    <span className="text-[10px] font-bold text-zinc-600">{votes.length} Total</span>
+                </div>
+
                 <div className="space-y-3">
-                    {['Sports', 'Crypto', 'Politics'].map((cat) => (
-                        <div key={cat} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
-                            <div className="flex items-center gap-3">
-                                <div className="h-2 w-2 rounded-full bg-brand" />
-                                <span className="font-medium">{cat}</span>
+                    {votes.map((vote: any) => {
+                        const isResolved = vote.predictions?.resolved;
+                        const isWin = isResolved && vote.side === vote.predictions?.outcome;
+                        const isLoss = isResolved && !isWin;
+
+                        return (
+                            <div key={vote.id} className="group relative flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/50 p-4 transition-all hover:bg-zinc-900">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                        {new Date(vote.created_at).toLocaleDateString()}
+                                    </span>
+                                    {isResolved ? (
+                                        isWin ? (
+                                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-success">
+                                                <CheckCircle2 size={12} /> WON
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-destructive">
+                                                <XCircle size={12} /> LOST
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-brand">
+                                            <Clock size={12} /> PENDING
+                                        </div>
+                                    )}
+                                </div>
+                                <h4 className="line-clamp-2 text-sm font-bold leading-snug">
+                                    {vote.predictions?.question}
+                                </h4>
+                                <div className="flex items-center justify-between rounded-xl bg-black/40 p-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wager</span>
+                                        <span className="text-sm font-bold">${vote.wager} on {vote.side}</span>
+                                    </div>
+                                    <div className="flex flex-col text-right">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Payout</span>
+                                        <span className={cn(
+                                            "text-sm font-black",
+                                            isWin ? "text-success" : isLoss ? "text-zinc-500 line-through" : "text-white"
+                                        )}>
+                                            ${(vote.wager * vote.payout_multiplier).toFixed(0)}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 text-zinc-400">
-                                <span className="text-sm">-</span>
-                                <ChevronRight size={16} />
-                            </div>
+                        );
+                    })}
+
+                    {votes.length === 0 && (
+                        <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
+                            <p className="text-sm font-medium text-zinc-500">No bets placed yet.</p>
+                            <Link href="/" className="mt-4 inline-block text-xs font-black uppercase tracking-widest text-brand">Start Playing →</Link>
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
 
