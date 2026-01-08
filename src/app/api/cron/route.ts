@@ -29,13 +29,13 @@ export async function GET() {
                 const gameTime = game.commence_time;
 
                 // Get DraftKings odds (or first available)
-                const oddsData = game.bookmakers?.find(b => b.key === 'draftkings') || game.bookmakers?.[0];
+                const oddsData = game.bookmakers?.find((b: any) => b.key === 'draftkings') || game.bookmakers?.[0];
 
                 if (oddsData) {
                     // Spread
-                    const spreadMarket = oddsData.markets?.find(m => m.key === 'spreads');
+                    const spreadMarket = oddsData.markets?.find((m: any) => m.key === 'spreads');
                     if (spreadMarket) {
-                        const homeSpread = spreadMarket.outcomes.find(o => o.name === homeTeam);
+                        const homeSpread = spreadMarket.outcomes.find((o: any) => o.name === homeTeam);
                         if (homeSpread) {
                             gamesToIngest.push({
                                 category: "NFL",
@@ -50,7 +50,7 @@ export async function GET() {
                     }
 
                     // Total
-                    const totalMarket = oddsData.markets?.find(m => m.key === 'totals');
+                    const totalMarket = oddsData.markets?.find((m: any) => m.key === 'totals');
                     if (totalMarket) {
                         const overUnder = totalMarket.outcomes[0];
                         if (overUnder) {
