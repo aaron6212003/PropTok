@@ -33,7 +33,8 @@ export default function PredictionFeed({ initialPredictions, bankroll }: Predict
                             yesMultiplier,
                             noMultiplier,
                             expiresAt: prediction.expires_at,
-                            imageUrl: prediction.image_url
+                            imageUrl: prediction.image_url,
+                            description: prediction.description
                         }}
                         isActive={true}
                         bankroll={bankroll}

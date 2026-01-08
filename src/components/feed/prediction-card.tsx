@@ -54,17 +54,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
     return (
         <>
             <div className="relative h-full w-full snap-start overflow-hidden bg-black">
-                {/* Background Image */}
-                {prediction.imageUrl && (
-                    <div className="absolute inset-0 z-0">
-                        <img
-                            src={prediction.imageUrl}
-                            alt="Background"
-                            className="h-full w-full object-cover opacity-40"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
-                    </div>
-                )}
+                {/* Background Image Removed for Simplicity */}
 
                 {/* Content Layer */}
                 <div className="relative z-10 flex h-full flex-col p-6 pb-24 font-sans text-white">
@@ -112,47 +102,8 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </button>
                         </div>
 
-                        {/* CENTRAL HERO VISUAL */}
-                        <div className="flex-1 flex items-center justify-center py-4 min-h-0">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                className="relative h-full aspect-[4/5] max-h-[300px] overflow-hidden rounded-[32px] border border-white/10 shadow-2xl"
-                            >
-                                {/* Background Image or Gradient */}
-                                {prediction.imageUrl ? (
-                                    <img
-                                        src={prediction.imageUrl}
-                                        alt=""
-                                        className="h-full w-full object-cover grayscale-[0.2] brightness-75"
-                                    />
-                                ) : (
-                                    <div className={cn(
-                                        "h-full w-full bg-gradient-to-br",
-                                        prediction.category === 'Crypto' ? "from-blue-600/20 to-purple-600/20" : "from-success/10 to-brand/10"
-                                    )} />
-                                )}
-
-                                {/* Gloss Shimmer Effect */}
-                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-50" />
-
-                                {/* Card Overlays */}
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
-                                        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-white/50">Market Active</span>
-                                    </div>
-                                    <p className="mt-1 text-sm font-black text-white uppercase tracking-wider leading-none">
-                                        {prediction.category === 'Crypto' ? 'Asset Prophet' : 'NFP Player Performance'}
-                                    </p>
-                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-2">
-                                        Prop Series #{(Math.random() * 100).toFixed(0)}
-                                    </p>
-                                </div>
-
-                                <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
-                            </motion.div>
-                        </div>
+                        {/* Central Visual Removed for Simplicity */}
+                        <div className="flex-1" />
                     </div>
 
                     {/* Voting Area */}
