@@ -1,12 +1,8 @@
 {
     "crons": [
         {
-            "path": "/api/ingestion/cron",
-            "schedule": "0 10 * * *"
-        },
-        {
-            "path": "/api/oracle/cron",
-            "schedule": "0 2 * * *"
+            "path": "/api/cron",
+            "schedule": "0 12 * * *"
         }
     ]
 }
