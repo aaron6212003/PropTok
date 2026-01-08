@@ -8,96 +8,67 @@ export async function GET() {
     const supabase = await createClient();
     const results = [];
 
-    // --- PART 1: INGESTION (Live from The Odds API) ---
-    const API_KEY = process.env.THE_ODDS_API_KEY;
-    const gamesToIngest = [];
-
-    if (API_KEY) {
-        try {
-            // Fetch upcoming NFL games with odds
-            const response = await fetch(
-                `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${API_KEY}&regions=us&markets=spreads,totals&oddsFormat=american`,
-                { next: { revalidate: 3600 } } // Cache for 1 hour
-            );
-
-            const data = await response.json();
-
-            // Process each game
-            const games = data.slice(0, 5); // Limit to 5 games to save API quota
-            for (const game of games) {
-                const homeTeam = game.home_team;
-                const awayTeam = game.away_team;
-                const gameTime = game.commence_time;
-
-                // Get DraftKings odds (or first available)
-                let oddsData = null;
-                if (game.bookmakers) {
-                    for (const bookmaker of game.bookmakers) {
-                        if (bookmaker.key === 'draftkings') {
-                            oddsData = bookmaker;
-                            break;
-                        }
-                    }
-                    if (!oddsData) oddsData = game.bookmakers[0];
-                }
-
-                if (oddsData && oddsData.markets) {
-                    // Spread
-                    for (const market of oddsData.markets) {
-                        if (market.key === 'spreads' && market.outcomes) {
-                            for (const outcome of market.outcomes) {
-                                if (outcome.name === homeTeam) {
-                                    gamesToIngest.push({
-                                        category: "NFL",
-                                        question: `Will ${homeTeam} cover ${outcome.point > 0 ? '+' : ''}${outcome.point} vs ${awayTeam}?`,
-                                        line: outcome.point,
-                                        oracle_type: "spread_cover",
-                                        oracle_id: `${homeTeam.toLowerCase().replace(/\s/g, '-')}-spread-${game.id}`,
-                                        game_date: gameTime,
-                                        player_name: homeTeam
-                                    });
-                                    break; // Found home team spread, no need to check other outcomes for this market
-                                }
-                            }
-                        }
-                    }
-
-                    // Total
-                    for (const market of oddsData.markets) {
-                        if (market.key === 'totals' && market.outcomes && market.outcomes.length > 0) {
-                            const overUnder = market.outcomes[0];
-                            gamesToIngest.push({
-                                category: "NFL",
-                                question: `Will ${homeTeam} vs ${awayTeam} go OVER ${overUnder.point} Points?`,
-                                line: overUnder.point,
-                                oracle_type: "total_score_gt",
-                                oracle_id: `${game.id}-total`,
-                                game_date: gameTime,
-                                player_name: "Game Total"
-                            });
-                            break; // Found total market, no need to check other markets
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching from The Odds API:", error);
+    // --- PART 1: INGESTION (Semi-Manual for Launch) ---
+    // REAL 2026 NFL WILD CARD WEEKEND GAMES
+    const MOCK_GAMES = [
+        {
+            category: "NFL",
+            question: "Will the Bills cover -9.5 vs Jaguars?",
+            line: -9.5,
+            oracle_type: "spread_cover",
+            oracle_id: "buf-vs-jax-spread-wc26",
+            game_date: new Date("2026-01-11T18:00:00Z").toISOString(), // Sunday 1 PM ET
+            player_name: "Buffalo Bills"
+        },
+        {
+            category: "NFL",
+            question: "Will Josh Allen throw for OVER 275.5 Yards vs JAX?",
+            line: 275.5,
+            oracle_type: "player_stat_gt",
+            oracle_id: "allen-pass-yards-wc26",
+            game_date: new Date("2026-01-11T18:00:00Z").toISOString(),
+            player_name: "Josh Allen"
+        },
+        {
+            category: "NFL",
+            question: "Will 49ers vs Eagles go OVER 47.5 Points?",
+            line: 47.5,
+            oracle_type: "total_score_gt",
+            oracle_id: "sf-vs-phi-total-wc26",
+            game_date: new Date("2026-01-11T21:30:00Z").toISOString(), // Sunday 4:30 PM ET
+            player_name: "Game Total"
+        },
+        {
+            category: "NFL",
+            question: "Will Christian McCaffrey score 2+ TDs vs Eagles?",
+            line: 1.5,
+            oracle_type: "player_stat_gt",
+            oracle_id: "cmc-tds-wc26",
+            game_date: new Date("2026-01-11T21:30:00Z").toISOString(),
+            player_name: "Christian McCaffrey"
+        },
+        {
+            category: "NFL",
+            question: "Will Patriots cover +7.5 @ Chargers?",
+            line: 7.5,
+            oracle_type: "spread_cover",
+            oracle_id: "ne-vs-lac-spread-wc26",
+            game_date: new Date("2026-01-12T01:00:00Z").toISOString(), // Sunday 8 PM ET
+            player_name: "New England Patriots"
+        },
+        {
+            category: "Crypto",
+            question: "Will Bitcoin hit $50k by Monday?",
+            line: 50000,
+            oracle_type: "crypto_price_gt",
+            oracle_id: "bitcoin",
+            target_value: 50000,
+            game_date: new Date("2026-01-12T23:59:00Z").toISOString()
         }
-    }
+    ];
 
-    // Add a crypto prop for variety
-    gamesToIngest.push({
-        category: "Crypto",
-        question: "Will Bitcoin hit $50k this week?",
-        line: 50000,
-        oracle_type: "crypto_price_gt",
-        oracle_id: "bitcoin",
-        target_value: 50000,
-        game_date: new Date(Date.now() + 86400000 * 7).toISOString()
-    });
-
-    // Insert games into database
-    for (const game of gamesToIngest) {
+    for (const game of MOCK_GAMES) {
+        // Check duplication
         const { data: existing } = await supabase.from("predictions").select("id").eq("oracle_id", game.oracle_id).single();
 
         if (!existing) {
