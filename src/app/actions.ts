@@ -152,8 +152,22 @@ export async function createPrediction(formData: FormData) {
 
 export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.rpc('resolve_prediction', {
+    if (!user) throw new Error("User not authenticated");
+
+    // Use Service Role to ensure we can update ALL users' bankrolls (payouts)
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return { error: "Missing Service Role Key" };
+    }
+
+    const { createClient: createServiceClient } = require('@supabase/supabase-js');
+    const adminClient = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const { error } = await adminClient.rpc('resolve_prediction', {
         p_id: id,
         p_outcome: outcome
     });
