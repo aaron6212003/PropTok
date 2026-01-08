@@ -1,20 +1,29 @@
 "use client";
 
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import PredictionCard from './prediction-card';
 import { useScroll, useTransform } from 'framer-motion';
 import { Prediction } from "@/lib/types";
 import { Flame, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useBetSlip } from '@/lib/context/bet-slip-context';
 
 interface PredictionFeedProps {
     initialPredictions: any[];
     bankroll: number;
+    tournamentId?: string;
 }
 
 type SortOption = 'trending' | 'ending' | 'new';
 
-export default function PredictionFeed({ initialPredictions, bankroll }: PredictionFeedProps) {
+export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
+    const { setTournamentId } = useBetSlip();
+
+    useEffect(() => {
+        setTournamentId(tournamentId || null);
+        return () => setTournamentId(null);
+    }, [tournamentId, setTournamentId]);
+
     const [sortBy, setSortBy] = useState<SortOption>('trending');
 
     // Sort Predictions

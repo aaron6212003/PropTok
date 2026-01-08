@@ -6,16 +6,31 @@ import { createClient } from "@/lib/supabase/server";
 import { Coins } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
+  const { tournament: tournamentId } = await searchParams;
   const predictions = await getPredictions(true);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   let profile = null;
+  let tournamentStack = null;
+
   if (user) {
+    if (tournamentId) {
+      const { data } = await supabase
+        .from("tournament_entries")
+        .select("current_stack")
+        .eq("tournament_id", tournamentId)
+        .eq("user_id", user.id)
+        .single();
+      tournamentStack = data?.current_stack;
+    }
+
     const { data } = await supabase.from("users").select("bankroll").eq("id", user.id).single();
     profile = data;
   }
+
+  const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.bankroll || 0);
 
   return (
     <main className="flex min-h-full flex-col bg-black text-white">
@@ -29,7 +44,7 @@ export default async function Home() {
           <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md pointer-events-auto">
             <Coins className="h-4 w-4 text-brand" />
             <span className="text-xs font-black tracking-tight">
-              ${(profile?.bankroll || 0).toLocaleString()}
+              ${activeBankroll.toLocaleString()} {tournamentId && <span className="text-[8px] opacity-50 ml-1">TRN</span>}
             </span>
           </div>
         )}
@@ -37,7 +52,8 @@ export default async function Home() {
 
       <PredictionFeed
         initialPredictions={predictions}
-        bankroll={profile?.bankroll || 0}
+        bankroll={activeBankroll}
+        tournamentId={tournamentId}
       />
 
       <BetSlip />

@@ -8,7 +8,7 @@ import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function BetSlip() {
-    const { items, isOpen, setIsOpen, removeFromSlip, clearSlip } = useBetSlip();
+    const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId } = useBetSlip();
     const [wager, setWager] = useState(25);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,7 +24,7 @@ export default function BetSlip() {
             if (items.length === 1) {
                 // Single Bet
                 const item = items[0];
-                const res = await submitVote(item.predictionId, item.side, wager);
+                const res = await submitVote(item.predictionId, item.side, wager, tournamentId || undefined);
                 if (res.error) alert(res.error);
                 else {
                     alert("Bet Placed!");
@@ -33,7 +33,7 @@ export default function BetSlip() {
             } else {
                 // Bundle
                 const legs = items.map(i => ({ id: i.predictionId, side: i.side, multiplier: i.multiplier }));
-                const res = await placeBundleWager(legs, wager);
+                const res = await placeBundleWager(legs, wager, tournamentId || undefined);
                 if (res.error) alert(res.error);
                 else {
                     alert("Bundle Placed!");

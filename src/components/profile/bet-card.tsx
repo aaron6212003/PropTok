@@ -23,8 +23,18 @@ interface BetCardProps {
 export default function BetCard({ bet }: BetCardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const isBundle = bet.isBundle || !!bet.legs;
-    const isResolved = isBundle ? bet.status !== 'PENDING' : bet.predictions?.resolved;
-    const isWin = isBundle ? bet.status === 'WON' : (isResolved && bet.side === bet.predictions?.outcome);
+
+    // Determine status for Bundles more robustly
+    let status = bet.status || 'PENDING';
+    if (isBundle && status === 'PENDING' && bet.legs && bet.legs.length > 0) {
+        const hasLoss = bet.legs.some(l => l.prediction?.resolved && l.side !== l.prediction?.outcome);
+        const allWon = bet.legs.every(l => l.prediction?.resolved && l.side === l.prediction?.outcome);
+        if (hasLoss) status = 'LOST';
+        else if (allWon) status = 'WON';
+    }
+
+    const isResolved = isBundle ? status !== 'PENDING' : bet.predictions?.resolved;
+    const isWin = isBundle ? status === 'WON' : (isResolved && bet.side === bet.predictions?.outcome);
     const isLoss = isResolved && !isWin;
 
     const multiplier = isBundle ? bet.total_multiplier : bet.payout_multiplier;

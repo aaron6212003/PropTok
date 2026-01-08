@@ -52,15 +52,24 @@ export default async function TournamentDetailPage({ params }: { params: Promise
 
                     {/* My Stats */}
                     {myEntry && (
-                        <div className="mt-6 flex items-center justify-between rounded-xl bg-white/5 p-4 border border-white/10">
-                            <div>
-                                <span className="block text-xs text-zinc-500">Your Rank</span>
-                                <span className="text-2xl font-black text-white">#{myRank}</span>
+                        <div className="mt-6 flex flex-col gap-4">
+                            <div className="flex items-center justify-between rounded-xl bg-white/5 p-4 border border-white/10">
+                                <div>
+                                    <span className="block text-xs text-zinc-500">Your Rank</span>
+                                    <span className="text-2xl font-black text-white">#{myRank}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="block text-xs text-zinc-500">Your Stack</span>
+                                    <span className="text-2xl font-black text-brand">${myEntry.current_stack.toLocaleString()}</span>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <span className="block text-xs text-zinc-500">Your Stack</span>
-                                <span className="text-2xl font-black text-brand">${myEntry.current_stack.toLocaleString()}</span>
-                            </div>
+
+                            <Link
+                                href={`/?tournament=${id}`}
+                                className="w-full py-4 bg-brand text-black font-black uppercase tracking-widest text-center rounded-xl shadow-lg shadow-brand/20 active:scale-[0.98] transition-all"
+                            >
+                                Bet Now
+                            </Link>
                         </div>
                     )}
                 </div>

@@ -376,28 +376,48 @@ export async function acknowledgeResults() {
     return { success: true };
 }
 
-export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', multiplier: number }[], wager: number) {
+export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', multiplier: number }[], wager: number, tournamentId?: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("User not authenticated");
 
-    // 1. Check Balance
-    const { data: userInfo } = await supabase.from("users").select("bankroll").eq("id", user.id).single();
-    if (!userInfo || userInfo.bankroll < wager) return { error: "Insufficient funds" };
+    // 1. Determine Wallet & Deduct
+    if (tournamentId) {
+        const { data: entry, error: entryError } = await supabase
+            .from("tournament_entries")
+            .select("current_stack")
+            .eq("tournament_id", tournamentId)
+            .eq("user_id", user.id)
+            .single();
+
+        if (entryError || !entry) return { error: "Not entered in tournament" };
+        if (entry.current_stack < wager) return { error: "Insufficient tournament stack" };
+
+        const { error: deductError } = await supabase.from("tournament_entries")
+            .update({ current_stack: entry.current_stack - wager })
+            .eq("tournament_id", tournamentId)
+            .eq("user_id", user.id);
+
+        if (deductError) return { error: "Tournament transaction failed" };
+    } else {
+        const { data: userInfo } = await supabase.from("users").select("bankroll").eq("id", user.id).single();
+        if (!userInfo || userInfo.bankroll < wager) return { error: "Insufficient funds" };
+        const { error: deductError } = await supabase.from("users").update({ bankroll: userInfo.bankroll - wager }).eq("id", user.id);
+
+        if (deductError) return { error: "Transaction failed" };
+    }
 
     // 2. Calculate Combined Multiplier
     const totalMultiplier = legs.reduce((acc, leg) => acc * leg.multiplier, 1);
 
-    // 3. Deduct Balance
-    await supabase.from("users").update({ bankroll: userInfo.bankroll - wager }).eq("id", user.id);
-
-    // 4. Create Bundle
+    // 3. Create Bundle
     const { data: bundle, error: bundleError } = await supabase.from("bundles").insert({
         user_id: user.id,
         wager,
         total_multiplier: totalMultiplier,
-        status: 'PENDING'
+        status: 'PENDING',
+        tournament_id: tournamentId || null
     }).select().single();
 
     if (bundleError || !bundle) return { error: "Failed to create bundle" };
