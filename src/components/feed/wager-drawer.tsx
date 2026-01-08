@@ -64,32 +64,46 @@ export function WagerDrawer({ isOpen, onClose, onConfirm, side, multiplier, curr
                             <input
                                 type="range"
                                 min="1"
-                                max="100" // Cap at 100 or bankroll? User asked for 1-100.
+                                max={currentBankroll > 0 ? currentBankroll : 100}
                                 value={wager}
                                 onChange={(e) => setWager(Number(e.target.value))}
                                 className="h-4 w-full cursor-pointer appearance-none rounded-full bg-zinc-700 accent-brand focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-zinc-900"
                             />
-                            <div className="mt-2 flex w-full justify-between text-xs font-bold text-zinc-500">
-                                <span>$1</span>
-                                <span>$50</span>
-                                <span>$100</span>
+                            <div className="mt-2 flex w-full justify-between text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                <span>Min</span>
+                                <span>${Math.floor(currentBankroll / 2)}</span>
+                                <span>Max</span>
                             </div>
                         </div>
 
+                        {/* Quick Bets */}
+                        <div className="mb-8 grid grid-cols-3 gap-3">
+                            {[0.25, 0.5, 1].map((p) => (
+                                <button
+                                    key={p}
+                                    onClick={() => setWager(Math.floor(currentBankroll * p))}
+                                    className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-black uppercase tracking-widest transition-colors hover:bg-white/10 active:bg-brand active:text-black"
+                                >
+                                    {p === 1 ? "Max" : `${p * 100}%`}
+                                </button>
+                            ))}
+                        </div>
+
                         {/* Summary */}
-                        <div className="mb-6 flex items-center justify-between rounded-xl bg-black/50 p-4">
-                            <span className="text-zinc-400">Potential Payout</span>
+                        <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/5 bg-black/40 p-4 backdrop-blur-md">
+                            <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Potential Payout</span>
                             <div className="text-right">
-                                <span className="block text-2xl font-bold text-success">${potentialPayout}</span>
-                                <span className="text-xs text-zinc-500">{multiplier}x Multiplier</span>
+                                <span className="block text-2xl font-black text-success">${potentialPayout}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{multiplier}x Multiplier</span>
                             </div>
                         </div>
 
                         <button
                             onClick={() => onConfirm(wager)}
-                            className="w-full rounded-xl bg-white py-4 text-lg font-bold text-black transition-transform active:scale-95"
+                            disabled={wager <= 0 || wager > currentBankroll}
+                            className="w-full rounded-2xl bg-white py-5 text-lg font-black uppercase tracking-widest text-black transition-all active:scale-[0.98] disabled:opacity-50"
                         >
-                            Confirm ${wager} Wager
+                            Place ${wager} Wager
                         </button>
                     </motion.div>
                 </>

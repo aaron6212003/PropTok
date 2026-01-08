@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
-import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut } from 'lucide-react';
+import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -85,11 +85,25 @@ export default async function ProfilePage() {
                 <p className="text-sm text-zinc-500">Joined {new Date(user.created_at).toLocaleDateString()}</p>
             </div>
 
+            {/* Bankroll Highlights */}
+            <div className="mt-6 px-6">
+                <div className="flex flex-col items-center rounded-3xl border border-brand/20 bg-brand/5 p-8 text-center backdrop-blur-xl">
+                    <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-brand/20">
+                        <Coins className="h-6 w-6 text-brand" />
+                    </div>
+                    <span className="text-sm font-bold uppercase tracking-widest text-brand/80">Available Bankroll</span>
+                    <h2 className="mt-1 text-5xl font-black tracking-tighter text-white">
+                        ${(profile?.bankroll || 0).toLocaleString()}
+                    </h2>
+                    <p className="mt-2 text-xs font-medium text-zinc-500 uppercase tracking-widest">In PropCash</p>
+                </div>
+            </div>
+
             {/* Main Stats Grid */}
             <div className="mt-8 grid grid-cols-2 gap-4 px-6">
                 <StatCard
                     label="Win Rate"
-                    value={`${profile?.win_rate || 0}% `}
+                    value={`${profile?.win_rate || 0}%`}
                     icon={TrendingUp}
                     colorClass="text-brand"
                 />
@@ -106,9 +120,9 @@ export default async function ProfilePage() {
                     colorClass="text-yellow-500"
                 />
                 <StatCard
-                    label="Total Rank"
+                    label="Active Bets"
                     value="-"
-                    icon={TrendingUp}
+                    icon={Coins}
                     colorClass="text-success"
                 />
             </div>

@@ -6,10 +6,11 @@ import { useScroll, useTransform } from 'framer-motion';
 import { Prediction } from "@/lib/types";
 
 interface PredictionFeedProps {
-    initialPredictions: any[]; // We'll refine this type
+    initialPredictions: any[];
+    bankroll: number;
 }
 
-export default function PredictionFeed({ initialPredictions }: PredictionFeedProps) {
+export default function PredictionFeed({ initialPredictions, bankroll }: PredictionFeedProps) {
     // Simple scroll snap implementation
     // In a real app we might use 'div' with scroll-snap-type: y mandatory
 
@@ -29,6 +30,7 @@ export default function PredictionFeed({ initialPredictions }: PredictionFeedPro
                         expiresAt: prediction.expires_at
                     }}
                     isActive={true}
+                    bankroll={bankroll}
                 />
             ))}
         </div>

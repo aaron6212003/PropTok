@@ -10,9 +10,10 @@ import { submitVote } from '@/app/actions'; // Import server action
 interface PredictionCardProps {
     prediction: Prediction;
     isActive: boolean;
+    bankroll: number;
 }
 
-export default function PredictionCard({ prediction, isActive }: PredictionCardProps) {
+export default function PredictionCard({ prediction, isActive, bankroll }: PredictionCardProps) {
     const [selectedSide, setSelectedSide] = useState<'YES' | 'NO' | null>(null);
     const [showComments, setShowComments] = useState(false);
 
@@ -169,7 +170,7 @@ export default function PredictionCard({ prediction, isActive }: PredictionCardP
                 onConfirm={handleConfirmWager}
                 side={pendingSide || 'YES'}
                 multiplier={pendingSide === 'YES' ? prediction.yesMultiplier : prediction.noMultiplier}
-                currentBankroll={1000}
+                currentBankroll={bankroll}
             />
         </>
     );
