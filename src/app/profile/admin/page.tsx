@@ -16,9 +16,13 @@ export default function AdminPage() {
     const handleClear = () => {
         if (confirm("Are you sure? This will delete ALL predictions, votes, and bundles.")) {
             startTransition(async () => {
-                await clearDatabase();
-                setPredictions([]);
-                alert("Database Wiped!");
+                const result = await clearDatabase();
+                if (result?.error) {
+                    alert("Failed to wipe: " + result.error);
+                } else {
+                    setPredictions([]);
+                    alert("Database Wiped Successfully!");
+                }
             });
         }
     };
