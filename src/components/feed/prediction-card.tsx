@@ -6,6 +6,7 @@ import { Clock, TrendingUp, Users, MessageSquare, Share2 } from 'lucide-react';
 import CommentsDrawer from '@/components/social/comments-drawer';
 import { WagerDrawer } from '@/components/feed/wager-drawer'; // Import
 import { submitVote } from '@/app/actions'; // Import server action
+import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
 
 interface PredictionCardProps {
     prediction: Prediction;
@@ -53,26 +54,17 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
     return (
         <>
-            <div className="relative h-full w-full snap-start overflow-hidden bg-black">
+            <div className={cn(
+                "relative h-full w-full snap-start overflow-hidden bg-black",
+                "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] before:to-transparent before:opacity-40",
+                CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default']
+            )}>
                 {/* Background Image Removed for Simplicity */}
 
                 {/* Content Layer */}
-                <div className="relative z-10 flex h-full flex-col p-6 pb-24 font-sans text-white">
+                <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-24 font-sans text-white">
 
-                    {/* Header Stats */}
-                    <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-zinc-500">
-                        <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 backdrop-blur-md border border-white/5">
-                            <Clock size={12} className="text-zinc-400" />
-                            <span>2d left</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 backdrop-blur-md border border-white/5">
-                            <Users size={12} className="text-zinc-400" />
-                            <span>{(prediction.volume / 1000).toFixed(1)}k</span>
-                        </div>
-                        <div className="ml-auto rounded-full bg-brand/10 border border-brand/20 px-3 py-1.5 text-brand backdrop-blur-md">
-                            {prediction.category}
-                        </div>
-                    </div>
+                    {/* Header Stats Removed - Moved to Bottom */}
 
                     {/* Main Content Area */}
                     <div className="mt-8 flex flex-col flex-1 min-h-0">
@@ -110,12 +102,20 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     <div className="mt-auto space-y-4 pb-4">
                         {/* Status Row */}
                         <div className="flex items-end justify-between px-2">
-                            <div className="flex flex-col">
-                                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600">Market Probability</span>
-                                <div className="h-[2px] w-8 bg-brand mt-1" />
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">
+                                    {prediction.category} • ${(prediction.volume / 1000).toFixed(1)}k Vol
+                                </span>
+                                <div className={cn(
+                                    "h-[3px] w-12 rounded-full",
+                                    (CATEGORY_TEXT_COLORS[prediction.category] || 'text-white').replace('text-', 'bg-')
+                                )} />
                             </div>
                             <div className="text-right">
-                                <span className="text-xs font-black text-success uppercase tracking-widest">{prediction.yesPercent}% Yes Confidence</span>
+                                <span className={cn(
+                                    "text-xs font-black uppercase tracking-widest",
+                                    CATEGORY_TEXT_COLORS[prediction.category] || 'text-white'
+                                )}>{prediction.yesPercent}% Yes</span>
                             </div>
                         </div>
 

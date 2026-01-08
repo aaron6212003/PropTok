@@ -15,7 +15,7 @@ export default function PredictionFeed({ initialPredictions, bankroll }: Predict
     // In a real app we might use 'div' with scroll-snap-type: y mandatory
 
     return (
-        <div className="h-[calc(100dvh-5rem)] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth pb-20 no-scrollbar">
+        <div className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar">
             {initialPredictions.map((prediction) => {
                 const yesProb = (prediction.yes_percent || 50) / 100;
                 const yesMultiplier = Number((0.95 / Math.max(0.01, yesProb)).toFixed(2));
