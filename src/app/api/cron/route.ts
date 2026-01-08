@@ -9,43 +9,52 @@ export async function GET() {
     const results = [];
 
     // --- PART 1: INGESTION (Semi-Manual for Launch) ---
-    // REAL NFL WILD CARD MATCHUPS
+    // REAL 2026 NFL WILD CARD WEEKEND GAMES
     const MOCK_GAMES = [
         {
             category: "NFL",
-            question: "Will the Lions cover -3.5 vs Rams?",
-            line: -3.5,
+            question: "Will the Bills cover -9.5 vs Jaguars?",
+            line: -9.5,
             oracle_type: "spread_cover",
-            oracle_id: "det-vs-lar-spread",
-            game_date: new Date("2024-01-14T20:00:00Z").toISOString(), // Sunday Night
-            player_name: "Detroit Lions"
+            oracle_id: "buf-vs-jax-spread-wc26",
+            game_date: new Date("2026-01-11T18:00:00Z").toISOString(), // Sunday 1 PM ET
+            player_name: "Buffalo Bills"
         },
         {
             category: "NFL",
-            question: "Will Travis Kelce verify OVER 6.5 Receptions?",
-            line: 6.5,
+            question: "Will Josh Allen throw for OVER 275.5 Yards vs JAX?",
+            line: 275.5,
             oracle_type: "player_stat_gt",
-            oracle_id: "kelce-rec-wildcard",
-            game_date: new Date("2024-01-13T20:00:00Z").toISOString(), // Saturday
-            player_name: "Travis Kelce"
+            oracle_id: "allen-pass-yards-wc26",
+            game_date: new Date("2026-01-11T18:00:00Z").toISOString(),
+            player_name: "Josh Allen"
         },
         {
             category: "NFL",
-            question: "Will Packers vs Cowboys go OVER 50.5 Points?",
-            line: 50.5,
+            question: "Will 49ers vs Eagles go OVER 47.5 Points?",
+            line: 47.5,
             oracle_type: "total_score_gt",
-            oracle_id: "gb-vs-dal-total",
-            game_date: new Date("2024-01-14T16:30:00Z").toISOString(),
+            oracle_id: "sf-vs-phi-total-wc26",
+            game_date: new Date("2026-01-11T21:30:00Z").toISOString(), // Sunday 4:30 PM ET
             player_name: "Game Total"
         },
         {
             category: "NFL",
-            question: "Will Lamar Jackson Rush for OVER 60.5 Yards?",
-            line: 60.5,
+            question: "Will Christian McCaffrey score 2+ TDs vs Eagles?",
+            line: 1.5,
             oracle_type: "player_stat_gt",
-            oracle_id: "lamar-rush-divisional",
-            game_date: new Date("2024-01-20T20:00:00Z").toISOString(),
-            player_name: "Lamar Jackson"
+            oracle_id: "cmc-tds-wc26",
+            game_date: new Date("2026-01-11T21:30:00Z").toISOString(),
+            player_name: "Christian McCaffrey"
+        },
+        {
+            category: "NFL",
+            question: "Will Patriots cover +7.5 @ Chargers?",
+            line: 7.5,
+            oracle_type: "spread_cover",
+            oracle_id: "ne-vs-lac-spread-wc26",
+            game_date: new Date("2026-01-12T01:00:00Z").toISOString(), // Sunday 8 PM ET
+            player_name: "New England Patriots"
         },
         {
             category: "Crypto",
@@ -54,7 +63,7 @@ export async function GET() {
             oracle_type: "crypto_price_gt",
             oracle_id: "bitcoin",
             target_value: 50000,
-            game_date: new Date(Date.now() + 86400000 * 3).toISOString()
+            game_date: new Date("2026-01-12T23:59:00Z").toISOString()
         }
     ];
 
