@@ -32,7 +32,8 @@ export default function PredictionFeed({ initialPredictions, bankroll }: Predict
                             yesPercent: prediction.yes_percent || 50,
                             yesMultiplier,
                             noMultiplier,
-                            expiresAt: prediction.expires_at
+                            expiresAt: prediction.expires_at,
+                            imageUrl: prediction.image_url
                         }}
                         isActive={true}
                         bankroll={bankroll}

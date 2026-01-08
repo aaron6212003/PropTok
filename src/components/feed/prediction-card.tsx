@@ -90,19 +90,14 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             {prediction.question}
                         </h1>
 
-                        {/* Engagement Row */}
-                        <div className="mt-8 flex items-center gap-6 border-y border-white/5 py-6">
+                        {/* Engagement Row (Cleaned up) */}
+                        <div className="mt-6 flex items-center gap-4 border-b border-white/5 pb-6">
                             <button
                                 onClick={() => setShowComments(true)}
-                                className="flex items-center gap-2 group"
+                                className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
                             >
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-all group-hover:bg-white/10">
-                                    <MessageSquare size={18} className="text-zinc-400 group-hover:text-white" />
-                                </div>
-                                <div className="flex flex-col items-start leading-none">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Discuss</span>
-                                    <span className="text-xs font-bold mt-1 text-zinc-300">245 Opinions</span>
-                                </div>
+                                <MessageSquare size={14} className="text-zinc-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">245 Discussing</span>
                             </button>
 
                             <button
@@ -110,64 +105,70 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                     navigator.clipboard.writeText(window.location.origin);
                                     alert("Link copied!");
                                 }}
-                                className="flex items-center gap-2 group"
+                                className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
                             >
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-all group-hover:bg-white/10">
-                                    <Share2 size={18} className="text-zinc-400 group-hover:text-white" />
-                                </div>
-                                <div className="flex flex-col items-start leading-none">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Invite</span>
-                                    <span className="text-xs font-bold mt-1 text-zinc-300">Share Link</span>
-                                </div>
+                                <Share2 size={14} className="text-zinc-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Share</span>
                             </button>
                         </div>
 
-                        {/* Social Void Filler: Featured Comment & Pulse */}
-                        <div className="flex-1 flex flex-col justify-center relative py-8">
-                            {/* Background Graphic: Subtle Peak Pulse */}
-                            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-32 opacity-20 pointer-events-none">
-                                <svg viewBox="0 0 400 100" className="w-full h-full text-brand fill-none stroke-current" strokeWidth="2" strokeLinecap="round">
-                                    <path d="M0 80 Q 50 80, 100 40 T 200 60 T 300 10 T 400 80" className="animate-pulse" />
-                                </svg>
-                            </div>
-
-                            {/* Featured Comment Preview */}
+                        {/* CENTRAL HERO VISUAL */}
+                        <div className="flex-1 flex items-center justify-center py-6">
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.5 }}
-                                className="glass relative z-10 self-start max-w-[85%] rounded-[24px] rounded-tl-none p-4 shadow-2xl"
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                className="relative aspect-[4/5] w-full max-w-[280px] overflow-hidden rounded-[40px] border border-white/10 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)]"
                             >
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-4 w-4 rounded-full bg-brand/40" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">@whale_watcher</span>
-                                    <span className="text-[10px] font-bold text-zinc-600">3h ago</span>
+                                {/* Background Image or Gradient */}
+                                {prediction.imageUrl ? (
+                                    <img
+                                        src={prediction.imageUrl}
+                                        alt=""
+                                        className="h-full w-full object-cover grayscale-[0.2] brightness-75"
+                                    />
+                                ) : (
+                                    <div className={cn(
+                                        "h-full w-full bg-gradient-to-br",
+                                        prediction.category === 'Crypto' ? "from-blue-600/20 to-purple-600/20" : "from-success/10 to-brand/10"
+                                    )} />
+                                )}
+
+                                {/* Gloss Shimmer Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-50" />
+
+                                {/* Card Overlays */}
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
+                                        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-white/50">Live Tracker</span>
+                                    </div>
+                                    <p className="mt-1 text-xs font-bold text-zinc-400 uppercase tracking-widest leading-none">
+                                        {prediction.category} Prop Card #{(Math.random() * 1000).toFixed(0)}
+                                    </p>
                                 </div>
-                                <p className="text-sm font-bold text-zinc-200 leading-snug">
-                                    "No way his passing line stays this low with the weather clearing up. Easiest YES of the week."
-                                </p>
+
+                                <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
                             </motion.div>
                         </div>
                     </div>
 
-                    {/* Voting / Stats Area */}
+                    {/* Voting Area */}
                     <div className="mt-auto space-y-6">
-
-                        {/* Live Percentages & Status */}
-                        <div className="flex items-end justify-between">
+                        {/* Status Row */}
+                        <div className="flex items-end justify-between px-2">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-1">Market Sentiment</span>
-                                <span className="text-2xl font-black text-white italic">Mostly Bullish</span>
+                                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600">Odds Probability</span>
+                                <div className="h-[2px] w-8 bg-brand mt-2" />
                             </div>
                             <div className="text-right">
-                                <span className="text-sm font-black text-success uppercase tracking-widest">{prediction.yesPercent}% YES</span>
+                                <span className="text-sm font-black text-success uppercase tracking-widest">{prediction.yesPercent}% Yes</span>
                             </div>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5 p-[1px] border border-white/5">
+                        {/* Progress Bar (Minimal) */}
+                        <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
                             <div
-                                className="h-full bg-success transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,220,130,0.3)]"
+                                className="h-full bg-success shadow-[0_0_10px_rgba(0,220,130,0.4)] transition-all duration-1000"
                                 style={{ width: `${prediction.yesPercent}%` }}
                             />
                         </div>
