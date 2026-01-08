@@ -159,6 +159,7 @@ export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
     return { success: true };
 }
 
+
 export async function getLeaderboard() {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -175,6 +176,7 @@ export async function getLeaderboard() {
 
     return data;
 }
+
 export async function getUserVotes() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -196,4 +198,68 @@ export async function getUserVotes() {
     }
 
     return data;
+}
+
+export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', multiplier: number }[], wager: number) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    // 1. Check Balance
+    const { data: userInfo } = await supabase.from("users").select("bankroll").eq("id", user.id).single();
+    if (!userInfo || userInfo.bankroll < wager) return { error: "Insufficient funds" };
+
+    // 2. Calculate Combined Multiplier
+    const totalMultiplier = legs.reduce((acc, leg) => acc * leg.multiplier, 1);
+
+    // 3. Deduct Balance
+    await supabase.from("users").update({ bankroll: userInfo.bankroll - wager }).eq("id", user.id);
+
+    // 4. Create Bundle
+    const { data: bundle, error: bundleError } = await supabase.from("bundles").insert({
+        user_id: user.id,
+        wager,
+        total_multiplier: totalMultiplier,
+        status: 'PENDING'
+    }).select().single();
+
+    if (bundleError || !bundle) return { error: "Failed to create bundle" };
+
+    // 5. Create Legs
+    const bundleLegs = legs.map(leg => ({
+        bundle_id: bundle.id,
+        prediction_id: leg.id,
+        side: leg.side,
+        multiplier: leg.multiplier
+    }));
+
+    const { error: legsError } = await supabase.from("bundle_legs").insert(bundleLegs);
+    if (legsError) return { error: "Failed to create bundle legs" };
+
+    revalidatePath("/profile");
+    revalidatePath("/");
+    return { success: true };
+}
+
+export async function adminHardReset() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    // Delete all votes, bundles (cascade handles legs), and reset cash
+    await supabase.from("votes").delete().eq("user_id", user.id);
+    await supabase.from("bundles").delete().eq("user_id", user.id);
+    await supabase.from("users").update({
+        bankroll: 1000,
+        win_rate: 0,
+        streak: 0,
+        best_streak: 0
+    }).eq("id", user.id);
+
+    revalidatePath("/profile");
+    revalidatePath("/leaderboard");
+    revalidatePath("/");
+    return { success: true };
 }

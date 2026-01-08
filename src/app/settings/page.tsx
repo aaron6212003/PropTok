@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Bell, Lock, Palette, HelpCircle, Zap, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Bell, Lock, Palette, HelpCircle, Zap, RotateCcw, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -120,6 +120,24 @@ export default function SettingsPage() {
                                 <p className="text-xs text-zinc-500 uppercase tracking-widest">Refill your PropCash to $1,000</p>
                             </div>
                             <RotateCcw size={18} className="text-zinc-500" />
+                        </button>
+
+                        <button
+                            onClick={async () => {
+                                if (confirm("DANGER: This will delete ALL your bets and reset your stats for a fresh start. Proceed?")) {
+                                    const { adminHardReset } = await import('@/app/actions');
+                                    await adminHardReset();
+                                    alert("Account Hard Reset Complete!");
+                                    window.location.reload();
+                                }
+                            }}
+                            className="flex w-full items-center justify-between rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-left transition-all hover:bg-destructive/20"
+                        >
+                            <div>
+                                <p className="font-bold text-destructive">Hard Reset Everything</p>
+                                <p className="text-xs text-destructive/60 uppercase tracking-widest">Wipe bets + Reset Bankroll</p>
+                            </div>
+                            <X size={18} className="text-destructive" />
                         </button>
                     </div>
                 </div>

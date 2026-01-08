@@ -49,59 +49,83 @@ export default function CreateBundlePage() {
 
     const totalMultiplier = selectedLegs.reduce((acc, leg) => acc * leg.multiplier, 1).toFixed(2);
 
+
+    const [wager, setWager] = useState(25);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showWagerOption, setShowWagerOption] = useState(false);
+
+    const handleCreateBundle = async () => {
+        setIsSubmitting(true);
+        const { placeBundleWager } = await import('../actions');
+        const res = await placeBundleWager(selectedLegs, wager);
+
+        if (res.success) {
+            alert("Bundle Created Successfully!");
+            window.location.href = "/profile";
+        } else {
+            alert(res.error || "Failed to create bundle");
+        }
+        setIsSubmitting(false);
+    };
+
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-32 text-white">
             <div className="p-6">
-                <h1 className="text-3xl font-black tracking-tight uppercase">Custom Bundle</h1>
-                <p className="mt-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Pick up to 5 legs to boost Payouts</p>
+                <h1 className="text-3xl font-black tracking-tight uppercase italic">Custom Bundle</h1>
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">Combine winners to skyrocket your payout</p>
 
                 {/* Multiplier Badge */}
-                <div className="mt-6 flex items-center justify-between rounded-3xl border border-brand/30 bg-brand/5 p-6 backdrop-blur-xl">
-                    <div className="flex flex-col">
+                <div className="mt-8 flex items-center justify-between rounded-[32px] border border-brand/20 bg-brand/5 p-8 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-brand/10 blur-3xl" />
+                    <div className="flex flex-col relative z-10">
                         <div className="flex items-center gap-2 text-brand">
-                            <Zap className="fill-brand" size={16} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Bundle Payout</span>
+                            <Zap className="fill-brand animate-pulse" size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Combined Payout</span>
                         </div>
-                        <span className="text-sm font-bold text-zinc-400">{selectedLegs.length} Leg Parlay</span>
+                        <span className="text-xs font-bold text-zinc-500 mt-1">{selectedLegs.length} Leg Parlay</span>
                     </div>
-                    <span className="text-5xl font-black tracking-tighter text-white">{selectedLegs.length > 0 ? totalMultiplier : "1.00"}x</span>
+                    <span className="text-6xl font-black tracking-tighter text-white relative z-10">{selectedLegs.length > 0 ? totalMultiplier : "1.00"}x</span>
                 </div>
             </div>
 
             {/* Available Predictions List */}
-            <div className="px-6">
-                <h2 className="mb-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">Live Markets</h2>
-                <div className="space-y-4">
+            <div className="px-6 flex-1">
+                <h2 className="mb-6 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 border-b border-white/5 pb-2">Live Markets</h2>
+                <div className="space-y-6">
                     {predictions.map((p) => {
                         const leg = selectedLegs.find(l => l.id === p.id);
-                        return (
-                            <div key={p.id} className="rounded-2xl border border-white/5 bg-zinc-900/50 p-4">
-                                <h3 className="mb-4 text-sm font-bold leading-tight">{p.question}</h3>
+                        const yesProb = (p.yes_percent || 50) / 100;
+                        const yesMult = (0.95 / Math.max(0.01, yesProb)).toFixed(2);
+                        const noMult = (0.95 / Math.max(0.01, 1 - yesProb)).toFixed(2);
 
-                                <div className="grid grid-cols-2 gap-3">
+                        return (
+                            <div key={p.id} className="rounded-3xl border border-white/5 bg-zinc-900/30 p-5 backdrop-blur-xl transition-all hover:bg-zinc-900/50">
+                                <h3 className="mb-6 text-base font-bold leading-snug tracking-tight">{p.question}</h3>
+
+                                <div className="grid grid-cols-2 gap-4">
                                     <button
-                                        onClick={() => toggleSelection(p, 'YES')}
+                                        onClick={() => toggleSelection({ ...p, yes_multiplier: Number(yesMult), no_multiplier: Number(noMult) }, 'YES')}
                                         className={cn(
-                                            "flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all",
+                                            "flex flex-col items-center justify-center rounded-2xl border py-4 transition-all duration-300",
                                             leg?.side === 'YES'
-                                                ? "border-success bg-success/20 text-success"
-                                                : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10"
+                                                ? "border-success bg-success/20 text-success shadow-[0_0_20px_rgba(0,220,130,0.2)]"
+                                                : "border-white/5 bg-white/5 text-zinc-500 hover:bg-white/10"
                                         )}
                                     >
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Yes</span>
-                                        <span className="text-sm font-bold">{p.yes_multiplier || "1.9"}x</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Yes</span>
+                                        <span className="text-sm font-black mt-0.5">{yesMult}x</span>
                                     </button>
                                     <button
-                                        onClick={() => toggleSelection(p, 'NO')}
+                                        onClick={() => toggleSelection({ ...p, yes_multiplier: Number(yesMult), no_multiplier: Number(noMult) }, 'NO')}
                                         className={cn(
-                                            "flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all text-destructive",
+                                            "flex flex-col items-center justify-center rounded-2xl border py-4 transition-all duration-300",
                                             leg?.side === 'NO'
-                                                ? "border-destructive bg-destructive/20 text-destructive"
-                                                : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10"
+                                                ? "border-destructive bg-destructive/20 text-destructive shadow-[0_0_20px_rgba(255,42,109,0.2)]"
+                                                : "border-white/5 bg-white/5 text-zinc-500 hover:bg-white/10"
                                         )}
                                     >
-                                        <span className="text-[10px] font-black uppercase tracking-widest">No</span>
-                                        <span className="text-sm font-bold">{p.no_multiplier || "1.9"}x</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No</span>
+                                        <span className="text-sm font-black mt-0.5">{noMult}x</span>
                                     </button>
                                 </div>
                             </div>
@@ -110,21 +134,43 @@ export default function CreateBundlePage() {
                 </div>
             </div>
 
-            {/* Floating Action Bar */}
+            {/* Wager Controls (Hidden until legs selected) */}
             {selectedLegs.length > 0 && (
-                <div className="fixed bottom-24 left-6 right-6 z-40">
-                    <button className="group flex w-full items-center justify-between rounded-2xl bg-white p-5 text-black shadow-[0_20px_50px_rgba(255,255,255,0.1)] transition-all active:scale-95">
-                        <div className="flex flex-col items-start leading-none">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Total Selection</span>
-                            <span className="text-xl font-black">{selectedLegs.length} Legs</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-black uppercase tracking-widest">Create Bundle</span>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:translate-x-1">
-                                <ArrowRight size={18} />
+                <div className="fixed bottom-24 left-0 right-0 z-40 px-6 animate-in slide-in-from-bottom-10 duration-500">
+                    <div className="rounded-t-[32px] border-t border-white/10 bg-zinc-900 p-6 shadow-2xl">
+                        <div className="mb-6 flex flex-col items-center">
+                            <div className="flex items-center justify-between w-full mb-4">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wager Amount</span>
+                                <span className="text-2xl font-black text-white">${wager}</span>
                             </div>
+                            <input
+                                type="range"
+                                min="10"
+                                max="1000"
+                                step="10"
+                                value={wager}
+                                onChange={(e) => setWager(Number(e.target.value))}
+                                className="h-4 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-brand"
+                            />
                         </div>
-                    </button>
+
+                        <button
+                            onClick={handleCreateBundle}
+                            disabled={isSubmitting}
+                            className="group flex w-full items-center justify-between rounded-3xl bg-white p-6 text-black shadow-2xl transition-all active:scale-[0.98] disabled:opacity-50"
+                        >
+                            <div className="flex flex-col items-start leading-none">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Potential Return</span>
+                                <span className="text-2xl font-black">${(wager * Number(totalMultiplier)).toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-black uppercase tracking-[0.2em]">{isSubmitting ? "Locking..." : "Lock Bundle"}</span>
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:translate-x-1 shadow-lg">
+                                    <ArrowRight size={20} />
+                                </div>
+                            </div>
+                        </button>
+                    </div>
                 </div>
             )}
 
