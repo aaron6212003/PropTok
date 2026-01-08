@@ -93,12 +93,17 @@ export default function TournamentsPage() {
 
                                 <div className="mt-6">
                                     {isEntered ? (
-                                        <div className="flex w-full items-center justify-between rounded-xl bg-success/10 px-4 py-3 border border-success/20">
-                                            <span className="text-sm font-bold text-success">Entered</span>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-xs text-zinc-400">Your Stack</span>
-                                                <span className="font-bold text-white">${entry.current_stack}</span>
+                                        <div className="space-y-3">
+                                            <div className="flex w-full items-center justify-between rounded-xl bg-success/10 px-4 py-3 border border-success/20">
+                                                <span className="text-sm font-bold text-success">Entered</span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-xs text-zinc-400">Your Stack</span>
+                                                    <span className="font-bold text-white">${entry.current_stack}</span>
+                                                </div>
                                             </div>
+                                            <a href={`/tournaments/${t.id}`} className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20">
+                                                View Leaderboard
+                                            </a>
                                         </div>
                                     ) : (
                                         <button

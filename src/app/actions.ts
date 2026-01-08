@@ -295,3 +295,41 @@ export async function clearDatabase() {
     revalidatePath("/admin");
     return { success: true };
 }
+
+// --- Tournament Actions ---
+
+export async function getTournament(id: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("tournaments")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) return null;
+    return data;
+}
+
+export async function getTournamentLeaderboard(tournamentId: string) {
+    const supabase = await createClient();
+
+    // Join entries with users to get usernames/avatars
+    const { data, error } = await supabase
+        .from("tournament_entries")
+        .select(`
+            *,
+            users:user_id (
+                username,
+                avatar_url
+            )
+        `)
+        .eq("tournament_id", tournamentId)
+        .order("current_stack", { ascending: false });
+
+    if (error) {
+        console.error("Tournament Leaderboard Error:", error);
+        return [];
+    }
+
+    return data;
+}
