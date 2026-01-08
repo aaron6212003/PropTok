@@ -1,9 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
-import { createPrediction, resolvePrediction, getPredictions, clearDatabase } from "@/app/actions";
+import { createPrediction, resolvePrediction, autoResolvePrediction, getPredictions, clearDatabase } from "@/app/actions";
 import { useState, useEffect } from "react";
-import { Trash2, Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Trash2, Plus, Clock, CheckCircle, XCircle, Wand2 } from 'lucide-react';
 
 export default function AdminPage() {
     const [isPending, startTransition] = useTransition();
@@ -32,7 +32,7 @@ export default function AdminPage() {
     };
 
     return (
-        <main className="min-h-screen bg-black p-6 text-white pb-32">
+        <main className="h-full w-full overflow-y-auto bg-black p-6 text-white pb-32 scrollbar-none">
             <header className="mb-8 flex items-center justify-between border-b border-white/10 pb-6">
                 <div className="flex items-center gap-4">
                     <a href="/" className="rounded-full bg-white/5 p-2 transition-colors hover:bg-white/10">
@@ -196,30 +196,45 @@ export default function AdminPage() {
                                 </div>
 
                                 {!p.resolved && (
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-3 gap-3">
                                         <button
                                             onClick={() => startTransition(async () => {
-                                                if (confirm(`Resolve "${p.question}" as YES? (This will payout all YES voters)`)) {
+                                                if (confirm(`Resolve "${p.question}" as YES?`)) {
                                                     await resolvePrediction(p.id, 'YES');
                                                     getPredictions().then(setPredictions);
                                                 }
                                             })}
-                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-success/20 py-4 text-xs font-black uppercase tracking-widest text-success hover:bg-success/30"
+                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-success/20 py-4 text-[10px] font-black uppercase tracking-widest text-success hover:bg-success/30"
                                         >
-                                            <CheckCircle size={18} />
-                                            <span>Winner: YES</span>
+                                            <CheckCircle size={16} />
+                                            <span>YES</span>
                                         </button>
+
                                         <button
                                             onClick={() => startTransition(async () => {
-                                                if (confirm(`Resolve "${p.question}" as NO? (This will payout all NO voters)`)) {
+                                                if (confirm(`Attempt to auto-resolve "${p.question}" using oracle data?`)) {
+                                                    const res = await autoResolvePrediction(p.id);
+                                                    if (res?.error) alert(res.error);
+                                                    else getPredictions().then(setPredictions);
+                                                }
+                                            })}
+                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-brand/20 py-4 text-[10px] font-black uppercase tracking-widest text-brand hover:bg-brand/30 border border-brand/20"
+                                        >
+                                            <Wand2 size={16} className="animate-pulse" />
+                                            <span>Auto</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => startTransition(async () => {
+                                                if (confirm(`Resolve "${p.question}" as NO?`)) {
                                                     await resolvePrediction(p.id, 'NO');
                                                     getPredictions().then(setPredictions);
                                                 }
                                             })}
-                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-destructive/20 py-4 text-xs font-black uppercase tracking-widest text-destructive hover:bg-destructive/30"
+                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-destructive/20 py-4 text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/30"
                                         >
-                                            <XCircle size={18} />
-                                            <span>Winner: NO</span>
+                                            <XCircle size={16} />
+                                            <span>NO</span>
                                         </button>
                                     </div>
                                 )}

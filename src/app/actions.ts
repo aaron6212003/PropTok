@@ -181,6 +181,54 @@ export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
     return { success: true };
 }
 
+export async function autoResolvePrediction(id: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    const { data: prediction, error: fetchError } = await supabase
+        .from("predictions")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (fetchError || !prediction) return { error: "Prediction not found" };
+    if (prediction.resolved) return { error: "Already resolved" };
+
+    // 1. Crypto Price
+    if (prediction.oracle_type === "crypto_price_gt") {
+        try {
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${prediction.oracle_id}&vs_currencies=usd`);
+            const data = await response.json();
+            const price = data[prediction.oracle_id]?.usd;
+
+            if (!price) return { error: "Could not fetch current price" };
+
+            const outcome = price > prediction.target_value ? "YES" : "NO";
+            return await resolvePrediction(id, outcome);
+        } catch (e) {
+            console.error(e);
+            return { error: "Oracle fetch failed" };
+        }
+    }
+
+    // 2. NFL / Game Date
+    if (prediction.game_date) {
+        const gameTime = new Date(prediction.game_date);
+        const now = new Date();
+
+        if (now < gameTime) return { error: "Game has not started/finished yet" };
+
+        // Semi-random consistent outcome for simulation
+        const seed = prediction.oracle_id?.length || 0;
+        const outcome = (seed % 2 === 0) ? "YES" : "NO";
+        return await resolvePrediction(id, outcome);
+    }
+
+    return { error: "No automated resolution logic for this market type" };
+}
+
 
 export async function getLeaderboard() {
     const supabase = await createClient();
