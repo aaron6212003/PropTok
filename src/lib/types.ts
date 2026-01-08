@@ -17,6 +17,7 @@ export interface Prediction {
     yesPercent: number; // 0-100
     volume: number; // Number of votes
     expiresAt: string; // ISO date
+    createdAt: string; // ISO date
 
     // Fake "market" data
     yesMultiplier: number;

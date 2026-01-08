@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prediction } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Clock, TrendingUp, Users, MessageSquare, Share2 } from 'lucide-react';
+import { Clock, TrendingUp, Users, MessageSquare, Share2, Lock } from 'lucide-react';
 import CommentsDrawer from '@/components/social/comments-drawer';
 import { WagerDrawer } from '@/components/feed/wager-drawer'; // Import
 import { submitVote } from '@/app/actions'; // Import server action
 import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
+import { CountdownTimer } from './countdown-timer';
 
 interface PredictionCardProps {
     prediction: Prediction;
@@ -51,6 +52,9 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
             setSelectedSide(null);
         }
     };
+
+    const yesVotes = Math.floor(prediction.volume * (prediction.yesPercent / 100));
+    const noVotes = prediction.volume - yesVotes;
 
     return (
         <>
@@ -114,13 +118,15 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                         {/* Status Row */}
                         <div className="flex items-end justify-between px-2">
                             <div className="flex flex-col gap-1">
-                                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">
-                                    ${(prediction.volume / 1000).toFixed(1)}k Vol
+                                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                                    <Clock size={10} />
+                                    <CountdownTimer targetDate={prediction.expiresAt} />
                                 </span>
-                                <div className={cn(
-                                    "h-[3px] w-12 rounded-full",
-                                    (CATEGORY_TEXT_COLORS[prediction.category] || 'text-white').replace('text-', 'bg-')
-                                )} />
+                                <div className="flex gap-1 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                                    <span>{yesVotes.toLocaleString()} YES</span>
+                                    <span className="text-zinc-700">•</span>
+                                    <span>{noVotes.toLocaleString()} NO</span>
+                                </div>
                             </div>
                             <div className="text-right">
                                 <span className={cn(
@@ -140,39 +146,61 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                         {/* Buttons */}
                         <div className="grid grid-cols-2 gap-3">
-                            <button
+                            <motion.button
                                 id={`yes-btn-${prediction.id}`}
                                 onClick={() => handleOptionClick('YES')}
+                                whileTap={{ scale: 0.95 }}
+                                animate={selectedSide === 'YES' ? { scale: 1.05 } : { scale: 1 }}
                                 className={cn(
-                                    "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300 active:scale-95",
+                                    "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300",
                                     (selectedSide === 'YES' || pendingSide === 'YES')
-                                        ? "border-success bg-success/20 text-success shadow-[0_0_20px_rgba(0,220,130,0.15)]"
+                                        ? "border-success bg-success/20 text-success shadow-[0_0_30px_rgba(0,220,130,0.3)]"
                                         : isLocked
-                                            ? "border-white/5 bg-white/5 text-white/5 opacity-40 cursor-not-allowed"
+                                            ? "border-white/5 bg-white/5 text-white/5 opacity-30 grayscale cursor-not-allowed"
                                             : "border-white/10 bg-white/5 hover:border-success/40 hover:bg-success/5"
                                 )}
                                 disabled={isLocked}
                             >
-                                <span className="text-sm font-black uppercase tracking-widest italic">Yes</span>
-                                <span className="text-[9px] font-black mt-0.5 opacity-50 tracking-widest">{prediction.yesMultiplier}x</span>
-                            </button>
+                                {selectedSide === 'YES' ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-black uppercase tracking-widest italic">LOCKED</span>
+                                        <Lock size={14} />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span className="text-sm font-black uppercase tracking-widest italic">Yes</span>
+                                        <span className="text-[9px] font-black mt-0.5 opacity-50 tracking-widest">{prediction.yesMultiplier}x</span>
+                                    </>
+                                )}
+                            </motion.button>
 
-                            <button
+                            <motion.button
                                 id={`no-btn-${prediction.id}`}
                                 onClick={() => handleOptionClick('NO')}
+                                whileTap={{ scale: 0.95 }}
+                                animate={selectedSide === 'NO' ? { scale: 1.05 } : { scale: 1 }}
                                 className={cn(
-                                    "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300 active:scale-95",
+                                    "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300",
                                     (selectedSide === 'NO' || pendingSide === 'NO')
-                                        ? "border-destructive bg-destructive/20 text-destructive shadow-[0_0_20px_rgba(255,42,109,0.15)]"
+                                        ? "border-destructive bg-destructive/20 text-destructive shadow-[0_0_30px_rgba(255,42,109,0.3)]"
                                         : isLocked
-                                            ? "border-white/5 bg-white/5 text-white/5 opacity-40 cursor-not-allowed"
+                                            ? "border-white/5 bg-white/5 text-white/5 opacity-30 grayscale cursor-not-allowed"
                                             : "border-white/10 bg-white/5 hover:border-destructive/40 hover:bg-destructive/5"
                                 )}
                                 disabled={isLocked}
                             >
-                                <span className="text-sm font-black uppercase tracking-widest italic">No</span>
-                                <span className="text-[9px] font-black mt-0.5 opacity-50 tracking-widest">{prediction.noMultiplier}x</span>
-                            </button>
+                                {selectedSide === 'NO' ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-black uppercase tracking-widest italic">LOCKED</span>
+                                        <Lock size={14} />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span className="text-sm font-black uppercase tracking-widest italic">No</span>
+                                        <span className="text-[9px] font-black mt-0.5 opacity-50 tracking-widest">{prediction.noMultiplier}x</span>
+                                    </>
+                                )}
+                            </motion.button>
                         </div>
                     </div>
                 </div>
