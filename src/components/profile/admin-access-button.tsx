@@ -13,6 +13,7 @@ export default function AdminAccessButton() {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (password === "123456") {
+            sessionStorage.setItem('admin_unlocked', 'true');
             router.push('/profile/admin');
         } else {
             setError(true);

@@ -10,6 +10,10 @@ export default function AdminPage() {
     const [predictions, setPredictions] = useState<any[]>([]);
 
     useEffect(() => {
+        if (!sessionStorage.getItem('admin_unlocked')) {
+            window.location.href = '/profile';
+            return;
+        }
         getPredictions().then(setPredictions);
     }, []);
 
