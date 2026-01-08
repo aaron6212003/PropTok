@@ -6,32 +6,42 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+    const [view, setView] = useState<'signin' | 'signup'>('signin');
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         const supabase = createClient();
-
-        // Dynamic URL based on where the user is (localhost or vercel)
         const redirectUrl = `${window.location.origin}/auth/callback`;
-        console.log("Redirecting to:", redirectUrl); // Debug log
 
-        const { error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                emailRedirectTo: redirectUrl,
-            },
-        });
+        let error;
 
-        if (error) {
-            setMessage(error.message);
+        if (view === 'signup') {
+            const { error: signUpError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: { emailRedirectTo: redirectUrl }
+            });
+            error = signUpError;
+            if (!error) setMessage("Check your email to confirm signup!");
         } else {
-            setMessage("Check your email for the magic link!");
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+            error = signInError;
+            if (!error) {
+                router.push('/');
+                router.refresh();
+            }
         }
+
+        if (error) setMessage(error.message);
         setLoading(false);
     };
 
@@ -53,11 +63,70 @@ export default function LoginPage() {
                     <p className="mt-2 text-zinc-400">Sign in to track your streak.</p>
                 </div>
 
+                <div className="flex rounded-lg bg-zinc-900 p-1">
+                    <button
+                        onClick={() => setView('signin')}
+                        className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${view === 'signin' ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}
+                    >
+                        Sign In
+                    </button>
+                    <button
+                        onClick={() => setView('signup')}
+                        className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${view === 'signup' ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}
+                    >
+                        Sign Up
+                    </button>
+                </div>
+
+                <form onSubmit={handleAuth} className="space-y-4">
+                    <input
+                        type="email"
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white placeholder-zinc-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                        required
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white placeholder-zinc-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                        required
+                        minLength={6}
+                    />
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-50"
+                    >
+                        {loading ? "Loading..." : (view === 'signin' ? "Sign In" : "Create Account")}
+                        <ArrowRight size={16} />
+                    </button>
+                </form>
+
+                {message && (
+                    <div className="rounded-lg bg-white/10 p-4 text-center text-sm text-yellow-400">
+                        {message}
+                    </div>
+                )}
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-white/10" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-black px-2 text-zinc-500">Or continue with</span>
+                    </div>
+                </div>
+
                 <div className="space-y-4">
                     <button
                         onClick={() => handleOAuth('google')}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-black transition-transform active:scale-95"
                     >
+                        {/* Google Icon SVG */}
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                             <path
                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -76,43 +145,9 @@ export default function LoginPage() {
                                 fill="#EA4335"
                             />
                         </svg>
-                        Continue with Google
+                        Google
                     </button>
                 </div>
-
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-white/10" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-black px-2 text-zinc-500">Or with Email</span>
-                    </div>
-                </div>
-
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <input
-                        type="email"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white placeholder-zinc-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-50"
-                    >
-                        {loading ? "Sending link..." : "Sign in to PropTok"}
-                        <ArrowRight size={16} />
-                    </button>
-                </form>
-
-                {message && (
-                    <div className="rounded-lg bg-green-500/10 p-4 text-center text-sm text-green-400">
-                        {message}
-                    </div>
-                )}
             </div>
         </main>
     );
