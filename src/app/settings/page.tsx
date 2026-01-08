@@ -142,7 +142,7 @@ export default function SettingsPage() {
                     </div>
                     {/* Admin Link */}
                     <Link
-                        href="/admin"
+                        href="/profile/admin"
                         className="mt-3 flex w-full items-center justify-between rounded-xl border border-brand/20 bg-brand/10 p-4 text-left transition-all hover:bg-brand/20"
                     >
                         <div>
