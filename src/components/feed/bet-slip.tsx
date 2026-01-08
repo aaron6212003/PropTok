@@ -2,15 +2,26 @@
 
 import { useBetSlip } from "@/lib/context/bet-slip-context";
 import { placeBundleWager, submitVote } from "@/app/actions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function BetSlip() {
+interface BetSlipProps {
+    bankroll: number;
+}
+
+export default function BetSlip({ bankroll }: BetSlipProps) {
     const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId } = useBetSlip();
-    const [wager, setWager] = useState(25);
+    const [wager, setWager] = useState(Math.min(25, bankroll));
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Context sync: Clamp wager if bankroll decreases (e.g. switching wallets)
+    useEffect(() => {
+        if (wager > bankroll) {
+            setWager(bankroll);
+        }
+    }, [bankroll, wager]);
 
     if (items.length === 0) return null;
 
@@ -150,8 +161,8 @@ export default function BetSlip() {
                                     </div>
                                     <input
                                         type="range"
-                                        min="1"
-                                        max="1000"
+                                        min="0"
+                                        max={bankroll || 1000}
                                         value={wager}
                                         onChange={(e) => setWager(Number(e.target.value))}
                                         className="h-4 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-brand"
@@ -161,8 +172,14 @@ export default function BetSlip() {
                                         {[10, 25, 50, 100].map(amt => (
                                             <button
                                                 key={amt}
+                                                disabled={amt > bankroll}
                                                 onClick={() => setWager(amt)}
-                                                className="flex-1 rounded-lg bg-zinc-900 py-2 text-xs font-bold hover:bg-zinc-800"
+                                                className={cn(
+                                                    "flex-1 rounded-lg py-2 text-xs font-bold transition-all",
+                                                    amt > bankroll
+                                                        ? "bg-zinc-900/50 text-zinc-700 cursor-not-allowed"
+                                                        : "bg-zinc-900 text-white hover:bg-zinc-800 active:scale-95"
+                                                )}
                                             >
                                                 ${amt}
                                             </button>
@@ -177,10 +194,10 @@ export default function BetSlip() {
 
                                 <button
                                     onClick={handlePlaceBet}
-                                    disabled={isSubmitting}
-                                    className="w-full rounded-2xl bg-brand py-4 text-xl font-black uppercase tracking-widest text-black shadow-lg shadow-brand/20 transition-transform active:scale-95 disabled:opacity-50"
+                                    disabled={isSubmitting || bankroll <= 0 || wager <= 0}
+                                    className="w-full rounded-2xl bg-brand py-4 text-xl font-black uppercase tracking-widest text-black shadow-lg shadow-brand/20 transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale"
                                 >
-                                    {isSubmitting ? "Placing..." : `To Win $${payout}`}
+                                    {isSubmitting ? "Placing..." : bankroll <= 0 ? "Insufficient Funds" : wager <= 0 ? "Set Wager" : `To Win $${payout}`}
                                 </button>
                             </div>
                         </motion.div>
