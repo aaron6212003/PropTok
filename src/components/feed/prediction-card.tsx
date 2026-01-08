@@ -56,10 +56,12 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
         <>
             <div className="relative h-full w-full snap-start overflow-hidden bg-black">
                 {/* Dynamic Background Gradient */}
-                <div className={cn(
-                    "absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] to-black opacity-40",
-                    CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default']
-                )} />
+                <div
+                    className="absolute inset-0 opacity-40 transition-colors duration-700"
+                    style={{
+                        background: `radial-gradient(circle at center, ${CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default']} 0%, #000000 100%)`
+                    }}
+                />
 
                 {/* Content Layer */}
                 <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-24 font-sans text-white h-full justify-center">

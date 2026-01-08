@@ -1,26 +1,26 @@
 export const CATEGORY_COLORS: Record<string, string> = {
-    'Sports': 'from-blue-600',
-    'NFL': 'from-blue-600',
-    'NBA': 'from-orange-600',
-    'MLB': 'from-red-600',
-    'NHL': 'from-cyan-600',
-    'UFC': 'from-red-700',
-    'Tennis': 'from-yellow-500',
-    'Golf': 'from-green-600',
-    'Soccer': 'from-emerald-500',
+    'Sports': '#2563eb', // blue-600
+    'NFL': '#2563eb',
+    'NBA': '#ea580c', // orange-600
+    'MLB': '#dc2626', // red-600
+    'NHL': '#0891b2', // cyan-600
+    'UFC': '#b91c1c', // red-700
+    'Tennis': '#eab308', // yellow-500
+    'Golf': '#16a34a', // green-600
+    'Soccer': '#10b981', // emerald-500
 
-    'Crypto': 'from-orange-500',
-    'Bitcoin': 'from-orange-500',
-    'Ethereum': 'from-purple-500',
-    'Solana': 'from-teal-400',
+    'Crypto': '#f97316', // orange-500
+    'Bitcoin': '#f97316',
+    'Ethereum': '#a855f7', // purple-500
+    'Solana': '#2dd4bf', // teal-400
 
-    'Pop Culture': 'from-pink-600',
-    'Politics': 'from-red-600',
-    'Tech': 'from-indigo-600',
-    'Weather': 'from-teal-600',
-    'Celebs': 'from-purple-600',
+    'Pop Culture': '#db2777', // pink-600
+    'Politics': '#dc2626', // red-600
+    'Tech': '#4f46e5', // indigo-600
+    'Weather': '#0d9488', // teal-600
+    'Celebs': '#9333ea', // purple-600
 
-    'Default': 'from-indigo-500', // Brighter fallback
+    'Default': '#6366f1', // indigo-500
 };
 
 export const CATEGORY_TEXT_COLORS: Record<string, string> = {
