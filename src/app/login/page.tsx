@@ -16,10 +16,14 @@ export default function LoginPage() {
         setLoading(true);
         const supabase = createClient();
 
+        // Dynamic URL based on where the user is (localhost or vercel)
+        const redirectUrl = `${window.location.origin}/auth/callback`;
+        console.log("Redirecting to:", redirectUrl); // Debug log
+
         const { error } = await supabase.auth.signInWithOtp({
             email,
             options: {
-                emailRedirectTo: `${location.origin}/auth/callback`,
+                emailRedirectTo: redirectUrl,
             },
         });
 
