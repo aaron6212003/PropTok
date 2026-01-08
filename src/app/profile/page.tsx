@@ -4,8 +4,10 @@ import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getUserVotes } from '@/app/actions';
+import { getUserVotes, getUserBundles } from '@/app/actions';
 import AdminAccessButton from '@/components/profile/admin-access-button';
+import BetCard from '@/components/profile/bet-card';
+import ResolutionRecap from '@/components/social/resolution-recap';
 
 function StatCard({
     label,
@@ -30,32 +32,62 @@ function StatCard({
 }
 
 export default async function ProfilePage() {
-    const supabase = await createClient(); // Wait for the promise
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
         redirect('/login');
     }
 
-    // Fetch public profile
-    const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    // Fetch data in parallel
+    const [profileRes, votes, bundles] = await Promise.all([
+        supabase.from('users').select('*').eq('id', user.id).single(),
+        getUserVotes(50),
+        getUserBundles(50)
+    ]);
 
-    // Fetch betting history
-    const votes = await getUserVotes();
+    const profile = profileRes.data;
+
+    // Fetch UNSEEN results for the recap
+    const unseenVotes = await getUserVotes(50, true);
+    const unseenBundles = await getUserBundles(50, true);
+
+    const resolvedUnseen = [
+        ...unseenVotes.filter(v => v.predictions?.resolved).map(v => ({
+            id: v.id,
+            wager: v.wager,
+            multiplier: v.payout_multiplier,
+            question: v.predictions.question,
+            won: v.side === v.predictions.outcome,
+            isBundle: false
+        })),
+        ...unseenBundles.filter(b => b.status !== 'PENDING').map(b => ({
+            id: b.id,
+            wager: b.wager,
+            multiplier: b.total_multiplier,
+            question: `${b.legs?.length}-Leg Parlay`,
+            won: b.status === 'WON',
+            isBundle: true
+        }))
+    ].sort((a, b) => b.wager - a.wager); // Show biggest bets first in recap
+
+    // Combine and sort history
+    const history = [
+        ...votes.map(v => ({ ...v, isBundle: false })),
+        ...bundles.map(b => ({ ...b, isBundle: true }))
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-24 text-white">
+            <ResolutionRecap results={resolvedUnseen} />
+
             {/* Header */}
             <div className="flex items-center justify-between p-6">
                 <h1 className="text-xl font-bold uppercase tracking-widest">My Account</h1>
                 <div className="flex gap-2">
                     <form action={async () => {
                         'use server';
-                        const sb = await createClient(); // Wait for the promise
+                        const sb = await createClient();
                         await sb.auth.signOut();
                         redirect('/login');
                     }}>
@@ -107,8 +139,8 @@ export default async function ProfilePage() {
                         </div>
                         <div className="h-8 w-px bg-white/10" />
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Return</span>
-                            <span className="text-sm font-bold text-brand">+--%</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Total Bets</span>
+                            <span className="text-sm font-bold text-brand">{profile?.total_bets || 0}</span>
                         </div>
                     </div>
                 </div>
@@ -128,60 +160,15 @@ export default async function ProfilePage() {
             <div className="mt-10 px-6">
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Active & Past Bets</h3>
-                    <span className="text-[10px] font-bold text-zinc-600">{votes.length} Total</span>
+                    <span className="text-[10px] font-bold text-zinc-600">{history.length} Recent</span>
                 </div>
 
                 <div className="space-y-3">
-                    {votes.map((vote: any) => {
-                        const isResolved = vote.predictions?.resolved;
-                        const isWin = isResolved && vote.side === vote.predictions?.outcome;
-                        const isLoss = isResolved && !isWin;
+                    {history.map((bet: any) => (
+                        <BetCard key={bet.id} bet={bet} />
+                    ))}
 
-                        return (
-                            <div key={vote.id} className="group relative flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/50 p-4 transition-all hover:bg-zinc-900">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                        {new Date(vote.created_at).toLocaleDateString()}
-                                    </span>
-                                    {isResolved ? (
-                                        isWin ? (
-                                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-success">
-                                                <CheckCircle2 size={12} /> WON
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-destructive">
-                                                <XCircle size={12} /> LOST
-                                            </div>
-                                        )
-                                    ) : (
-                                        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-brand">
-                                            <Clock size={12} /> PENDING
-                                        </div>
-                                    )}
-                                </div>
-                                <h4 className="line-clamp-2 text-sm font-bold leading-snug">
-                                    {vote.predictions?.question}
-                                </h4>
-                                <div className="flex items-center justify-between rounded-xl bg-black/40 p-3">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wager</span>
-                                        <span className="text-sm font-bold">${vote.wager} on {vote.side}</span>
-                                    </div>
-                                    <div className="flex flex-col text-right">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Payout</span>
-                                        <span className={cn(
-                                            "text-sm font-black",
-                                            isWin ? "text-success" : isLoss ? "text-zinc-500 line-through" : "text-white"
-                                        )}>
-                                            ${(vote.wager * vote.payout_multiplier).toFixed(0)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {votes.length === 0 && (
+                    {history.length === 0 && (
                         <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
                             <p className="text-sm font-medium text-zinc-500">No bets placed yet.</p>
                             <Link href="/" className="mt-4 inline-block text-xs font-black uppercase tracking-widest text-brand">Start Playing →</Link>

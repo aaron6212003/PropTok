@@ -247,13 +247,13 @@ export async function getLeaderboard() {
     return data;
 }
 
-export async function getUserVotes() {
+export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boolean = false) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return [];
 
-    const { data, error } = await supabase
+    let query = supabase
         .from("votes")
         .select(`
             *,
@@ -261,6 +261,16 @@ export async function getUserVotes() {
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+    if (onlyUnacknowledged) {
+        query = query.eq("acknowledged", false);
+    }
+
+    if (limit > 0) {
+        query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error("Error fetching user votes:", error);
@@ -270,13 +280,13 @@ export async function getUserVotes() {
     return data;
 }
 
-export async function getUserBundles() {
+export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boolean = false) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return [];
 
-    const { data, error } = await supabase
+    let query = supabase
         .from("bundles")
         .select(`
             *,
@@ -284,12 +294,24 @@ export async function getUserBundles() {
                 *,
                 prediction:predictions (
                     question,
-                    category
+                    category,
+                    resolved,
+                    outcome
                 )
             )
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+    if (onlyUnacknowledged) {
+        query = query.eq("acknowledged", false);
+    }
+
+    if (limit > 0) {
+        query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error("Error fetching bundles:", error);
@@ -297,6 +319,34 @@ export async function getUserBundles() {
     }
 
     return data;
+}
+
+export async function acknowledgeResults() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Not authenticated" };
+
+    // Batch acknowledge both votes and bundles
+    const [votesRes, bundlesRes] = await Promise.all([
+        supabase
+            .from("votes")
+            .update({ acknowledged: true })
+            .eq("user_id", user.id)
+            .eq("acknowledged", false),
+        supabase
+            .from("bundles")
+            .update({ acknowledged: true })
+            .eq("user_id", user.id)
+            .eq("acknowledged", false)
+    ]);
+
+    if (votesRes.error || bundlesRes.error) {
+        return { error: "Failed to acknowledge results" };
+    }
+
+    revalidatePath("/profile");
+    return { success: true };
 }
 
 export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', multiplier: number }[], wager: number) {
