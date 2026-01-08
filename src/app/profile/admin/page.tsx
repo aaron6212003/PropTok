@@ -26,7 +26,13 @@ export default function AdminPage() {
     return (
         <main className="min-h-screen bg-black p-6 text-white pb-32">
             <header className="mb-8 flex items-center justify-between border-b border-white/10 pb-6">
-                <h1 className="text-3xl font-black italic tracking-tighter text-brand">ADMIN<span className="text-white">ORACLE</span></h1>
+                <div className="flex items-center gap-4">
+                    <a href="/" className="rounded-full bg-white/5 p-2 transition-colors hover:bg-white/10">
+                        <span className="sr-only">Back</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                    </a>
+                    <h1 className="text-3xl font-black italic tracking-tighter text-brand">ADMIN<span className="text-white">ORACLE</span></h1>
+                </div>
 
                 <button
                     onClick={handleClear}
@@ -115,31 +121,6 @@ export default function AdminPage() {
                                 />
                             </div>
 
-                            {/* Oracle Config (Collapsed/Secondary) */}
-                            <details className="group rounded-xl border border-white/5 bg-white/5">
-                                <summary className="cursor-pointer p-4 text-xs font-bold uppercase tracking-widest text-zinc-500 group-open:text-brand">
-                                    Advanced: Auto-Resolution
-                                </summary>
-                                <div className="grid grid-cols-2 gap-4 p-4 pt-0">
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-zinc-500">Asset ID / Slug</label>
-                                        <input name="oracle_id" className="w-full rounded-lg bg-black px-3 py-2 text-xs text-white border border-white/10" placeholder="bitcoin" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-zinc-500">Oracle Type</label>
-                                        <select name="oracle_type" className="w-full rounded-lg bg-black px-3 py-2 text-xs text-white border border-white/10">
-                                            <option value="">Manual Resolution</option>
-                                            <option value="crypto_price_gt">Price &gt; Target</option>
-                                            <option value="sports_winner">Game Winner</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-zinc-500">Target Value</label>
-                                        <input name="target_value" type="number" step="any" className="w-full rounded-lg bg-black px-3 py-2 text-xs text-white border border-white/10" placeholder="100000" />
-                                    </div>
-                                </div>
-                            </details>
-
                             <button
                                 disabled={isPending}
                                 type="submit"
@@ -153,11 +134,11 @@ export default function AdminPage() {
 
                 {/* MANAGE SECTION */}
                 <section className="space-y-6">
-                    <div className="mb-6 flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white">
-                            <Clock size={20} />
+                    <div className="mb-6 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-bold">Live Markets</h2>
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-xs font-bold text-black border-2 border-white">{predictions.length}</span>
                         </div>
-                        <h2 className="text-xl font-bold">Live Markets</h2>
                     </div>
 
                     <div className="space-y-4">
@@ -185,27 +166,27 @@ export default function AdminPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             onClick={() => startTransition(async () => {
-                                                if (confirm(`Resolve "${p.question}" as YES?`)) {
+                                                if (confirm(`Resolve "${p.question}" as YES? (This will payout all YES voters)`)) {
                                                     await resolvePrediction(p.id, 'YES');
                                                     getPredictions().then(setPredictions);
                                                 }
                                             })}
-                                            className="group flex items-center justify-center gap-2 rounded-xl bg-success/10 py-3 text-xs font-black uppercase tracking-widest text-success transition-all hover:bg-success/20"
+                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-success/20 py-4 text-xs font-black uppercase tracking-widest text-success hover:bg-success/30"
                                         >
-                                            <CheckCircle size={14} />
-                                            Resolve Yes
+                                            <CheckCircle size={18} />
+                                            <span>Winner: YES</span>
                                         </button>
                                         <button
                                             onClick={() => startTransition(async () => {
-                                                if (confirm(`Resolve "${p.question}" as NO?`)) {
+                                                if (confirm(`Resolve "${p.question}" as NO? (This will payout all NO voters)`)) {
                                                     await resolvePrediction(p.id, 'NO');
                                                     getPredictions().then(setPredictions);
                                                 }
                                             })}
-                                            className="group flex items-center justify-center gap-2 rounded-xl bg-destructive/10 py-3 text-xs font-black uppercase tracking-widest text-destructive transition-all hover:bg-destructive/20"
+                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-destructive/20 py-4 text-xs font-black uppercase tracking-widest text-destructive hover:bg-destructive/30"
                                         >
-                                            <XCircle size={14} />
-                                            Resolve No
+                                            <XCircle size={18} />
+                                            <span>Winner: NO</span>
                                         </button>
                                     </div>
                                 )}
