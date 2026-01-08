@@ -157,15 +157,14 @@ export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
     if (!user) throw new Error("User not authenticated");
 
     // Use Service Role to ensure we can update ALL users' bankrolls (payouts)
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        return { error: "Missing Service Role Key" };
-    }
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
 
-    const { createClient: createServiceClient } = require('@supabase/supabase-js');
-    const adminClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    if (!adminClient) {
+        // Debugging: What keys ARE available?
+        const availableKeys = Object.keys(process.env).filter(k => k.includes("SUPABASE") || k.includes("KEY"));
+        return { error: `Server Error: Missing Service Role Key. Available Env Vars: ${availableKeys.join(", ")}` };
+    }
 
     const { error } = await adminClient.rpc('resolve_prediction', {
         p_id: id,
@@ -294,16 +293,13 @@ export async function clearDatabase() {
     if (!user) throw new Error("User not authenticated");
 
     // Create Service Role Client to bypass RLS
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
-        return { error: "Server Error: Missing Service Role Key in Vercel. Please add it to Environment Variables." };
-    }
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
 
-    const { createClient: createServiceClient } = require('@supabase/supabase-js');
-    const adminClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    if (!adminClient) {
+        const availableKeys = Object.keys(process.env).filter(k => k.includes("SUPABASE") || k.includes("KEY"));
+        return { error: `Server Error: Missing Service Role Key. Available Env Vars: ${availableKeys.join(", ")}` };
+    }
 
     // Clear all Predictions (Cascades to Votes, Bundles)
     const { error } = await adminClient.from("predictions").delete().neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
