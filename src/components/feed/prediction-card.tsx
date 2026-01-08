@@ -168,7 +168,7 @@ export default function PredictionCard({ prediction, isActive }: PredictionCardP
                 onClose={() => setShowWagerDrawer(false)}
                 onConfirm={handleConfirmWager}
                 side={pendingSide || 'YES'}
-                // In a real app we'd fetch balance here or pass from layout
+                multiplier={pendingSide === 'YES' ? prediction.yesMultiplier : prediction.noMultiplier}
                 currentBankroll={1000}
             />
         </>

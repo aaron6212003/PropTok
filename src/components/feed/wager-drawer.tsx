@@ -15,15 +15,14 @@ interface WagerDrawerProps {
     onClose: () => void;
     onConfirm: (amount: number) => void;
     side: "YES" | "NO";
+    multiplier: number; // Dynamic multiplier from market odds
     currentBankroll?: number; // Optional passed in, or fetched
 }
 
-export function WagerDrawer({ isOpen, onClose, onConfirm, side, currentBankroll = 1000 }: WagerDrawerProps) {
+export function WagerDrawer({ isOpen, onClose, onConfirm, side, multiplier, currentBankroll = 1000 }: WagerDrawerProps) {
     const [wager, setWager] = useState(25); // Default to 25
 
-    // Quick calc for "Implied Multiplier" visual (This is just visual, real calc is on server)
-    // Assuming 50/50 split for demo
-    const multiplier = 1.9;
+    // Calculate potential payout using the dynamic multiplier
     const potentialPayout = (wager * multiplier).toFixed(0);
 
     return (
