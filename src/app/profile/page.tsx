@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getUserVotes } from '@/app/actions';
+import AdminAccessButton from '@/components/profile/admin-access-button';
 
 function StatCard({
     label,
@@ -117,6 +118,10 @@ export default async function ProfilePage() {
             <div className="mt-6 grid grid-cols-2 gap-4 px-6 md:grid-cols-4">
                 <StatCard label="Win Rate" value={`${profile?.win_rate || 0}%`} icon={TrendingUp} colorClass="text-brand" />
                 <StatCard label="Streak" value={profile?.streak || 0} icon={Flame} colorClass="text-destructive" />
+            </div>
+
+            <div className="px-6">
+                <AdminAccessButton />
             </div>
 
             {/* Betting History */}

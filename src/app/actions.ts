@@ -117,8 +117,13 @@ export async function createPrediction(formData: FormData) {
     const target_value = formData.get("target_value") ? Number(formData.get("target_value")) : null;
     const target_slug = formData.get("target_slug") as string | null;
 
-    // Default to 24h from now for simplicity
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    // Expiration
+    let expiresAt = formData.get("expires_at") as string;
+    if (!expiresAt) {
+        expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    } else {
+        expiresAt = new Date(expiresAt).toISOString();
+    }
 
     const { error } = await supabase.from("predictions").insert({
         question,
@@ -129,6 +134,10 @@ export async function createPrediction(formData: FormData) {
         target_value,
         target_slug,
         expires_at: expiresAt,
+        yes_percent: 50, // Default start
+        volume: 0,
+        yes_multiplier: 1.9,
+        no_multiplier: 1.9
     });
 
     if (error) {
@@ -258,8 +267,26 @@ export async function adminHardReset() {
         best_streak: 0
     }).eq("id", user.id);
 
-    revalidatePath("/profile");
     revalidatePath("/leaderboard");
     revalidatePath("/");
+    return { success: true };
+}
+
+export async function clearDatabase() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    // Clear all Predictions (Cascades to Votes, Bundles)
+    const { error } = await supabase.from("predictions").delete().neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+
+    if (error) {
+        console.error("Clear DB Error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/admin");
     return { success: true };
 }

@@ -140,24 +140,53 @@ export default function SettingsPage() {
                             <X size={18} className="text-destructive" />
                         </button>
                     </div>
+                    {/* Admin Link */}
+                    <Link
+                        href="/admin"
+                        className="mt-3 flex w-full items-center justify-between rounded-xl border border-brand/20 bg-brand/10 p-4 text-left transition-all hover:bg-brand/20"
+                    >
+                        <div>
+                            <p className="font-bold text-brand">Open Admin Oracle</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-widest">Create props & resolve markets</p>
+                        </div>
+                        <HelpCircle size={18} className="text-brand" />
+                    </Link>
                 </div>
+            </div>
 
-                {/* Account Info */}
-                <div className="mt-8 rounded-xl border border-white/5 bg-white/5 p-4">
-                    <p className="text-sm text-zinc-500">Logged in as</p>
-                    <p className="font-medium">{user.email}</p>
-                </div>
+            {/* Account Info */}
+            <div className="mt-8 rounded-xl border border-white/5 bg-white/5 p-4">
+                <p className="text-sm text-zinc-500">Logged in as</p>
+                <p className="font-medium">{user.email}</p>
+            </div>
 
-                {/* Danger Zone */}
-                <div className="mt-8">
-                    <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-destructive">
-                        Danger Zone
-                    </h2>
-                    <button className="w-full  rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-destructive transition-colors hover:bg-destructive/20">
-                        Delete Account
+            {/* Danger Zone */}
+            <div className="mt-8">
+                <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-destructive">
+                    Danger Zone
+                </h2>
+                <div className="space-y-3">
+                    <button
+                        onClick={async () => {
+                            if (confirm("ADMIN ONLY: This will wipe the ENTIRE database (all props for everyone). Are you sure?")) {
+                                const { clearDatabase } = await import('@/app/actions');
+                                await clearDatabase();
+                                alert("Database wiped!");
+                                window.location.reload();
+                            }
+                        }}
+                        className="w-full rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-left transition-colors hover:bg-destructive/20"
+                    >
+                        <p className="font-bold text-destructive">Wipe Global Database</p>
+                        <p className="text-xs text-destructive/60 uppercase tracking-widest">Delete all props & votes (Admin)</p>
+                    </button>
+
+                    <button className="w-full rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center text-destructive transition-colors hover:bg-destructive/20 opacity-50 cursor-not-allowed">
+                        Delete Account (Coming Soon)
                     </button>
                 </div>
             </div>
-        </main>
+        </div>
+        </main >
     );
 }
