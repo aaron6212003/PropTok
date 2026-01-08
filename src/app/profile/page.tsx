@@ -58,9 +58,9 @@ export default async function ProfilePage() {
                             <LogOut size={20} />
                         </button>
                     </form>
-                    <button className="rounded-full bg-white/5 p-2 text-zinc-400 backdrop-blur-md transition-colors hover:text-white">
+                    <Link href="/settings" className="rounded-full bg-white/5 p-2 text-zinc-400 backdrop-blur-md transition-colors hover:text-white">
                         <Settings size={20} />
-                    </button>
+                    </Link>
                 </div>
             </div>
 
