@@ -83,7 +83,7 @@ export default function PredictionFeed({ initialPredictions, bankroll }: Predict
                                 id: prediction.id,
                                 question: prediction.question,
                                 category: prediction.category,
-                                volume: prediction.volume || 1200,
+                                volume: prediction.volume || 0,
                                 yesPercent: prediction.yes_percent || 50,
                                 yesMultiplier,
                                 noMultiplier,
