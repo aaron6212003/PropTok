@@ -4,10 +4,9 @@ import { Prediction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Clock, TrendingUp, Users, MessageSquare, Share2, Lock } from 'lucide-react';
 import CommentsDrawer from '@/components/social/comments-drawer';
-import { WagerDrawer } from '@/components/feed/wager-drawer'; // Import
-import { submitVote } from '@/app/actions'; // Import server action
 import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
 import { CountdownTimer } from './countdown-timer';
+import { useBetSlip } from '@/lib/context/bet-slip-context';
 
 interface PredictionCardProps {
     prediction: Prediction;
@@ -16,41 +15,23 @@ interface PredictionCardProps {
 }
 
 export default function PredictionCard({ prediction, isActive, bankroll }: PredictionCardProps) {
-    const [selectedSide, setSelectedSide] = useState<'YES' | 'NO' | null>(null);
     const [showComments, setShowComments] = useState(false);
 
-    // Wager State
-    const [showWagerDrawer, setShowWagerDrawer] = useState(false);
-    const [pendingSide, setPendingSide] = useState<'YES' | 'NO' | null>(null);
+    // Bet Slip Integration
+    const { items, toggleInSlip } = useBetSlip();
 
-    const isLocked = selectedSide !== null;
+    // Check if this card is in the slip
+    const slipItem = items.find(i => i.predictionId === prediction.id);
+    const selectedSide = slipItem?.side || null;
 
     const handleOptionClick = (side: 'YES' | 'NO') => {
-        if (isLocked) return;
-        setPendingSide(side);
-        setShowWagerDrawer(true);
-    };
-
-    const handleConfirmWager = async (amount: number) => {
-        if (!pendingSide) return;
-
-        // Optimistic UI
-        setSelectedSide(pendingSide);
-        setShowWagerDrawer(false);
-
-        try {
-            const result = await submitVote(prediction.id, pendingSide, amount);
-            if (result.error) {
-                alert(result.error); // Simple feedback for MVP
-                setSelectedSide(null); // Revert
-            } else {
-                // Success! Bankroll updated via server revalidation or we can update local state context
-                console.log("Bet placed!");
-            }
-        } catch (e) {
-            console.error(e);
-            setSelectedSide(null);
-        }
+        toggleInSlip({
+            predictionId: prediction.id,
+            question: prediction.question,
+            side,
+            multiplier: side === 'YES' ? prediction.yesMultiplier : prediction.noMultiplier,
+            category: prediction.category
+        });
     };
 
     const yesVotes = Math.floor(prediction.volume * (prediction.yesPercent / 100));
@@ -81,8 +62,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </span>
                         </div>
                     </div>
-
-                    {/* Header Stats Removed - Moved to Bottom */}
 
                     {/* Main Content Area - Centered */}
                     <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto">
@@ -150,56 +129,36 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 id={`yes-btn-${prediction.id}`}
                                 onClick={() => handleOptionClick('YES')}
                                 whileTap={{ scale: 0.95 }}
-                                animate={selectedSide === 'YES' ? { scale: 1.05 } : { scale: 1 }}
+                                animate={selectedSide === 'YES' ? { scale: 1.02, borderColor: "rgba(0,220,130,0.8)" } : { scale: 1 }}
                                 className={cn(
                                     "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300",
-                                    (selectedSide === 'YES' || pendingSide === 'YES')
-                                        ? "border-success bg-success/20 text-success shadow-[0_0_30px_rgba(0,220,130,0.3)]"
-                                        : isLocked
-                                            ? "border-white/5 bg-white/5 text-white/5 opacity-30 grayscale cursor-not-allowed"
-                                            : "border-white/10 bg-white/5 hover:border-success/40 hover:bg-success/5"
+                                    selectedSide === 'YES'
+                                        ? "border-success bg-success text-black shadow-[0_0_30px_rgba(0,220,130,0.3)]"
+                                        : "border-white/10 bg-white/5 hover:border-success/40 hover:bg-success/5"
                                 )}
-                                disabled={isLocked}
                             >
-                                {selectedSide === 'YES' ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-black uppercase tracking-widest italic">LOCKED</span>
-                                        <Lock size={14} />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <span className="text-sm font-black uppercase tracking-widest italic">Yes</span>
-                                        <span className="text-[9px] font-black mt-0.5 opacity-50 tracking-widest">{prediction.yesMultiplier}x</span>
-                                    </>
-                                )}
+                                <span className="text-sm font-black uppercase tracking-widest italic">Yes</span>
+                                <span className={cn("text-[9px] font-black mt-0.5 tracking-widest", selectedSide === 'YES' ? "text-black/60" : "text-white/50")}>
+                                    {prediction.yesMultiplier}x
+                                </span>
                             </motion.button>
 
                             <motion.button
                                 id={`no-btn-${prediction.id}`}
                                 onClick={() => handleOptionClick('NO')}
                                 whileTap={{ scale: 0.95 }}
-                                animate={selectedSide === 'NO' ? { scale: 1.05 } : { scale: 1 }}
+                                animate={selectedSide === 'NO' ? { scale: 1.02, borderColor: "rgba(255,42,109,0.8)" } : { scale: 1 }}
                                 className={cn(
                                     "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300",
-                                    (selectedSide === 'NO' || pendingSide === 'NO')
-                                        ? "border-destructive bg-destructive/20 text-destructive shadow-[0_0_30px_rgba(255,42,109,0.3)]"
-                                        : isLocked
-                                            ? "border-white/5 bg-white/5 text-white/5 opacity-30 grayscale cursor-not-allowed"
-                                            : "border-white/10 bg-white/5 hover:border-destructive/40 hover:bg-destructive/5"
+                                    selectedSide === 'NO'
+                                        ? "border-destructive bg-destructive text-white shadow-[0_0_30px_rgba(255,42,109,0.3)]"
+                                        : "border-white/10 bg-white/5 hover:border-destructive/40 hover:bg-destructive/5"
                                 )}
-                                disabled={isLocked}
                             >
-                                {selectedSide === 'NO' ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-black uppercase tracking-widest italic">LOCKED</span>
-                                        <Lock size={14} />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <span className="text-sm font-black uppercase tracking-widest italic">No</span>
-                                        <span className="text-[9px] font-black mt-0.5 opacity-50 tracking-widest">{prediction.noMultiplier}x</span>
-                                    </>
-                                )}
+                                <span className="text-sm font-black uppercase tracking-widest italic">No</span>
+                                <span className={cn("text-[9px] font-black mt-0.5 tracking-widest", selectedSide === 'NO' ? "text-white/80" : "text-white/50")}>
+                                    {prediction.noMultiplier}x
+                                </span>
                             </motion.button>
                         </div>
                     </div>
@@ -207,15 +166,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
             </div>
 
             <CommentsDrawer isOpen={showComments} onClose={() => setShowComments(false)} />
-
-            <WagerDrawer
-                isOpen={showWagerDrawer}
-                onClose={() => setShowWagerDrawer(false)}
-                onConfirm={handleConfirmWager}
-                side={pendingSide || 'YES'}
-                multiplier={pendingSide === 'YES' ? prediction.yesMultiplier : prediction.noMultiplier}
-                currentBankroll={bankroll}
-            />
         </>
     );
 }

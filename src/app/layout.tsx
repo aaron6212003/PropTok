@@ -15,6 +15,8 @@ export const viewport: Viewport = {
   userScalable: false, // Prevent zooming for app-like feel
 };
 
+import { BetSlipProvider } from "@/lib/context/bet-slip-context";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,9 +25,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-black text-white antialiased selection:bg-brand selection:text-white">
-        <MobileContainer>
-          {children}
-        </MobileContainer>
+        <BetSlipProvider>
+          <MobileContainer>
+            {children}
+          </MobileContainer>
+        </BetSlipProvider>
       </body>
     </html>
   );

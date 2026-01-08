@@ -4,6 +4,7 @@ import PredictionFeed from "@/components/feed/prediction-feed";
 import { getPredictions } from "./actions";
 import { createClient } from "@/lib/supabase/server";
 import { Coins } from "lucide-react";
+import BetSlip from "@/components/feed/bet-slip";
 
 export default async function Home() {
   const predictions = await getPredictions();
@@ -38,6 +39,8 @@ export default async function Home() {
         initialPredictions={predictions}
         bankroll={profile?.bankroll || 0}
       />
+
+      <BetSlip />
 
       <div className="fixed bottom-0 left-0 right-0 z-50">
         <BottomNavBar />
