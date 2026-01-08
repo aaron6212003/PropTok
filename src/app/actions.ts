@@ -125,6 +125,15 @@ export async function createPrediction(formData: FormData) {
         expiresAt = new Date(expiresAt).toISOString();
     }
 
+    // Initial Odds
+    const initialPercent = Number(formData.get("initial_percent") || 50);
+    const safePercent = Math.max(1, Math.min(99, initialPercent)); // Clamp 1-99
+
+    // Calculate Multipliers based on User Input
+    const prob = safePercent / 100;
+    const yesMultiplier = Number((0.95 / prob).toFixed(2));
+    const noMultiplier = Number((0.95 / (1 - prob)).toFixed(2));
+
     const { error } = await supabase.from("predictions").insert({
         question,
         category,
@@ -134,10 +143,10 @@ export async function createPrediction(formData: FormData) {
         target_value,
         target_slug,
         expires_at: expiresAt,
-        yes_percent: 50, // Default start
+        yes_percent: safePercent, // Use the user-defined percent
         volume: 0,
-        yes_multiplier: 1.9,
-        no_multiplier: 1.9
+        yes_multiplier: yesMultiplier,
+        no_multiplier: noMultiplier
     });
 
     if (error) {
@@ -207,6 +216,35 @@ export async function getUserVotes() {
 
     if (error) {
         console.error("Error fetching user votes:", error);
+        return [];
+    }
+
+    return data;
+}
+
+export async function getUserBundles() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from("bundles")
+        .select(`
+            *,
+            legs:bundle_legs (
+                *,
+                prediction:predictions (
+                    question,
+                    category
+                )
+            )
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching bundles:", error);
         return [];
     }
 

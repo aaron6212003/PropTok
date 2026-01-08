@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import BottomNavBar from '@/components/layout/bottom-nav';
-import { getPredictions } from '../actions';
+import { getUserBundles, getPredictions } from '../actions';
 import { cn } from '@/lib/utils';
-import { Plus, X, ArrowRight, Zap } from 'lucide-react';
+import { Plus, X, ArrowRight, Zap, Ticket } from 'lucide-react';
 
 interface SelectedLeg {
     id: string;
@@ -14,14 +14,18 @@ interface SelectedLeg {
 }
 
 export default function CreateBundlePage() {
+    const [activeTab, setActiveTab] = useState<'MARKET' | 'MY_BETS'>('MARKET');
     const [predictions, setPredictions] = useState<any[]>([]);
+    const [myBundles, setMyBundles] = useState<any[]>([]);
     const [selectedLegs, setSelectedLegs] = useState<SelectedLeg[]>([]);
 
     useEffect(() => {
         getPredictions().then(setPredictions);
+        getUserBundles().then(setMyBundles);
     }, []);
 
     const toggleSelection = (prediction: any, side: 'YES' | 'NO') => {
+        // ... (existing logic)
         const existing = selectedLegs.find(l => l.id === prediction.id);
 
         if (existing) {
@@ -61,7 +65,10 @@ export default function CreateBundlePage() {
 
         if (res.success) {
             alert("Bundle Created Successfully!");
-            window.location.href = "/profile";
+            // Refresh bundles and clear selection
+            getUserBundles().then(setMyBundles);
+            setSelectedLegs([]);
+            setActiveTab('MY_BETS');
         } else {
             alert(res.error || "Failed to create bundle");
         }
@@ -70,69 +77,136 @@ export default function CreateBundlePage() {
 
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-32 text-white">
-            <div className="p-6">
-                <h1 className="text-3xl font-black tracking-tight uppercase italic">Custom Bundle</h1>
-                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">Combine winners to skyrocket your payout</p>
+            <div className="p-6 pb-0">
+                <h1 className="text-3xl font-black tracking-tight uppercase italic mb-6">Bundles</h1>
 
-                {/* Multiplier Badge */}
-                <div className="mt-8 flex items-center justify-between rounded-[32px] border border-brand/20 bg-brand/5 p-8 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-brand/10 blur-3xl" />
-                    <div className="flex flex-col relative z-10">
-                        <div className="flex items-center gap-2 text-brand">
-                            <Zap className="fill-brand animate-pulse" size={14} />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Combined Payout</span>
-                        </div>
-                        <span className="text-xs font-bold text-zinc-500 mt-1">{selectedLegs.length} Leg Parlay</span>
-                    </div>
-                    <span className="text-6xl font-black tracking-tighter text-white relative z-10">{selectedLegs.length > 0 ? totalMultiplier : "1.00"}x</span>
+                {/* Tabs */}
+                <div className="flex p-1 mb-8 gap-1 bg-zinc-900/50 rounded-xl border border-white/5">
+                    <button
+                        onClick={() => setActiveTab('MARKET')}
+                        className={cn(
+                            "flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all",
+                            activeTab === 'MARKET' ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"
+                        )}
+                    >
+                        Create
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('MY_BETS')}
+                        className={cn(
+                            "flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all",
+                            activeTab === 'MY_BETS' ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"
+                        )}
+                    >
+                        My Slips
+                    </button>
                 </div>
-            </div>
 
-            {/* Available Predictions List */}
-            <div className="px-6 flex-1">
-                <h2 className="mb-6 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 border-b border-white/5 pb-2">Live Markets</h2>
-                <div className="space-y-6">
-                    {predictions.map((p) => {
-                        const leg = selectedLegs.find(l => l.id === p.id);
-                        const yesProb = (p.yes_percent || 50) / 100;
-                        const yesMult = (0.95 / Math.max(0.01, yesProb)).toFixed(2);
-                        const noMult = (0.95 / Math.max(0.01, 1 - yesProb)).toFixed(2);
+                {activeTab === 'MARKET' && (
+                    <>
+                        <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">Combine winners to skyrocket your payout</p>
 
-                        return (
-                            <div key={p.id} className="rounded-3xl border border-white/5 bg-zinc-900/30 p-5 backdrop-blur-xl transition-all hover:bg-zinc-900/50">
-                                <h3 className="mb-6 text-base font-bold leading-snug tracking-tight">{p.question}</h3>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => toggleSelection({ ...p, yes_multiplier: Number(yesMult), no_multiplier: Number(noMult) }, 'YES')}
-                                        className={cn(
-                                            "flex flex-col items-center justify-center rounded-2xl border py-4 transition-all duration-300",
-                                            leg?.side === 'YES'
-                                                ? "border-success bg-success/20 text-success shadow-[0_0_20px_rgba(0,220,130,0.2)]"
-                                                : "border-white/5 bg-white/5 text-zinc-500 hover:bg-white/10"
-                                        )}
-                                    >
-                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Yes</span>
-                                        <span className="text-sm font-black mt-0.5">{yesMult}x</span>
-                                    </button>
-                                    <button
-                                        onClick={() => toggleSelection({ ...p, yes_multiplier: Number(yesMult), no_multiplier: Number(noMult) }, 'NO')}
-                                        className={cn(
-                                            "flex flex-col items-center justify-center rounded-2xl border py-4 transition-all duration-300",
-                                            leg?.side === 'NO'
-                                                ? "border-destructive bg-destructive/20 text-destructive shadow-[0_0_20px_rgba(255,42,109,0.2)]"
-                                                : "border-white/5 bg-white/5 text-zinc-500 hover:bg-white/10"
-                                        )}
-                                    >
-                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No</span>
-                                        <span className="text-sm font-black mt-0.5">{noMult}x</span>
-                                    </button>
+                        {/* Multiplier Badge */}
+                        <div className="mt-6 flex items-center justify-between rounded-[32px] border border-brand/20 bg-brand/5 p-8 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-brand/10 blur-3xl" />
+                            <div className="flex flex-col relative z-10">
+                                <div className="flex items-center gap-2 text-brand">
+                                    <Zap className="fill-brand animate-pulse" size={14} />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em]">Combined Payout</span>
                                 </div>
+                                <span className="text-xs font-bold text-zinc-500 mt-1">{selectedLegs.length} Leg Parlay</span>
                             </div>
-                        );
-                    })}
-                </div>
+                            <span className="text-6xl font-black tracking-tighter text-white relative z-10">{selectedLegs.length > 0 ? totalMultiplier : "1.00"}x</span>
+                        </div>
+                    </>
+                )}
             </div>
+
+            {activeTab === 'MY_BETS' ? (
+                <div className="px-6 py-6 space-y-4">
+                    {myBundles.length === 0 && (
+                        <div className="text-center py-10 text-zinc-500">
+                            No bundles placed yet.
+                        </div>
+                    )}
+                    {myBundles.map(bundle => (
+                        <div key={bundle.id} className="rounded-3xl border border-white/10 bg-zinc-900 p-6">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Ticket size={16} className="text-brand" />
+                                        <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Parlay</span>
+                                    </div>
+                                    <div className="text-2xl font-black">${bundle.wager} <span className="text-lg text-zinc-500">to win</span> <span className="text-success">${(bundle.wager * bundle.total_multiplier).toFixed(0)}</span></div>
+                                </div>
+                                <span className="text-lg font-black text-brand">{bundle.total_multiplier.toFixed(2)}x</span>
+                            </div>
+
+                            <div className="space-y-3 pt-4 border-t border-white/5">
+                                {bundle.legs.map((leg: any) => (
+                                    <div key={leg.id} className="flex justify-between items-center text-sm">
+                                        <span className="text-zinc-300 font-bold line-clamp-1 flex-1 pr-4">{leg.prediction.question}</span>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <span className={cn(
+                                                "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
+                                                leg.side === 'YES' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                                            )}>
+                                                {leg.side}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                /* Available Predictions List */
+                <div className="px-6 flex-1 mt-8">
+                    <h2 className="mb-6 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 border-b border-white/5 pb-2">Live Markets</h2>
+                    <div className="space-y-6">
+                        {predictions.map((p) => {
+                            const leg = selectedLegs.find(l => l.id === p.id);
+                            const yesProb = (p.yes_percent || 50) / 100;
+                            const yesMult = (0.95 / Math.max(0.01, yesProb)).toFixed(2);
+                            const noMult = (0.95 / Math.max(0.01, 1 - yesProb)).toFixed(2);
+
+                            return (
+                                <div key={p.id} className="rounded-3xl border border-white/5 bg-zinc-900/30 p-5 backdrop-blur-xl transition-all hover:bg-zinc-900/50">
+                                    <h3 className="mb-6 text-base font-bold leading-snug tracking-tight">{p.question}</h3>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => toggleSelection({ ...p, yes_multiplier: Number(yesMult), no_multiplier: Number(noMult) }, 'YES')}
+                                            className={cn(
+                                                "flex flex-col items-center justify-center rounded-2xl border py-4 transition-all duration-300",
+                                                leg?.side === 'YES'
+                                                    ? "border-success bg-success/20 text-success shadow-[0_0_20px_rgba(0,220,130,0.2)]"
+                                                    : "border-white/5 bg-white/5 text-zinc-500 hover:bg-white/10"
+                                            )}
+                                        >
+                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Yes</span>
+                                            <span className="text-sm font-black mt-0.5">{yesMult}x</span>
+                                        </button>
+                                        <button
+                                            onClick={() => toggleSelection({ ...p, yes_multiplier: Number(yesMult), no_multiplier: Number(noMult) }, 'NO')}
+                                            className={cn(
+                                                "flex flex-col items-center justify-center rounded-2xl border py-4 transition-all duration-300",
+                                                leg?.side === 'NO'
+                                                    ? "border-destructive bg-destructive/20 text-destructive shadow-[0_0_20px_rgba(255,42,109,0.2)]"
+                                                    : "border-white/5 bg-white/5 text-zinc-500 hover:bg-white/10"
+                                            )}
+                                        >
+                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No</span>
+                                            <span className="text-sm font-black mt-0.5">{noMult}x</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Wager Controls (Hidden until legs selected) */}
             {selectedLegs.length > 0 && (

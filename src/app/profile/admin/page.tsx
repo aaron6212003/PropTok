@@ -129,6 +129,31 @@ export default function AdminPage() {
                                 />
                             </div>
 
+                            <div className="space-y-4 rounded-xl border border-white/10 bg-black p-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Impled Probability</label>
+                                    <span className="text-brand font-mono font-bold text-sm">50% YES</span>
+                                </div>
+                                <input
+                                    name="initial_percent"
+                                    type="range"
+                                    min="1"
+                                    max="99"
+                                    defaultValue="50"
+                                    className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-brand"
+                                    onInput={(e) => {
+                                        const val = (e.target as HTMLInputElement).value;
+                                        const span = (e.target as HTMLInputElement).previousElementSibling?.lastElementChild;
+                                        if (span) span.textContent = `${val}% YES`;
+                                    }}
+                                />
+                                <div className="flex justify-between text-[10px] uppercase font-black text-zinc-600 tracking-widest">
+                                    <span>Underdog</span>
+                                    <span>Even</span>
+                                    <span>Favorite</span>
+                                </div>
+                            </div>
+
                             <button
                                 disabled={isPending}
                                 type="submit"
