@@ -1,10 +1,11 @@
 import Link from "next/link";
 import BottomNavBar from "@/components/layout/bottom-nav";
 import PredictionFeed from "@/components/feed/prediction-feed";
-import { getPredictions } from "./actions";
+import { getPredictions, getUserTournamentEntries } from "./actions";
 import { createClient } from "@/lib/supabase/server";
 import { Coins } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
+import WalletToggle from "@/components/layout/wallet-toggle";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
   const { tournament: tournamentId } = await searchParams;
@@ -30,6 +31,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
     profile = data;
   }
 
+  const tournamentEntries = user ? await getUserTournamentEntries() : [];
   const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.bankroll || 0);
 
   return (
@@ -41,12 +43,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
         </h1>
 
         {user && (
-          <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md pointer-events-auto">
-            <Coins className="h-4 w-4 text-brand" />
-            <span className="text-xs font-black tracking-tight">
-              ${activeBankroll.toLocaleString()} {tournamentId && <span className="text-[8px] opacity-50 ml-1">TRN</span>}
-            </span>
-          </div>
+          <WalletToggle
+            bankroll={profile?.bankroll || 0}
+            entries={tournamentEntries}
+            activeTournamentId={tournamentId || null}
+          />
         )}
       </div>
 

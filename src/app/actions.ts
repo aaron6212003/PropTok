@@ -516,3 +516,29 @@ export async function getTournamentLeaderboard(tournamentId: string) {
 
     return data;
 }
+
+export async function getUserTournamentEntries() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from("tournament_entries")
+        .select(`
+            *,
+            tournament:tournament_id (
+                id,
+                name,
+                status
+            )
+        `)
+        .eq("user_id", user.id);
+
+    if (error) {
+        console.error("User Tournament Entries Error:", error);
+        return [];
+    }
+
+    return data;
+}
