@@ -23,37 +23,49 @@ export async function GET() {
             const data = await response.json();
 
             // Process each game
-            for (const game of data.slice(0, 5)) { // Limit to 5 games to save API quota
+            const games = data.slice(0, 5); // Limit to 5 games to save API quota
+            for (const game of games) {
                 const homeTeam = game.home_team;
                 const awayTeam = game.away_team;
                 const gameTime = game.commence_time;
 
                 // Get DraftKings odds (or first available)
-                const oddsData = game.bookmakers?.find((b: any) => b.key === 'draftkings') || game.bookmakers?.[0];
+                let oddsData = null;
+                if (game.bookmakers) {
+                    for (const bookmaker of game.bookmakers) {
+                        if (bookmaker.key === 'draftkings') {
+                            oddsData = bookmaker;
+                            break;
+                        }
+                    }
+                    if (!oddsData) oddsData = game.bookmakers[0];
+                }
 
-                if (oddsData) {
+                if (oddsData && oddsData.markets) {
                     // Spread
-                    const spreadMarket = oddsData.markets?.find((m: any) => m.key === 'spreads');
-                    if (spreadMarket) {
-                        const homeSpread = spreadMarket.outcomes.find((o: any) => o.name === homeTeam);
-                        if (homeSpread) {
-                            gamesToIngest.push({
-                                category: "NFL",
-                                question: `Will ${homeTeam} cover ${homeSpread.point > 0 ? '+' : ''}${homeSpread.point} vs ${awayTeam}?`,
-                                line: homeSpread.point,
-                                oracle_type: "spread_cover",
-                                oracle_id: `${homeTeam.toLowerCase().replace(/\s/g, '-')}-spread-${game.id}`,
-                                game_date: gameTime,
-                                player_name: homeTeam
-                            });
+                    for (const market of oddsData.markets) {
+                        if (market.key === 'spreads' && market.outcomes) {
+                            for (const outcome of market.outcomes) {
+                                if (outcome.name === homeTeam) {
+                                    gamesToIngest.push({
+                                        category: "NFL",
+                                        question: `Will ${homeTeam} cover ${outcome.point > 0 ? '+' : ''}${outcome.point} vs ${awayTeam}?`,
+                                        line: outcome.point,
+                                        oracle_type: "spread_cover",
+                                        oracle_id: `${homeTeam.toLowerCase().replace(/\s/g, '-')}-spread-${game.id}`,
+                                        game_date: gameTime,
+                                        player_name: homeTeam
+                                    });
+                                    break; // Found home team spread, no need to check other outcomes for this market
+                                }
+                            }
                         }
                     }
 
                     // Total
-                    const totalMarket = oddsData.markets?.find((m: any) => m.key === 'totals');
-                    if (totalMarket) {
-                        const overUnder = totalMarket.outcomes[0];
-                        if (overUnder) {
+                    for (const market of oddsData.markets) {
+                        if (market.key === 'totals' && market.outcomes && market.outcomes.length > 0) {
+                            const overUnder = market.outcomes[0];
                             gamesToIngest.push({
                                 category: "NFL",
                                 question: `Will ${homeTeam} vs ${awayTeam} go OVER ${overUnder.point} Points?`,
@@ -63,6 +75,7 @@ export async function GET() {
                                 game_date: gameTime,
                                 player_name: "Game Total"
                             });
+                            break; // Found total market, no need to check other markets
                         }
                     }
                 }
