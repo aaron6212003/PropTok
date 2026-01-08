@@ -54,26 +54,25 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
     return (
         <>
-            <div className={cn(
-                "relative h-full w-full snap-start overflow-hidden bg-black",
-                "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] before:to-transparent before:opacity-40",
-                CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default']
-            )}>
-                {/* Background Image Removed for Simplicity */}
+            <div className="relative h-full w-full snap-start overflow-hidden bg-black">
+                {/* Dynamic Background Gradient */}
+                <div className={cn(
+                    "absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] to-black opacity-60",
+                    CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default']
+                )} />
 
                 {/* Content Layer */}
-                <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-24 font-sans text-white">
+                <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-24 font-sans text-white h-full justify-center">
 
                     {/* Header Stats Removed - Moved to Bottom */}
 
-                    {/* Main Content Area */}
-                    <div className="mt-8 flex flex-col flex-1 min-h-0">
-                        <h1 className="text-3xl font-black leading-tight tracking-tighter shadow-black drop-shadow-2xl">
+                    {/* Main Content Area - Centered */}
+                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto">
+                        <h1 className="text-4xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl">
                             {prediction.question}
                         </h1>
 
-                        {/* Engagement Row */}
-                        <div className="mt-4 flex items-center gap-4">
+                        <div className="mt-6 flex items-center justify-center gap-4">
                             <button
                                 onClick={() => setShowComments(true)}
                                 className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
@@ -94,8 +93,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </button>
                         </div>
 
-                        {/* Central Visual Removed for Simplicity */}
-                        <div className="flex-1" />
                     </div>
 
                     {/* Voting Area */}
