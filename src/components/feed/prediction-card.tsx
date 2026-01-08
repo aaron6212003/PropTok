@@ -57,12 +57,24 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
             <div className="relative h-full w-full snap-start overflow-hidden bg-black">
                 {/* Dynamic Background Gradient */}
                 <div className={cn(
-                    "absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] to-black opacity-60",
+                    "absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] to-black opacity-40",
                     CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default']
                 )} />
 
                 {/* Content Layer */}
                 <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-24 font-sans text-white h-full justify-center">
+
+                    {/* Category Badge - Top Right */}
+                    <div className="absolute top-24 right-6">
+                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg">
+                            <span className={cn(
+                                "text-xs font-black uppercase tracking-widest",
+                                CATEGORY_TEXT_COLORS[prediction.category] || 'text-white'
+                            )}>
+                                {prediction.category}
+                            </span>
+                        </div>
+                    </div>
 
                     {/* Header Stats Removed - Moved to Bottom */}
 
@@ -101,7 +113,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                         <div className="flex items-end justify-between px-2">
                             <div className="flex flex-col gap-1">
                                 <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">
-                                    {prediction.category} • ${(prediction.volume / 1000).toFixed(1)}k Vol
+                                    ${(prediction.volume / 1000).toFixed(1)}k Vol
                                 </span>
                                 <div className={cn(
                                     "h-[3px] w-12 rounded-full",

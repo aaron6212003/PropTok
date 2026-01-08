@@ -1,12 +1,12 @@
 export const CATEGORY_COLORS: Record<string, string> = {
-    'Sports': 'from-blue-600/20',
-    'Crypto': 'from-orange-500/20',
-    'Pop Culture': 'from-pink-600/20',
-    'Politics': 'from-red-600/20',
-    'Tech': 'from-indigo-600/20',
-    'Weather': 'from-teal-600/20',
-    'Celebs': 'from-purple-600/20',
-    'Default': 'from-slate-600/20',
+    'Sports': 'from-blue-600',
+    'Crypto': 'from-orange-500',
+    'Pop Culture': 'from-pink-600',
+    'Politics': 'from-red-600',
+    'Tech': 'from-indigo-600',
+    'Weather': 'from-teal-600',
+    'Celebs': 'from-purple-600',
+    'Default': 'from-slate-600',
 };
 
 export const CATEGORY_TEXT_COLORS: Record<string, string> = {
