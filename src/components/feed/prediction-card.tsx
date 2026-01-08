@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prediction } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Clock, TrendingUp, Users, MessageSquare } from 'lucide-react';
+import { Clock, TrendingUp, Users, MessageSquare, Share2 } from 'lucide-react';
 import CommentsDrawer from '@/components/social/comments-drawer';
 import { WagerDrawer } from '@/components/feed/wager-drawer'; // Import
 import { submitVote } from '@/app/actions'; // Import server action
@@ -72,9 +72,21 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md transition-transform active:scale-90">
                             <MessageSquare size={20} className="fill-white text-white" />
                         </div>
-                        <span className="text-xs font-bold drop-shadow-md">245</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">245</span>
                     </button>
-                    {/* Placeholder for Share/More */}
+
+                    <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(window.location.origin);
+                            alert("Link copied to clipboard!");
+                        }}
+                        className="flex flex-col items-center gap-1"
+                    >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md transition-transform active:scale-90">
+                            <Share2 size={20} className="text-white" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">Share</span>
+                    </button>
                 </div>
 
                 {/* Content Layer */}
