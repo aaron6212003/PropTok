@@ -1,26 +1,67 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Animations */
+  --animate-snap: snap 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Base - Deep Black */
+  --background: #000000;
+  --foreground: #ffffff;
+
+  /* Brand - Electric Blue */
+  --brand: #2563eb;
+  --brand-foreground: #ffffff;
+
+  /* Yes/Success - Neon Green */
+  --success: #00dc82;
+  --success-foreground: #000000;
+
+  /* No/Fail - Neon Red */
+  --destructive: #ff2a6d;
+  --destructive-foreground: #ffffff;
+  
+  /* Card/Surface - Glassy */
+  --card: rgba(20, 20, 20, 0.6);
+  --card-foreground: #ffffff;
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes snap {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Hide scrollbar for clean app feel */
+::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

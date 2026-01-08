@@ -1,0 +1,12 @@
+{
+    "crons": [
+        {
+            "path": "/api/ingestion/cron",
+            "schedule": "0 8 * * *"
+        },
+        {
+            "path": "/api/oracle/cron",
+            "schedule": "*/30 * * * *"
+        }
+    ]
+}
