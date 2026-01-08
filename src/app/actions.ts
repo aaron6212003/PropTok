@@ -229,6 +229,27 @@ export async function autoResolvePrediction(id: string) {
     return { error: "No automated resolution logic for this market type" };
 }
 
+export async function undoResolvePrediction(id: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    const { error } = await supabase.rpc('undo_resolve_prediction', {
+        p_id: id
+    });
+
+    if (error) {
+        console.error("Undo error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/admin");
+    revalidatePath("/profile");
+    return { success: true };
+}
+
 
 export async function getLeaderboard() {
     const supabase = await createClient();

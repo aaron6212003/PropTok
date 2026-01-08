@@ -1,9 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
-import { createPrediction, resolvePrediction, autoResolvePrediction, getPredictions, clearDatabase } from "@/app/actions";
+import { createPrediction, resolvePrediction, autoResolvePrediction, undoResolvePrediction, getPredictions, clearDatabase } from "@/app/actions";
 import { useState, useEffect } from "react";
-import { Trash2, Plus, Clock, CheckCircle, XCircle, Wand2 } from 'lucide-react';
+import { Trash2, Plus, Clock, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
 
 export default function AdminPage() {
     const [isPending, startTransition] = useTransition();
@@ -240,9 +240,19 @@ export default function AdminPage() {
                                 )}
 
                                 {p.resolved && (
-                                    <div className="flex w-full items-center justify-center rounded-xl bg-white/5 py-3 text-xs font-bold text-zinc-500">
-                                        Market Closed
-                                    </div>
+                                    <button
+                                        onClick={() => startTransition(async () => {
+                                            if (confirm(`UNDO resolution for "${p.question}"? This will revert ALL payouts and bankrolls.`)) {
+                                                const res = await undoResolvePrediction(p.id);
+                                                if (res?.error) alert(res.error);
+                                                else getPredictions().then(setPredictions);
+                                            }
+                                        })}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:bg-white/10 hover:text-white"
+                                    >
+                                        <RotateCcw size={14} />
+                                        <span>Undo Resolution</span>
+                                    </button>
                                 )}
                             </div>
                         ))}
