@@ -10,7 +10,7 @@ export default function BottomNavBar() {
 
     const navItems = [
         { label: 'Feed', href: '/', icon: Home },
-        { label: 'Rank', href: '/leaderboard', icon: Trophy },
+        { label: 'Tournaments', href: '/tournaments', icon: Trophy },
         { label: 'Bundle', href: '/create', icon: PlusCircle },
         { label: 'Profile', href: '/profile', icon: User },
     ];
