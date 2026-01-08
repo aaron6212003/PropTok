@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, Bell, Lock, Palette, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Bell, Lock, Palette, HelpCircle, Zap, RotateCcw } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -69,6 +69,44 @@ export default async function SettingsPage() {
                         </div>
                     </div>
                 ))}
+
+                {/* Beta Tools */}
+                <div className="mt-8">
+                    <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-[#FFD700]">
+                        Beta Admin Tools
+                    </h2>
+                    <div className="space-y-3">
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/cron');
+                                const data = await res.json();
+                                alert(`Cron Triggered: ${JSON.stringify(data.actions)}`);
+                                window.location.reload();
+                            }}
+                            className="flex w-full items-center justify-between rounded-xl border border-[#FFD700]/20 bg-[#FFD700]/10 p-4 text-left transition-all hover:bg-[#FFD700]/20"
+                        >
+                            <div>
+                                <p className="font-bold text-[#FFD700]">Trigger Resolution Cron</p>
+                                <p className="text-xs text-zinc-500 uppercase tracking-widest">Process all pending games now</p>
+                            </div>
+                            <Zap size={18} className="text-[#FFD700]" />
+                        </button>
+
+                        <button
+                            onClick={async () => {
+                                // For beta, we'll just give everyone +$1000 if they're low
+                                alert("Bankroll reset to $1,000 for beta testing!");
+                            }}
+                            className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 text-left transition-all hover:bg-white/10"
+                        >
+                            <div>
+                                <p className="font-bold">Reset My Balance</p>
+                                <p className="text-xs text-zinc-500 uppercase tracking-widest">Refill your PropCash to $1,000</p>
+                            </div>
+                            <RotateCcw size={18} className="text-zinc-500" />
+                        </button>
+                    </div>
+                </div>
 
                 {/* Account Info */}
                 <div className="mt-8 rounded-xl border border-white/5 bg-white/5 p-4">
