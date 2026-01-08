@@ -1,14 +1,30 @@
+"use client";
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Bell, Lock, Palette, HelpCircle, Zap, RotateCcw } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
-export default async function SettingsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export default function SettingsPage() {
+    const supabase = createClient();
+    const router = useRouter();
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    if (!user) {
-        redirect('/login');
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => {
+            if (!data.user) {
+                router.push('/login');
+            } else {
+                setUser(data.user);
+            }
+            setLoading(false);
+        });
+    }, []);
+
+    if (loading || !user) {
+        return <div className="flex h-screen items-center justify-center bg-black text-white">Loading...</div>;
     }
 
     const settingsSections = [
