@@ -280,6 +280,11 @@ export async function clearDatabase() {
     if (!user) throw new Error("User not authenticated");
 
     // Create Service Role Client to bypass RLS
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
+        return { error: "Server Error: Missing Service Role Key in Vercel. Please add it to Environment Variables." };
+    }
+
     const { createClient: createServiceClient } = require('@supabase/supabase-js');
     const adminClient = createServiceClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
