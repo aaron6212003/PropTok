@@ -8,26 +8,53 @@ export async function GET() {
     const supabase = await createClient();
     const results = [];
 
-    // --- PART 1: INGESTION (Mocked for now) ---
-    // In a real app, we fetch from TheRundown or SportRadar here.
+    // --- PART 1: INGESTION (Semi-Manual for Launch) ---
+    // REAL NFL WILD CARD MATCHUPS
     const MOCK_GAMES = [
         {
             category: "NFL",
-            question: "Will Patrick Mahomes throw for OVER 285.5 Yards?",
-            line: 285.5,
+            question: "Will the Lions cover -3.5 vs Rams?",
+            line: -3.5,
+            oracle_type: "spread_cover",
+            oracle_id: "det-vs-lar-spread",
+            game_date: new Date("2024-01-14T20:00:00Z").toISOString(), // Sunday Night
+            player_name: "Detroit Lions"
+        },
+        {
+            category: "NFL",
+            question: "Will Travis Kelce verify OVER 6.5 Receptions?",
+            line: 6.5,
             oracle_type: "player_stat_gt",
-            oracle_id: "mahomes-yards-week1",
-            player_name: "Patrick Mahomes",
-            game_date: new Date(Date.now() + 86400000).toISOString()
+            oracle_id: "kelce-rec-wildcard",
+            game_date: new Date("2024-01-13T20:00:00Z").toISOString(), // Saturday
+            player_name: "Travis Kelce"
+        },
+        {
+            category: "NFL",
+            question: "Will Packers vs Cowboys go OVER 50.5 Points?",
+            line: 50.5,
+            oracle_type: "total_score_gt",
+            oracle_id: "gb-vs-dal-total",
+            game_date: new Date("2024-01-14T16:30:00Z").toISOString(),
+            player_name: "Game Total"
+        },
+        {
+            category: "NFL",
+            question: "Will Lamar Jackson Rush for OVER 60.5 Yards?",
+            line: 60.5,
+            oracle_type: "player_stat_gt",
+            oracle_id: "lamar-rush-divisional",
+            game_date: new Date("2024-01-20T20:00:00Z").toISOString(),
+            player_name: "Lamar Jackson"
         },
         {
             category: "Crypto",
-            question: "Will Bitcoin be above $100k tomorrow?",
-            line: 100000,
+            question: "Will Bitcoin hit $50k by Monday?",
+            line: 50000,
             oracle_type: "crypto_price_gt",
             oracle_id: "bitcoin",
-            target_value: 100000,
-            game_date: new Date(Date.now() + 86400000).toISOString()
+            target_value: 50000,
+            game_date: new Date(Date.now() + 86400000 * 3).toISOString()
         }
     ];
 
