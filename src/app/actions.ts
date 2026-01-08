@@ -420,7 +420,10 @@ export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', m
         tournament_id: tournamentId || null
     }).select().single();
 
-    if (bundleError || !bundle) return { error: "Failed to create bundle" };
+    if (bundleError || !bundle) {
+        console.error("Bundle creation error:", bundleError);
+        return { error: bundleError?.message || "Failed to create bundle" };
+    }
 
     // 5. Create Legs
     const bundleLegs = legs.map(leg => ({
