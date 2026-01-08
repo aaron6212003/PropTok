@@ -5,9 +5,10 @@ import { Trophy, Clock, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function TournamentDetailPage({ params }: { params: { id: string } }) {
-    const tournament = await getTournament(params.id);
-    const leaderboard = await getTournamentLeaderboard(params.id);
+export default async function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const tournament = await getTournament(id);
+    const leaderboard = await getTournamentLeaderboard(id);
     const supabase = await createClient();
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
