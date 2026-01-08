@@ -3,12 +3,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function getPredictions() {
+export async function getPredictions(onlyOpen: boolean = false) {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    let query = supabase
         .from("predictions")
         .select("*")
         .order("created_at", { ascending: false });
+
+    if (onlyOpen) {
+        query = query.eq("resolved", false);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error("Error fetching predictions:", error);

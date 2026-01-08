@@ -7,7 +7,7 @@ import { Coins } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
 
 export default async function Home() {
-  const predictions = await getPredictions();
+  const predictions = await getPredictions(true);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

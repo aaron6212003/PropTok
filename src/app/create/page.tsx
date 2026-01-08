@@ -5,6 +5,7 @@ import BottomNavBar from '@/components/layout/bottom-nav';
 import { getUserBundles, getPredictions } from '../actions';
 import { cn } from '@/lib/utils';
 import { Plus, X, ArrowRight, Zap, Ticket } from 'lucide-react';
+import BetCard from '@/components/profile/bet-card';
 
 interface SelectedLeg {
     id: string;
@@ -20,7 +21,7 @@ export default function CreateBundlePage() {
     const [selectedLegs, setSelectedLegs] = useState<SelectedLeg[]>([]);
 
     useEffect(() => {
-        getPredictions().then(setPredictions);
+        getPredictions(true).then(setPredictions);
         getUserBundles().then(setMyBundles);
     }, []);
 
@@ -130,34 +131,7 @@ export default function CreateBundlePage() {
                         </div>
                     )}
                     {myBundles.map(bundle => (
-                        <div key={bundle.id} className="rounded-3xl border border-white/10 bg-zinc-900 p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Ticket size={16} className="text-brand" />
-                                        <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Parlay</span>
-                                    </div>
-                                    <div className="text-2xl font-black">${bundle.wager} <span className="text-lg text-zinc-500">to win</span> <span className="text-success">${(bundle.wager * bundle.total_multiplier).toFixed(0)}</span></div>
-                                </div>
-                                <span className="text-lg font-black text-brand">{bundle.total_multiplier.toFixed(2)}x</span>
-                            </div>
-
-                            <div className="space-y-3 pt-4 border-t border-white/5">
-                                {bundle.legs.map((leg: any) => (
-                                    <div key={leg.id} className="flex justify-between items-center text-sm">
-                                        <span className="text-zinc-300 font-bold line-clamp-1 flex-1 pr-4">{leg.prediction.question}</span>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span className={cn(
-                                                "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
-                                                leg.side === 'YES' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-                                            )}>
-                                                {leg.side}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <BetCard key={bundle.id} bet={{ ...bundle, isBundle: true }} />
                     ))}
                 </div>
             ) : (
