@@ -52,26 +52,24 @@ export default function BetSlip() {
         <>
             {/* Floating Bar (Collapsed) */}
             {!isOpen && (
-                <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-sm px-6">
+                <div className="fixed bottom-24 right-4 z-40">
                     <motion.button
-                        initial={{ y: 100, opacity: 0 }}
+                        initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="flex w-full items-center justify-between rounded-full border border-white/10 bg-brand py-3 px-5 shadow-2xl backdrop-blur-xl transition-transform active:scale-95"
+                        className="flex items-center gap-3 rounded-full border border-white/10 bg-brand py-2.5 pl-3 pr-4 shadow-2xl backdrop-blur-xl transition-transform active:scale-95"
                         onClick={() => setIsOpen(true)}
                     >
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[9px] font-bold text-white">
                                 {items.length}
                             </span>
-                            <div className="flex flex-col items-start px-1">
-                                <span className="text-xs font-black text-black uppercase tracking-wider">
-                                    {items.length > 1 ? "Parlay" : "Bet Slip"}
-                                </span>
-                            </div>
+                            <span className="text-[11px] font-black text-black uppercase tracking-wider">
+                                {items.length > 1 ? "Parlay" : "Slip"}
+                            </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-black text-black">{totalMultiplier.toFixed(2)}x</span>
-                            <ChevronUp className="text-black h-4 w-4" />
+                        <div className="flex items-center gap-1 border-l border-black/10 pl-2">
+                            <span className="text-xs font-black text-black">{totalMultiplier.toFixed(2)}x</span>
+                            <ChevronUp className="text-black h-3.5 w-3.5" />
                         </div>
                     </motion.button>
                 </div>
