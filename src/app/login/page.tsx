@@ -9,6 +9,7 @@ export default function LoginPage() {
     const [view, setView] = useState<'signin' | 'signup'>('signin');
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [username, setUsername] = useState(""); // [NEW]
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const router = useRouter();
@@ -25,7 +26,10 @@ export default function LoginPage() {
             const { error: signUpError } = await supabase.auth.signUp({
                 email,
                 password,
-                options: { emailRedirectTo: redirectUrl }
+                options: {
+                    emailRedirectTo: redirectUrl,
+                    data: { full_name: username } // [NEW] Pass username to trigger
+                }
             });
             error = signUpError;
             if (!error) setMessage("Check your email to confirm signup!");
@@ -79,6 +83,19 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleAuth} className="space-y-4">
+                    {/* [NEW] Username Input (Only for Sign Up) */}
+                    {view === 'signup' && (
+                        <input
+                            type="text"
+                            placeholder="Username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white placeholder-zinc-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                            required
+                            minLength={3}
+                        />
+                    )}
+
                     <input
                         type="email"
                         placeholder="name@example.com"
