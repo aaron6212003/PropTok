@@ -16,23 +16,29 @@ export default function PredictionFeed({ initialPredictions, bankroll }: Predict
 
     return (
         <div className="h-[calc(100dvh-5rem)] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth pb-20 no-scrollbar">
-            {initialPredictions.map((prediction) => (
-                <PredictionCard
-                    key={prediction.id}
-                    prediction={{
-                        id: prediction.id,
-                        question: prediction.question,
-                        category: prediction.category,
-                        volume: prediction.volume || 1200, // Fallback for seeds
-                        yesPercent: prediction.yes_percent || 50,
-                        yesMultiplier: prediction.yes_multiplier || 1.9,
-                        noMultiplier: prediction.no_multiplier || 1.9,
-                        expiresAt: prediction.expires_at
-                    }}
-                    isActive={true}
-                    bankroll={bankroll}
-                />
-            ))}
+            {initialPredictions.map((prediction) => {
+                const yesProb = (prediction.yes_percent || 50) / 100;
+                const yesMultiplier = Number((0.95 / Math.max(0.01, yesProb)).toFixed(2));
+                const noMultiplier = Number((0.95 / Math.max(0.01, 1 - yesProb)).toFixed(2));
+
+                return (
+                    <PredictionCard
+                        key={prediction.id}
+                        prediction={{
+                            id: prediction.id,
+                            question: prediction.question,
+                            category: prediction.category,
+                            volume: prediction.volume || 1200,
+                            yesPercent: prediction.yes_percent || 50,
+                            yesMultiplier,
+                            noMultiplier,
+                            expiresAt: prediction.expires_at
+                        }}
+                        isActive={true}
+                        bankroll={bankroll}
+                    />
+                );
+            })}
         </div>
     );
 }
