@@ -156,17 +156,8 @@ export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
 
     if (!user) throw new Error("User not authenticated");
 
-    // Use Service Role to ensure we can update ALL users' bankrolls (payouts)
-    const { createAdminClient } = await import("@/lib/supabase/admin");
-    const adminClient = createAdminClient();
-
-    if (!adminClient) {
-        // Debugging: What keys ARE available?
-        const availableKeys = Object.keys(process.env).filter(k => k.includes("SUPABASE") || k.includes("KEY"));
-        return { error: `Server Error: Missing Service Role Key. Available Env Vars: ${availableKeys.join(", ")}` };
-    }
-
-    const { error } = await adminClient.rpc('resolve_prediction', {
+    // Call the Security Definer RPC function (no service key needed)
+    const { error } = await supabase.rpc('resolve_prediction', {
         p_id: id,
         p_outcome: outcome
     });
@@ -292,17 +283,8 @@ export async function clearDatabase() {
 
     if (!user) throw new Error("User not authenticated");
 
-    // Create Service Role Client to bypass RLS
-    const { createAdminClient } = await import("@/lib/supabase/admin");
-    const adminClient = createAdminClient();
-
-    if (!adminClient) {
-        const availableKeys = Object.keys(process.env).filter(k => k.includes("SUPABASE") || k.includes("KEY"));
-        return { error: `Server Error: Missing Service Role Key. Available Env Vars: ${availableKeys.join(", ")}` };
-    }
-
-    // Clear all Predictions (Cascades to Votes, Bundles)
-    const { error } = await adminClient.from("predictions").delete().neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+    // Use RPC Function (Security Definer) to bypass RLS without Env Vars
+    const { error } = await supabase.rpc('admin_wipe_data');
 
     if (error) {
         console.error("Clear DB Error:", error);
