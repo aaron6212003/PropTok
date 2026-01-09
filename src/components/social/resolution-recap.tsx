@@ -6,6 +6,7 @@ import { Trophy, XCircle, Coins, ArrowRight, Share2, CheckCircle2 } from "lucide
 import { cn } from "@/lib/utils";
 import { acknowledgeResults } from "@/app/actions";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface ResolutionRecapProps {
     results: {
@@ -23,11 +24,13 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPending, setIsPending] = useState(false);
     const router = useRouter();
-    const { toast } = require('sonner'); // Inline import to avoid potential build issues if not globally available yet
 
     useEffect(() => {
+        // Only trigger if we have results and hasn't been closed in this mount
         if (results.length > 0) {
             setIsOpen(true);
+        } else {
+            setIsOpen(false);
         }
     }, [results]);
 
