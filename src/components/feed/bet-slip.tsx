@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface BetSlipProps {
     bankroll: number;
@@ -38,9 +39,9 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 // Single Bet
                 const item = items[0];
                 const res = await submitVote(item.predictionId, item.side, wager, tournamentId || undefined);
-                if (res.error) alert(res.error);
+                if (res.error) toast.error(res.error);
                 else {
-                    alert("Bet Placed!");
+                    toast.success("Bet Placed!");
                     clearSlip();
                     router.refresh();
                 }
@@ -48,16 +49,16 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 // Bundle
                 const legs = items.map(i => ({ id: i.predictionId, side: i.side, multiplier: i.multiplier }));
                 const res = await placeBundleWager(legs, wager, tournamentId || undefined);
-                if (res.error) alert(res.error);
+                if (res.error) toast.error(res.error);
                 else {
-                    alert("Bundle Placed!");
+                    toast.success("Bundle Placed!");
                     clearSlip();
                     router.refresh();
                 }
             }
         } catch (e) {
             console.error(e);
-            alert("Error placing bet");
+            toast.error("Error placing bet");
         } finally {
             setIsSubmitting(false);
         }
@@ -132,28 +133,36 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
 
                             {/* Items List */}
                             <div className="flex-1 overflow-y-auto p-6 space-y-3">
-                                {items.map((item) => (
-                                    <div key={item.predictionId} className="relative flex flex-col gap-2 rounded-2xl border border-white/5 bg-black/40 p-4">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <p className="text-sm font-bold leading-snug break-words line-clamp-2">{item.question}</p>
-                                            <button
-                                                onClick={() => removeFromSlip(item.predictionId)}
-                                                className="shrink-0 text-zinc-500 hover:text-white"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className={cn(
-                                                "rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest",
-                                                item.side === 'YES' ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive"
-                                            )}>
-                                                {item.side}
-                                            </span>
-                                            <span className="text-xs font-mono font-bold text-zinc-400">{item.multiplier}x</span>
-                                        </div>
-                                    </div>
-                                ))}
+                                <AnimatePresence initial={false}>
+                                    {items.map((item) => (
+                                        <motion.div
+                                            key={item.predictionId}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 20 }}
+                                            className="relative flex flex-col gap-2 rounded-2xl border border-white/5 bg-black/40 p-4"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <p className="text-sm font-bold leading-snug break-words line-clamp-2">{item.question}</p>
+                                                <button
+                                                    onClick={() => removeFromSlip(item.predictionId)}
+                                                    className="shrink-0 text-zinc-500 hover:text-white"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className={cn(
+                                                    "rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest",
+                                                    item.side === 'YES' ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive"
+                                                )}>
+                                                    {item.side}
+                                                </span>
+                                                <span className="text-xs font-mono font-bold text-zinc-400">{item.multiplier}x</span>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
 
                             {/* Wager Controls */}

@@ -5,6 +5,7 @@ import BottomNavBar from '@/components/layout/bottom-nav';
 import { getUserBundles, getPredictions } from '../actions';
 import { cn } from '@/lib/utils';
 import { Plus, X, ArrowRight, Zap, Ticket } from 'lucide-react';
+import { toast } from 'sonner';
 import BetCard from '@/components/profile/bet-card';
 
 interface SelectedLeg {
@@ -65,13 +66,13 @@ export default function CreateBundlePage() {
         const res = await placeBundleWager(selectedLegs, wager);
 
         if (res.success) {
-            alert("Bundle Created Successfully!");
+            toast.success("Bundle Created Successfully!");
             // Refresh bundles and clear selection
             getUserBundles().then(setMyBundles);
             setSelectedLegs([]);
             setActiveTab('MY_BETS');
         } else {
-            alert(res.error || "Failed to create bundle");
+            toast.error(res.error || "Failed to create bundle");
         }
         setIsSubmitting(false);
     };

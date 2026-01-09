@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, Trophy, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,16 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
     const searchParams = useSearchParams();
 
     const activeEntry = entries.find(e => e.tournament_id === activeTournamentId);
+    const balance = activeTournamentId ? activeEntry?.current_stack : bankroll;
+    const [isPulsing, setIsPulsing] = useState(false);
+
+    useEffect(() => {
+        if (balance !== undefined) {
+            setIsPulsing(true);
+            const timer = setTimeout(() => setIsPulsing(false), 600);
+            return () => clearTimeout(timer);
+        }
+    }, [balance]);
 
     const handleSwitch = (id: string | null) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -45,16 +55,21 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-md transition-all",
+                    "flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-md transition-all duration-500",
                     activeTournamentId
                         ? "border-brand/40 bg-brand/10 text-brand"
-                        : "border-white/10 bg-black/40 text-white"
+                        : "border-white/10 bg-black/40 text-white",
+                    isPulsing && (activeTournamentId ? "border-brand shadow-[0_0_15px_rgba(255,42,109,0.4)]" : "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]")
                 )}
             >
                 {activeTournamentId ? <Trophy size={14} /> : <Coins size={14} />}
-                <span className="text-xs font-black tracking-tight">
+                <motion.span
+                    animate={isPulsing ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                    className="text-xs font-black tracking-tight"
+                >
                     ${(activeTournamentId ? activeEntry?.current_stack : bankroll)?.toLocaleString()}
-                </span>
+                </motion.span>
                 {activeTournamentId && <span className="text-[8px] font-black opacity-60 ml-0.5">TRN</span>}
                 <ChevronDown size={14} className={cn("transition-transform", isOpen && "rotate-180")} />
             </button>

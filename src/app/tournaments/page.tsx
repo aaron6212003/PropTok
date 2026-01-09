@@ -5,6 +5,7 @@ import BottomNavBar from '@/components/layout/bottom-nav';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { Trophy, Calendar, Users, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TournamentsPage() {
     const [tournaments, setTournaments] = useState<any[]>([]);
@@ -37,7 +38,10 @@ export default function TournamentsPage() {
 
     const joinTournament = async (tId: string) => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return alert("Login required");
+        if (!user) {
+            toast.error("Login required");
+            return;
+        }
 
         const { error } = await supabase.from('tournament_entries').insert({
             tournament_id: tId,
@@ -45,8 +49,11 @@ export default function TournamentsPage() {
             current_stack: 500 // Hardcoded for MVP, should come from tournament.starting_stack
         });
 
-        if (error) alert(error.message);
-        else window.location.reload();
+        if (error) toast.error(error.message);
+        else {
+            toast.success("Joined Successfully!");
+            window.location.reload();
+        }
     };
 
     return (

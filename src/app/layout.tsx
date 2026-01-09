@@ -17,6 +17,7 @@ export const viewport: Viewport = {
 
 import { BetSlipProvider } from "@/lib/context/bet-slip-context";
 import { Suspense } from "react";
+import ToastProvider from "@/components/layout/toast-provider";
 
 export default function RootLayout({
   children,
@@ -31,6 +32,7 @@ export default function RootLayout({
             <MobileContainer>
               {children}
             </MobileContainer>
+            <ToastProvider />
           </BetSlipProvider>
         </Suspense>
       </body>

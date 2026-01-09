@@ -72,12 +72,22 @@ export default function BetCard({ bet }: BetCardProps) {
                     <div className="flex items-center gap-3">
                         {isResolved ? (
                             isWin ? (
-                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-success">
-                                    <CheckCircle2 size={12} /> WON
+                                <div className="flex flex-col items-end">
+                                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-success">
+                                        <CheckCircle2 size={12} /> WON
+                                    </div>
+                                    {!isBundle && (
+                                        <span className="text-[8px] font-bold text-success/60 mt-0.5">RESULT: {bet.predictions?.outcome}</span>
+                                    )}
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-destructive">
-                                    <XCircle size={12} /> LOST
+                                <div className="flex flex-col items-end">
+                                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-destructive">
+                                        <XCircle size={12} /> LOST
+                                    </div>
+                                    {!isBundle && (
+                                        <span className="text-[8px] font-bold text-destructive/60 mt-0.5">RESULT: {bet.predictions?.outcome}</span>
+                                    )}
                                 </div>
                             )
                         ) : (

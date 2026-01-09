@@ -1,9 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { createPrediction, resolvePrediction, autoResolvePrediction, undoResolvePrediction, getPredictions, clearDatabase } from "@/app/actions";
-import { useState, useEffect } from "react";
 import { Trash2, Plus, Clock, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
+import { toast } from "sonner";
 
 export default function AdminPage() {
     const [isPending, startTransition] = useTransition();
@@ -22,18 +22,18 @@ export default function AdminPage() {
             startTransition(async () => {
                 const result = await clearDatabase();
                 if (result?.error) {
-                    alert("Failed to wipe: " + result.error);
+                    toast.error("Failed to wipe: " + result.error);
                 } else {
                     setPredictions([]);
-                    alert("Database Wiped Successfully!");
+                    toast.success("Database Wiped Successfully!");
                 }
             });
         }
     };
 
     return (
-        <main className="h-full w-full overflow-y-auto bg-black p-6 text-white pb-32 scrollbar-none">
-            <header className="mb-8 flex items-center justify-between border-b border-white/10 pb-6">
+        <main className="h-full w-full overflow-y-auto bg-black p-4 sm:p-6 text-white pb-32 scrollbar-none">
+            <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-6">
                 <div className="flex items-center gap-4">
                     <a href="/" className="rounded-full bg-white/5 p-2 transition-colors hover:bg-white/10">
                         <span className="sr-only">Back</span>
@@ -45,7 +45,7 @@ export default function AdminPage() {
                 <button
                     onClick={handleClear}
                     disabled={isPending}
-                    className="flex items-center gap-2 rounded-full bg-destructive/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-destructive transition-colors hover:bg-destructive/20"
+                    className="flex w-fit items-center gap-2 rounded-full bg-destructive/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-destructive transition-colors hover:bg-destructive/20"
                 >
                     <Trash2 size={14} />
                     <span>Wipe All Data</span>
@@ -67,7 +67,7 @@ export default function AdminPage() {
                             action={async (formData) => {
                                 await createPrediction(formData);
                                 getPredictions().then(setPredictions);
-                                alert("Prediction Created!");
+                                toast.success("Prediction Created!");
                             }}
                             className="space-y-5"
                         >
@@ -214,8 +214,11 @@ export default function AdminPage() {
                                             onClick={() => startTransition(async () => {
                                                 if (confirm(`Attempt to auto-resolve "${p.question}" using oracle data?`)) {
                                                     const res = await autoResolvePrediction(p.id);
-                                                    if (res?.error) alert(res.error);
-                                                    else getPredictions().then(setPredictions);
+                                                    if (res?.error) toast.error(res.error);
+                                                    else {
+                                                        toast.success("Market Auto-Resolved!");
+                                                        getPredictions().then(setPredictions);
+                                                    }
                                                 }
                                             })}
                                             className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-brand/20 py-4 text-[10px] font-black uppercase tracking-widest text-brand hover:bg-brand/30 border border-brand/20"
@@ -244,8 +247,11 @@ export default function AdminPage() {
                                         onClick={() => startTransition(async () => {
                                             if (confirm(`UNDO resolution for "${p.question}"? This will revert ALL payouts and bankrolls.`)) {
                                                 const res = await undoResolvePrediction(p.id);
-                                                if (res?.error) alert(res.error);
-                                                else getPredictions().then(setPredictions);
+                                                if (res?.error) toast.error(res.error);
+                                                else {
+                                                    toast.success("Resolution Reverted");
+                                                    getPredictions().then(setPredictions);
+                                                }
                                             }
                                         })}
                                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:bg-white/10 hover:text-white"

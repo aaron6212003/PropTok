@@ -7,6 +7,7 @@ import { Prediction } from "@/lib/types";
 import { Flame, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBetSlip } from '@/lib/context/bet-slip-context';
+import EmptyState from '../ui/empty-state';
 
 interface PredictionFeedProps {
     initialPredictions: any[];
@@ -37,7 +38,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     return (
         <div className="relative h-full w-full">
             {/* Sorting Tabs - Floating Header */}
-            <div className="fixed top-20 left-0 right-0 z-40 flex justify-center pointer-events-none">
+            <div className="fixed top-[72px] left-0 right-0 z-40 flex justify-center pointer-events-none">
                 <div className="flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-md border border-white/10 shadow-xl pointer-events-auto">
                     <button
                         onClick={() => setSortBy('trending')}
@@ -99,6 +100,15 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                         />
                     );
                 })}
+
+                {sortedPredictions.length === 0 && (
+                    <EmptyState
+                        icon={Sparkles}
+                        title="No Markets Found"
+                        description="There are currently no active markets. Check back soon for new opportunities!"
+                        className="h-full"
+                    />
+                )}
             </div>
         </div>
     );

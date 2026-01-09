@@ -11,6 +11,7 @@ import AdminAccessButton from '@/components/profile/admin-access-button';
 import BetCard from '@/components/profile/bet-card';
 import ResolutionRecap from '@/components/social/resolution-recap';
 import WalletToggle from '@/components/layout/wallet-toggle';
+import EmptyState from '@/components/ui/empty-state';
 
 function StatCard({
     label,
@@ -194,10 +195,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     ))}
 
                     {history.length === 0 && (
-                        <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
-                            <p className="text-sm font-medium text-zinc-500">No bets placed yet.</p>
-                            <Link href="/" className="mt-4 inline-block text-xs font-black uppercase tracking-widest text-brand">Start Playing →</Link>
-                        </div>
+                        <EmptyState
+                            icon={Clock}
+                            title="No Bets Yet"
+                            description="You haven't placed any bets yet. Head over to the feed to start predicting!"
+                            actionText="Explore Markets"
+                            onAction={() => window.location.href = '/'}
+                            className="py-12"
+                        />
                     )}
                 </div>
             </div>

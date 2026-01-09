@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Home, Trophy, PlusCircle, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export default function BottomNavBar() {
     const pathname = usePathname();
@@ -34,12 +35,22 @@ export default function BottomNavBar() {
                                 isActive ? "text-brand" : "text-zinc-500 hover:text-zinc-300"
                             )}
                         >
-                            <Icon
-                                size={24}
-                                strokeWidth={isActive ? 2.5 : 2}
-                                className={cn("transition-transform", isActive && "scale-110")}
-                            />
-                            <span className="text-[10px] font-medium">{item.label}</span>
+                            <motion.div
+                                whileTap={{ scale: 0.8, rotate: isActive ? 0 : [0, -10, 10, 0] }}
+                                whileHover={{ y: -2 }}
+                                animate={isActive ? { scale: 1.15 } : { scale: 1 }}
+                            >
+                                <Icon
+                                    size={24}
+                                    strokeWidth={isActive ? 2.5 : 2}
+                                />
+                            </motion.div>
+                            <span className={cn(
+                                "text-[10px] font-black uppercase tracking-[0.1em] transition-all",
+                                isActive ? "opacity-100 translate-y-0" : "opacity-60 translate-y-0.5"
+                            )}>
+                                {item.label}
+                            </span>
                         </Link>
                     );
                 })}

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prediction } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Clock, TrendingUp, Users, MessageSquare, Share2, Lock } from 'lucide-react';
+import { Share2, Clock, Volume2, TrendingUp, HelpCircle, MessageCircle, MoreHorizontal, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 import CommentsDrawer from '@/components/social/comments-drawer';
 import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
 import { CountdownTimer } from './countdown-timer';
@@ -49,23 +50,21 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 />
 
                 {/* Content Layer */}
-                <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-24 font-sans text-white h-full justify-center">
+                <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-40 font-sans text-white h-full justify-center">
 
-                    {/* Category Badge - Top Right */}
-                    <div className="absolute top-24 right-6">
-                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg">
+                    {/* Main Content Area - Centered */}
+                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto gap-4">
+                        {/* Category Badge - Centered above question */}
+                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2">
                             <span className={cn(
-                                "text-xs font-black uppercase tracking-widest",
+                                "text-[10px] font-black uppercase tracking-widest",
                                 CATEGORY_TEXT_COLORS[prediction.category] || 'text-white'
                             )}>
                                 {prediction.category}
                             </span>
                         </div>
-                    </div>
 
-                    {/* Main Content Area - Centered */}
-                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto">
-                        <h1 className="text-4xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl">
+                        <h1 className="text-4xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl h-full flex items-center">
                             {prediction.question}
                         </h1>
 
@@ -74,14 +73,14 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 onClick={() => setShowComments(true)}
                                 className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
                             >
-                                <MessageSquare size={14} className="text-zinc-400" />
+                                <MessageCircle size={18} className="text-zinc-400" />
                                 <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Discuss</span>
                             </button>
 
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(window.location.origin);
-                                    alert("Link copied!");
+                                    toast.success("Link copied!");
                                 }}
                                 className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
                             >

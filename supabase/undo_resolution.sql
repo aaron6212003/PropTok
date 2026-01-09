@@ -1,4 +1,12 @@
--- Undo Resolution Engine
+-- 1. Migration: Add acknowledged field to track seen results
+alter table public.votes add column if not exists acknowledged boolean default false;
+alter table public.bundles add column if not exists acknowledged boolean default false;
+
+-- 2. Performance Indexes
+create index if not exists idx_votes_unacknowledged on public.votes(user_id) where acknowledged = false;
+create index if not exists idx_bundles_unacknowledged on public.bundles(user_id) where acknowledged = false;
+
+-- 3. Undo Resolution Engine
 create or replace function public.undo_resolve_prediction(
   p_id uuid
 ) returns void as $$
