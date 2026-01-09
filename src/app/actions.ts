@@ -648,21 +648,28 @@ export async function likeComment(commentId: string) {
 
 export async function hideBet(id: string, isBundle: boolean) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) return { error: "Not authenticated" };
+    if (authError || !user) {
+        console.error("Auth error in hideBet:", authError);
+        return { error: "You must be logged in to hide bets" };
+    }
 
     const table = isBundle ? "bundles" : "votes";
 
-    const { error } = await supabase
+    const { error: dbError } = await supabase
         .from(table)
         .update({ hidden_by_user: true })
         .eq("id", id)
         .eq("user_id", user.id);
 
-    if (error) {
-        console.error("Hide Bet Error:", error);
-        return { error: error.message };
+    if (dbError) {
+        console.error(`Error hiding bet in ${table}:`, dbError);
+        // If it's a 42703 (missing column), it means migration hasn't run
+        if (dbError.code === '42703') {
+            return { error: "Database update pending. Please try again in a few minutes." };
+        }
+        return { error: `Database error: ${dbError.message}` };
     }
 
     revalidatePath("/profile");

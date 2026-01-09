@@ -64,8 +64,17 @@ export default function BetCard({ bet }: BetCardProps) {
         }
     };
 
+    const [isRevealed, setIsRevealed] = useState(false);
+
     return (
-        <div className="relative overflow-hidden rounded-2xl">
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
+            transition={{ type: "spring", stiffness: 500, damping: 50, mass: 1 }}
+            className="relative rounded-2xl overflow-hidden"
+        >
             {/* Background Delete Button - Behind the card */}
             <div className="absolute inset-0 flex items-center justify-end bg-destructive px-6">
                 <button
@@ -82,20 +91,27 @@ export default function BetCard({ bet }: BetCardProps) {
             <motion.div
                 drag="x"
                 dragConstraints={{ left: -100, right: 0 }}
-                dragElastic={0.1}
-                dragSnapToOrigin={false}
+                dragElastic={0.05}
+                animate={{ x: isRevealed ? -80 : 0 }}
                 onDragEnd={(_, info) => {
-                    // If they dragged halfway or more, stay open, else snap back
-                    if (info.offset.x > -50) {
-                        // This is handled by animate prop below or automatic snap
+                    if (info.offset.x < -30) {
+                        setIsRevealed(true);
+                    } else {
+                        setIsRevealed(false);
                     }
                 }}
                 whileDrag={{ cursor: "grabbing" }}
                 className={cn(
-                    "group relative flex flex-col gap-3 rounded-2xl border transition-all cursor-pointer bg-zinc-900 border-white/5",
+                    "group relative flex flex-col gap-3 rounded-2xl border transition-colors cursor-pointer bg-zinc-900 border-white/5",
                     isExpanded ? "border-white/20 shadow-2xl" : "hover:bg-zinc-800"
                 )}
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => {
+                    if (isRevealed) {
+                        setIsRevealed(false);
+                    } else {
+                        setIsExpanded(!isExpanded);
+                    }
+                }}
             >
                 <div className="p-4 flex flex-col gap-3">
                     <div className="flex items-center justify-between">
@@ -252,6 +268,6 @@ export default function BetCard({ bet }: BetCardProps) {
                     )}
                 </AnimatePresence>
             </motion.div>
-        </div>
+        </motion.div>
     );
 }

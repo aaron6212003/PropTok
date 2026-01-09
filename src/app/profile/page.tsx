@@ -4,6 +4,7 @@ import BottomNavBar from '@/components/layout/bottom-nav';
 export const dynamic = 'force-dynamic';
 import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getUserVotes, getUserBundles, getUserTournamentEntries } from '@/app/actions';
@@ -190,9 +191,11 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 </div>
 
                 <div className="space-y-3">
-                    {history.map((bet: any) => (
-                        <BetCard key={bet.id} bet={bet} />
-                    ))}
+                    <AnimatePresence mode="popLayout">
+                        {history.map((bet: any) => (
+                            <BetCard key={bet.id} bet={bet} />
+                        ))}
+                    </AnimatePresence>
 
                     {history.length === 0 && (
                         <EmptyState
