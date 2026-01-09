@@ -27,11 +27,11 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
     const router = useRouter();
 
     useEffect(() => {
-        // Check session storage to see if we've already acknowledged this session
-        // This prevents the "pop back up" when navigating back to Profile
-        const sessionAck = typeof window !== 'undefined' && sessionStorage.getItem('prop_ack_complete');
+        // Use localStorage to remember acknowledgement across full app refreshes
+        // This is the absolute fail-safe for persistent modals
+        const localAck = typeof window !== 'undefined' && localStorage.getItem('prop_ack_v1');
 
-        if (results.length > 0 && !hasAcknowledged && !sessionAck) {
+        if (results.length > 0 && !hasAcknowledged && !localAck) {
             setIsOpen(true);
         } else {
             setIsOpen(false);
@@ -52,9 +52,9 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
                 if (res.success) {
                     toast.success("Results acknowledged");
 
-                    // Persist locally for this session to kill flicker/repeat pops
+                    // Kill the modal for good in localStorage
                     if (typeof window !== 'undefined') {
-                        sessionStorage.setItem('prop_ack_complete', 'true');
+                        localStorage.setItem('prop_ack_v1', 'true');
                     }
 
                     setHasAcknowledged(true);

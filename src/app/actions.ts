@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getPredictions(onlyOpen: boolean = false) {
@@ -283,8 +283,10 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
 
     if (!user) return [];
 
-    // If fetching for recap, ensure we get FRESH data
-    const queryOptions = onlyUnacknowledged ? { head: false, count: null } : {};
+    // If fetching for recap, ensure we get FRESH data by bypassing cache
+    if (onlyUnacknowledged) {
+        noStore();
+    }
 
     let query = supabase
         .from("votes")
@@ -319,6 +321,10 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return [];
+
+    if (onlyUnacknowledged) {
+        noStore();
+    }
 
     let query = supabase
         .from("bundles")

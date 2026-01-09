@@ -11,7 +11,7 @@ interface PullToRefreshProps {
     className?: string;
 }
 
-const PULL_THRESHOLD = 100;
+const PULL_THRESHOLD = 70; // Tightened from 100
 
 export default function PullToRefresh({ onRefresh, children, className }: PullToRefreshProps) {
     const [pullDistance, setPullDistance] = useState(0);
@@ -31,8 +31,8 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
             const currentY = moveEvent.touches[0].pageY;
             const diff = currentY - startY;
             if (diff > 0 && window.scrollY <= 0) {
-                // Resistant pulling physics
-                const pull = Math.pow(diff, 0.85);
+                // More direct pulling physics for faster response
+                const pull = Math.pow(diff, 0.92); // Tightened from 0.85
                 setPullDistance(pull);
                 pullY.set(pull);
                 if (diff > 10) {
