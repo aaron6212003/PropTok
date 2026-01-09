@@ -537,6 +537,7 @@ export async function getTournament(id: string) {
 }
 
 export async function getTournamentLeaderboard(tournamentId: string) {
+    noStore(); // Force fresh data
     const supabase = await createClient();
 
     // Join entries with users to get usernames/avatars

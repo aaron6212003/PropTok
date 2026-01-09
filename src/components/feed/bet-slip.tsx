@@ -1,7 +1,7 @@
 "use client";
 
 import { useBetSlip } from "@/lib/context/bet-slip-context";
-import { placeBundleWager, submitVote } from "@/app/actions";
+import { placeBundleWager, submitVote, getUserTournamentEntries } from "@/app/actions";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
@@ -14,17 +14,44 @@ interface BetSlipProps {
 }
 
 export default function BetSlip({ bankroll }: BetSlipProps) {
-    const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId } = useBetSlip();
-    const [wager, setWager] = useState(Math.min(25, bankroll));
+    const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId: contextTournamentId } = useBetSlip();
+    const [wager, setWager] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [myTournaments, setMyTournaments] = useState<any[]>([]);
+    const [activeWalletId, setActiveWalletId] = useState<string | "cash">("cash"); // "cash" or tournament_id
     const router = useRouter();
 
-    // Context sync: Clamp wager if bankroll decreases (e.g. switching wallets)
+    // Fetch Tournaments on Load
     useEffect(() => {
-        if (wager > bankroll) {
-            setWager(bankroll);
+        const fetchTournaments = async () => {
+            // Import dynamically to avoid server-action issues if needed, or just call imported
+            const entries = await getUserTournamentEntries();
+            setMyTournaments(entries || []);
+
+            // If context already has a tournament set, default to it
+            if (contextTournamentId) {
+                setActiveWalletId(contextTournamentId);
+            }
+        };
+        fetchTournaments();
+    }, [contextTournamentId]);
+
+    // Derived State for Current Balance
+    const activeBalance = activeWalletId === "cash"
+        ? bankroll
+        : myTournaments.find(t => t.tournament_id === activeWalletId)?.current_stack || 0;
+
+    // Default wager to a safe amount of active balance
+    useEffect(() => {
+        // Only set default if wager is 0 to avoid overriding user input
+        if (wager === 0 && activeBalance > 0) {
+            setWager(Math.min(25, activeBalance));
         }
-    }, [bankroll, wager]);
+        // Clamp if balance drops below current wager (e.g. switching wallets)
+        if (wager > activeBalance) {
+            setWager(activeBalance);
+        }
+    }, [activeBalance, wager]);
 
     if (items.length === 0) return null;
 
@@ -35,10 +62,12 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
     const handlePlaceBet = async () => {
         setIsSubmitting(true);
         try {
+            const targetTournamentId = activeWalletId === "cash" ? undefined : activeWalletId;
+
             if (items.length === 1) {
                 // Single Bet
                 const item = items[0];
-                const res = await submitVote(item.predictionId, item.side, wager, tournamentId || undefined);
+                const res = await submitVote(item.predictionId, item.side, wager, targetTournamentId);
                 if (res.error) toast.error(res.error);
                 else {
                     toast.success("Bet Placed!");
@@ -48,7 +77,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
             } else {
                 // Bundle
                 const legs = items.map(i => ({ id: i.predictionId, side: i.side, multiplier: i.multiplier }));
-                const res = await placeBundleWager(legs, wager, tournamentId || undefined);
+                const res = await placeBundleWager(legs, wager, targetTournamentId);
                 if (res.error) toast.error(res.error);
                 else {
                     toast.success("Bundle Placed!");
@@ -165,8 +194,65 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                                 </AnimatePresence>
                             </div>
 
-                            {/* Wager Controls */}
+                            {/* Wallet Selector & Controls */}
                             <div className="border-t border-white/10 bg-black p-6 pb-10">
+
+                                {/* Wallet Selector */}
+                                <div className="mb-6">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                            Pay With
+                                        </span>
+                                        <span className="text-[10px] font-bold text-white">
+                                            Balance: <span className="text-success">${activeBalance.toLocaleString()}</span>
+                                        </span>
+                                    </div>
+
+                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                                        {/* Cash Option */}
+                                        <button
+                                            onClick={() => setActiveWalletId("cash")}
+                                            className={cn(
+                                                "flex flex-col items-start gap-1 rounded-xl border p-3 min-w-[120px] transition-all",
+                                                activeWalletId === "cash"
+                                                    ? "border-brand bg-brand/10"
+                                                    : "border-white/10 bg-zinc-900 hover:bg-zinc-800"
+                                            )}
+                                        >
+                                            <span className={cn("text-[10px] font-black uppercase tracking-widest", activeWalletId === "cash" ? "text-brand" : "text-zinc-500")}>Prop Cash</span>
+                                            <span className="text-sm font-bold text-white">${bankroll.toLocaleString()}</span>
+                                        </button>
+
+                                        {/* Tournament Options */}
+                                        {myTournaments.map(t => (
+                                            <button
+                                                key={t.tournament_id}
+                                                onClick={() => setActiveWalletId(t.tournament_id)}
+                                                className={cn(
+                                                    "flex flex-col items-start gap-1 rounded-xl border p-3 min-w-[140px] max-w-[160px] transition-all",
+                                                    activeWalletId === t.tournament_id
+                                                        ? "border-yellow-500 bg-yellow-500/10"
+                                                        : "border-white/10 bg-zinc-900 hover:bg-zinc-800"
+                                                )}
+                                            >
+                                                <span className={cn(
+                                                    "text-[10px] font-black uppercase tracking-widest truncate w-full text-left",
+                                                    activeWalletId === t.tournament_id ? "text-yellow-500" : "text-zinc-500"
+                                                )}>
+                                                    {t.tournament?.name || "Tournament"}
+                                                </span>
+                                                <span className="text-sm font-bold text-white">${t.current_stack.toLocaleString()}</span>
+                                            </button>
+                                        ))}
+
+                                        {myTournaments.length === 0 && (
+                                            <div className="flex items-center justify-center rounded-xl border border-dashed border-white/5 bg-transparent px-4">
+                                                <span className="text-[10px] text-zinc-600">No Tournaments</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="mb-6 flex flex-col items-center">
                                     <div className="mb-2 flex items-baseline gap-1">
                                         <span className="text-5xl font-black text-white">${wager}</span>
@@ -175,7 +261,8 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                                     <input
                                         type="range"
                                         min="0"
-                                        max={bankroll || 1000}
+                                        max={activeBalance}
+                                        step={1}
                                         value={wager}
                                         onChange={(e) => setWager(Number(e.target.value))}
                                         className="h-4 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-brand"
@@ -185,11 +272,11 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                                         {[10, 25, 50, 100].map(amt => (
                                             <button
                                                 key={amt}
-                                                disabled={amt > bankroll}
+                                                disabled={amt > activeBalance}
                                                 onClick={() => setWager(amt)}
                                                 className={cn(
                                                     "flex-1 rounded-lg py-2 text-xs font-bold transition-all",
-                                                    amt > bankroll
+                                                    amt > activeBalance
                                                         ? "bg-zinc-900/50 text-zinc-700 cursor-not-allowed"
                                                         : "bg-zinc-900 text-white hover:bg-zinc-800 active:scale-95"
                                                 )}
@@ -207,10 +294,10 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
 
                                 <button
                                     onClick={handlePlaceBet}
-                                    disabled={isSubmitting || bankroll <= 0 || wager <= 0}
+                                    disabled={isSubmitting || activeBalance <= 0 || wager <= 0}
                                     className="w-full rounded-2xl bg-brand py-4 text-xl font-black uppercase tracking-widest text-black shadow-lg shadow-brand/20 transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale"
                                 >
-                                    {isSubmitting ? "Placing..." : bankroll <= 0 ? "Insufficient Funds" : wager <= 0 ? "Set Wager" : `To Win $${payout}`}
+                                    {isSubmitting ? "Placing..." : activeBalance <= 0 ? "Insufficient Funds" : wager <= 0 ? "Set Wager" : `To Win $${payout}`}
                                 </button>
                             </div>
                         </motion.div>
