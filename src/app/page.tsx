@@ -3,9 +3,11 @@ import BottomNavBar from "@/components/layout/bottom-nav";
 import PredictionFeed from "@/components/feed/prediction-feed";
 import { getPredictions, getUserTournamentEntries } from "./actions";
 import { createClient } from "@/lib/supabase/server";
-import { Coins } from "lucide-react";
+import { Coins, Trophy as TrophyIcon, ChevronDown } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
 import WalletToggle from "@/components/layout/wallet-toggle";
+
+export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
   const { tournament: tournamentId } = await searchParams;

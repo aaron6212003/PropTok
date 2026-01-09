@@ -107,6 +107,7 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
     }
 
     revalidatePath("/");
+    revalidatePath("/profile");
     return { success: true };
 }
 

@@ -36,6 +36,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
             params.delete('tournament');
         }
         router.push(`${window.location.pathname}?${params.toString()}`);
+        router.refresh(); // Force re-fetch of server data
         setIsOpen(false);
     };
 

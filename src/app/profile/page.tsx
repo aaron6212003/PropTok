@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
+
+export const dynamic = 'force-dynamic';
 import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';

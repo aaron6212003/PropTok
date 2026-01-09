@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Prediction } from '@/lib/types';
+import { useSearchParams } from 'next/navigation';
 
 export interface SlipItem {
     predictionId: string;
@@ -20,7 +21,6 @@ interface BetSlipContextType {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
     tournamentId: string | null;
-    setTournamentId: (id: string | null) => void;
 }
 
 const BetSlipContext = createContext<BetSlipContextType | undefined>(undefined);
@@ -28,7 +28,8 @@ const BetSlipContext = createContext<BetSlipContextType | undefined>(undefined);
 export function BetSlipProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<SlipItem[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [tournamentId, setTournamentId] = useState<string | null>(null);
+    const searchParams = useSearchParams();
+    const tournamentId = searchParams.get('tournament');
 
     // Initial load from local storage could go here
 
@@ -66,7 +67,7 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <BetSlipContext.Provider value={{ items, addToSlip, removeFromSlip, toggleInSlip, clearSlip, isOpen, setIsOpen, tournamentId, setTournamentId }}>
+        <BetSlipContext.Provider value={{ items, addToSlip, removeFromSlip, toggleInSlip, clearSlip, isOpen, setIsOpen, tournamentId }}>
             {children}
         </BetSlipContext.Provider>
     );

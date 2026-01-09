@@ -17,13 +17,6 @@ interface PredictionFeedProps {
 type SortOption = 'trending' | 'ending' | 'new';
 
 export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
-    const { setTournamentId } = useBetSlip();
-
-    useEffect(() => {
-        setTournamentId(tournamentId || null);
-        return () => setTournamentId(null);
-    }, [tournamentId, setTournamentId]);
-
     const [sortBy, setSortBy] = useState<SortOption>('trending');
 
     // Sort Predictions
