@@ -53,7 +53,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-40 font-sans text-white h-full justify-center">
 
                     {/* Main Content Area - Centered */}
-                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto gap-4">
+                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto gap-8 pt-12">
                         {/* Category Badge - Centered above question */}
                         <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2">
                             <span className={cn(
@@ -164,7 +164,11 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 </div>
             </div>
 
-            <CommentsDrawer isOpen={showComments} onClose={() => setShowComments(false)} />
+            <CommentsDrawer
+                predictionId={prediction.id}
+                isOpen={showComments}
+                onClose={() => setShowComments(false)}
+            />
         </>
     );
 }

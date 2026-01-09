@@ -1,118 +1,143 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, ThumbsUp } from 'lucide-react';
+import { X, Send, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MOCK_USER } from '@/lib/mock-data';
-
-// Mock comments data
-const MOCK_COMMENTS = [
-    { id: '1', user: 'crypto_king', text: 'Bitcoin definitely hitting 100k, look at the volume!', side: 'YES', likes: 45, time: '2m' },
-    { id: '2', user: 'bear_market', text: 'No way, resistance is too strong at 98k.', side: 'NO', likes: 12, time: '5m' },
-    { id: '3', user: 'moon_b0y', text: 'LFG!!! 🚀', side: 'YES', likes: 8, time: '12m' },
-    { id: '4', user: 'skeptic_sam', text: 'This is a trap.', side: 'NO', likes: 23, time: '15m' },
-];
+import { getComments, postComment } from '@/app/actions';
+import CommentItem from './comment-item';
+import { toast } from 'sonner';
 
 export default function CommentsDrawer({
     isOpen,
-    onClose
+    onClose,
+    predictionId
 }: {
     isOpen: boolean;
     onClose: () => void;
+    predictionId: string;
 }) {
-    const [activeTab, setActiveTab] = useState<'ALL' | 'YES' | 'NO'>('ALL');
+    const [comments, setComments] = useState<any[]>([]);
+    const [newComment, setNewComment] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (isOpen && predictionId) {
+            fetchComments();
+        }
+    }, [isOpen, predictionId]);
+
+    const fetchComments = async () => {
+        setIsLoading(true);
+        const data = await getComments(predictionId);
+        setComments(data);
+        setIsLoading(false);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newComment.trim() || isSubmitting) return;
+
+        setIsSubmitting(true);
+        const res = await postComment(predictionId, newComment);
+
+        if (res.success) {
+            setNewComment("");
+            fetchComments();
+        } else {
+            toast.error(res.error || "Failed to post comment");
+        }
+        setIsSubmitting(false);
+    };
 
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop */}
+                    {/* Backdrop with premium blur */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-xl"
                     />
 
-                    {/* Drawer */}
+                    {/* Drawer - Cinematic Slide */}
                     <motion.div
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 right-0 z-50 flex h-[70vh] flex-col rounded-t-3xl bg-zinc-900 shadow-2xl ring-1 ring-white/10"
+                        transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+                        className="fixed bottom-0 left-0 right-0 z-[70] flex h-[85vh] flex-col rounded-t-[40px] bg-zinc-950 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10"
                     >
+                        {/* Drag Handle */}
+                        <div className="flex justify-center p-3">
+                            <div className="h-1.5 w-12 rounded-full bg-white/10" />
+                        </div>
+
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b border-white/5 p-4">
-                            <h2 className="text-lg font-bold">Debate</h2>
-                            <button onClick={onClose} className="rounded-full bg-white/5 p-2 transition-colors hover:bg-white/10">
+                        <div className="flex items-center justify-between px-6 py-2 border-b border-white/5">
+                            <div className="flex flex-col">
+                                <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Social Feed</h2>
+                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{comments.length} Comments</span>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="rounded-full bg-white/5 p-3 text-zinc-400 transition-all hover:bg-white/10 hover:text-white"
+                            >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        {/* Tabs */}
-                        <div className="flex p-2">
-                            {['ALL', 'YES', 'NO'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab as any)}
-                                    className={cn(
-                                        "flex-1 rounded-lg py-2 text-xs font-bold transition-colors",
-                                        activeTab === tab
-                                            ? "bg-white/10 text-white"
-                                            : "text-zinc-500 hover:bg-white/5"
-                                    )}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-
                         {/* Comments List */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {MOCK_COMMENTS
-                                .filter(c => activeTab === 'ALL' || c.side === activeTab)
-                                .map((comment) => (
-                                    <div key={comment.id} className="flex gap-3">
-                                        <div className="h-8 w-8 shrink-0 rounded-full bg-zinc-800" />
-                                        <div className="flex-1 space-y-1">
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-sm font-bold text-white">{comment.user}</span>
-                                                <span className={cn(
-                                                    "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded",
-                                                    comment.side === 'YES' ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive"
-                                                )}>
-                                                    {comment.side}
-                                                </span>
-                                                <span className="text-xs text-zinc-500">{comment.time}</span>
-                                            </div>
-                                            <p className="text-sm text-zinc-300">{comment.text}</p>
-                                            <div className="flex items-center gap-4 pt-1">
-                                                <button className="flex items-center gap-1 text-xs text-zinc-500 hover:text-white">
-                                                    <ThumbsUp size={12} />
-                                                    {comment.likes}
-                                                </button>
-                                                <button className="text-xs text-zinc-500 hover:text-white">Reply</button>
-                                            </div>
-                                        </div>
+                        <div className="flex-1 overflow-y-auto py-6 no-scrollbar">
+                            {isLoading ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Loading Debate...</span>
+                                </div>
+                            ) : comments.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
+                                    <div className="mb-6 rounded-full bg-brand/5 p-8 border border-brand/10">
+                                        <Sparkles className="text-brand opacity-50" size={40} />
                                     </div>
-                                ))}
+                                    <h3 className="text-lg font-black uppercase italic text-white mb-2">Be the first to speak</h3>
+                                    <p className="text-sm text-zinc-500 max-w-[200px] leading-relaxed">The debate is empty. Drop your take below!</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {comments.map((comment) => (
+                                        <CommentItem key={comment.id} comment={comment} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
-                        {/* Input */}
-                        <div className="border-t border-white/10 bg-zinc-900 p-4 pb-8">
-                            <div className="flex items-center gap-2 rounded-full bg-black/40 px-4 py-2 ring-1 ring-white/10 focus-within:ring-brand">
+                        {/* Input Area - Glassmorphism */}
+                        <div className="p-6 pb-12 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md">
+                            <form
+                                onSubmit={handleSubmit}
+                                className="relative flex items-center gap-3 bg-white/5 rounded-[28px] p-2 pr-3 border border-white/5 focus-within:border-brand/40 focus-within:bg-white/10 transition-all shadow-2xl"
+                            >
                                 <input
                                     type="text"
-                                    placeholder="Add to the debate..."
-                                    className="flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-600"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    placeholder="Drop a take..."
+                                    className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-zinc-600 font-medium text-white"
                                 />
-                                <button className="text-brand">
+                                <button
+                                    disabled={!newComment.trim() || isSubmitting}
+                                    className={cn(
+                                        "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                                        newComment.trim() ? "bg-brand text-white shadow-lg shadow-brand/20 active:scale-90" : "bg-white/5 text-zinc-700"
+                                    )}
+                                >
                                     <Send size={18} />
                                 </button>
-                            </div>
+                            </form>
                         </div>
                     </motion.div>
                 </>

@@ -550,3 +550,76 @@ export async function getUserTournamentEntries() {
 
     return data;
 }
+
+// --- Social Actions ---
+
+export async function getComments(predictionId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("comment_details")
+        .select("*")
+        .eq("prediction_id", predictionId)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching comments:", error);
+        return [];
+    }
+
+    return data;
+}
+
+export async function postComment(predictionId: string, text: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Not authenticated" };
+
+    const { error } = await supabase.from("comments").insert({
+        prediction_id: predictionId,
+        user_id: user.id,
+        text
+    });
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/", "layout");
+    return { success: true };
+}
+
+export async function likeComment(commentId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Not authenticated" };
+
+    // Check if liked
+    const { data: existing } = await supabase
+        .from("comment_likes")
+        .select("*")
+        .eq("comment_id", commentId)
+        .eq("user_id", user.id)
+        .single();
+
+    if (existing) {
+        // Unlike
+        const { error } = await supabase
+            .from("comment_likes")
+            .delete()
+            .eq("comment_id", commentId)
+            .eq("user_id", user.id);
+        if (error) return { error: error.message };
+    } else {
+        // Like
+        const { error } = await supabase
+            .from("comment_likes")
+            .insert({
+                comment_id: commentId,
+                user_id: user.id
+            });
+        if (error) return { error: error.message };
+    }
+
+    revalidatePath("/", "layout");
+    return { success: true };
+}
