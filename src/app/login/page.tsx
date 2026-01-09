@@ -23,16 +23,26 @@ export default function LoginPage() {
         let error;
 
         if (view === 'signup') {
-            const { error: signUpError } = await supabase.auth.signUp({
+            const { data, error: signUpError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     emailRedirectTo: redirectUrl,
-                    data: { full_name: username } // [NEW] Pass username to trigger
+                    data: { full_name: username }
                 }
             });
             error = signUpError;
-            if (!error) setMessage("Check your email to confirm signup!");
+
+            if (!error) {
+                if (data.session) {
+                    // Verification is off, or auto-confirmed
+                    router.push('/');
+                    router.refresh();
+                } else {
+                    // Verification is on
+                    setMessage("Check your email to confirm signup!");
+                }
+            }
         } else {
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email,
