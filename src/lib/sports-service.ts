@@ -98,6 +98,14 @@ export const sportsService = {
             "soccer_uefa_champions_league"
         ];
 
+        const sportCategoryMap: Record<string, string> = {
+            "americanfootball_nfl": "NFL",
+            "basketball_nba": "NBA",
+            "icehockey_nhl": "NHL",
+            "soccer_epl": "Soccer",
+            "soccer_uefa_champions_league": "Soccer"
+        };
+
         const allFetchedGames: any[] = [];
 
         for (const sport of sports) {
@@ -166,10 +174,11 @@ export const sportsService = {
                 const question = this.generateQuestion(market.key, game, primaryOutcome);
                 const yesMultiplier = this.decimalToMultiplier(primaryOutcome.price);
                 const noMultiplier = this.decimalToMultiplier(secondaryOutcome.price);
+                const category = sportCategoryMap[game.sport_key] || 'Sports';
 
                 const { error: insertError } = await supabase.from("predictions").insert({
                     question,
-                    category: 'Sports',
+                    category,
                     expires_at: game.commence_time,
                     yes_multiplier: yesMultiplier,
                     no_multiplier: noMultiplier,

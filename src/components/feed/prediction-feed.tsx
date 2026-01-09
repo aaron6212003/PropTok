@@ -8,7 +8,7 @@ import { useScroll, useTransform } from 'framer-motion';
 import { Prediction } from "@/lib/types";
 import { Flame, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useBetSlip } from '@/lib/context/bet-slip-context';
+import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
 import EmptyState from '../ui/empty-state';
 import { toast } from 'sonner';
 
@@ -22,23 +22,48 @@ type SortOption = 'trending' | 'ending' | 'new';
 
 export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
     const [sortBy, setSortBy] = useState<SortOption>('trending');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const router = useRouter();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Sort Predictions
-    const sortedPredictions = useMemo(() => {
-        const preds = [...initialPredictions];
+    // Get unique categories from predictions
+    const availableCategories = useMemo(() => {
+        const cats = new Set<string>();
+        initialPredictions.forEach(p => {
+            if (p.category) cats.add(p.category);
+        });
+        return Array.from(cats).sort();
+    }, [initialPredictions]);
+
+    const toggleCategory = (cat: string) => {
+        setSelectedCategories(prev =>
+            prev.includes(cat)
+                ? prev.filter(c => c !== cat)
+                : [...prev, cat]
+        );
+    };
+
+    // Filter and then Sort Predictions
+    const filteredAndSortedPredictions = useMemo(() => {
+        let filtered = [...initialPredictions];
+
+        // Apply Category Filter
+        if (selectedCategories.length > 0) {
+            filtered = filtered.filter(p => selectedCategories.includes(p.category));
+        }
+
+        // Apply Sorting
         switch (sortBy) {
             case 'trending':
-                return preds.sort((a, b) => (b.volume || 0) - (a.volume || 0));
+                return filtered.sort((a, b) => (b.volume || 0) - (a.volume || 0));
             case 'ending':
-                return preds.sort((a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime());
+                return filtered.sort((a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime());
             case 'new':
-                return preds.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
             default:
-                return preds;
+                return filtered;
         }
-    }, [initialPredictions, sortBy]);
+    }, [initialPredictions, sortBy, selectedCategories]);
 
     const handleRefresh = async () => {
         router.refresh();
@@ -84,8 +109,42 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                 </div>
             </div>
 
-            <div ref={scrollRef} className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar">
-                {sortedPredictions.map((prediction) => {
+            <div className="fixed top-[124px] left-0 right-0 z-40 flex px-4 overflow-x-auto no-scrollbar gap-2 pointer-events-none">
+                <div className="flex items-center gap-2 pointer-events-auto pb-2">
+                    <button
+                        onClick={() => setSelectedCategories([])}
+                        className={cn(
+                            "whitespace-nowrap rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border transition-all",
+                            selectedCategories.length === 0
+                                ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                                : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20"
+                        )}
+                    >
+                        All Sports
+                    </button>
+                    {availableCategories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => toggleCategory(cat)}
+                            className={cn(
+                                "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border transition-all",
+                                selectedCategories.includes(cat)
+                                    ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                                    : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20"
+                            )}
+                        >
+                            <div
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
+                            />
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div ref={scrollRef} className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar pt-12">
+                {filteredAndSortedPredictions.map((prediction: any) => {
                     const fallbackYesMultiplier = Number((0.95 / Math.max(0.01, (prediction.yes_percent || 50) / 100)).toFixed(2));
                     const fallbackNoMultiplier = Number((0.95 / Math.max(0.01, 1 - (prediction.yes_percent || 50) / 100)).toFixed(2));
 
@@ -114,7 +173,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                     );
                 })}
 
-                {sortedPredictions.length === 0 && (
+                {filteredAndSortedPredictions.length === 0 && (
                     <EmptyState
                         icon={Sparkles}
                         title="No Markets Found"
