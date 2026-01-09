@@ -15,6 +15,12 @@ export async function GET() {
         SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? "FOUND" : "MISSING",
         SUPABASE_ADMIN_KEY: process.env.SUPABASE_ADMIN_KEY ? "FOUND" : "MISSING",
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "FOUND" : "MISSING",
+        meta: {
+            url: process.env.VERCEL_URL || "local",
+            region: process.env.VERCEL_REGION || "local",
+            time: new Date().toISOString(),
+            node_env: process.env.NODE_ENV
+        }
     };
     results.push({ type: "Environment Diagnostics", ...envDiagnostics });
 
