@@ -361,19 +361,19 @@ export async function acknowledgeResults() {
 
     if (!user) return { error: "Not authenticated" };
 
-    // 2. Use ADMIN client to bypass RLS and force-clear status
-    // This is safer because we've already verified the user's identity above
+    // 2. Use ADMIN client if available to bypass RLS, otherwise fallback to standard client
+    // Standard client works IF the RLS update policies are applied
     const admin = createAdminClient();
-    if (!admin) return { error: "Admin environment not configured" };
+    const client = admin || supabase;
 
     // Batch acknowledge both votes and bundles
     const [votesRes, bundlesRes] = await Promise.all([
-        admin
+        client
             .from("votes")
             .update({ acknowledged: true })
             .eq("user_id", user.id)
             .eq("acknowledged", false),
-        admin
+        client
             .from("bundles")
             .update({ acknowledged: true })
             .eq("user_id", user.id)
@@ -382,7 +382,7 @@ export async function acknowledgeResults() {
 
     if (votesRes.error || bundlesRes.error) {
         console.error("Acknowledge Error:", votesRes.error || bundlesRes.error);
-        return { error: "Failed to acknowledge results" };
+        return { error: "Failed to acknowledge results. Check RLS policies." };
     }
 
     revalidatePath("/", "layout");
