@@ -107,7 +107,7 @@ export default function CommentItem({ comment, replies = [], onReply }: CommentI
                             <span className="tabular-nums">{likes}</span>
                         </button>
                         <button
-                            onClick={() => onReply(comment.id, comment.username)}
+                            onClick={() => onReply(comment.id, comment.username || 'anon')}
                             className="text-xs font-bold text-zinc-500 hover:text-white transition-colors"
                         >
                             Reply

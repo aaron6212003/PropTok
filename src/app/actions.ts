@@ -567,6 +567,21 @@ export async function getTournamentLeaderboard(tournamentId: string) {
     return data;
 }
 
+export async function getAllTournaments() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("tournaments")
+        .select("id, name, status")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching all tournaments:", error);
+        return [];
+    }
+
+    return data;
+}
+
 export async function getUserTournamentEntries() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

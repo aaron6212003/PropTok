@@ -1,13 +1,23 @@
 "use client";
 
 import { useTransition, useState, useEffect } from "react";
-import { createPrediction, resolvePrediction, autoResolvePrediction, undoResolvePrediction, getPredictions, clearDatabase, adminResetTournament } from "@/app/actions";
-import { Trash2, Plus, Clock, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
+import {
+    createPrediction,
+    resolvePrediction,
+    autoResolvePrediction,
+    undoResolvePrediction,
+    getPredictions,
+    clearDatabase,
+    adminResetTournament,
+    getAllTournaments
+} from "@/app/actions";
+import { Trash2, Plus, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
 import { toast } from "sonner";
 
 export default function AdminPage() {
     const [isPending, startTransition] = useTransition();
     const [predictions, setPredictions] = useState<any[]>([]);
+    const [tournaments, setTournaments] = useState<any[]>([]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('admin_unlocked')) {
@@ -15,6 +25,7 @@ export default function AdminPage() {
             return;
         }
         getPredictions().then(setPredictions);
+        getAllTournaments().then(setTournaments);
     }, []);
 
     const handleClear = () => {
@@ -55,13 +66,21 @@ export default function AdminPage() {
                         }}
                         className="flex items-center gap-2 rounded-full bg-white/5 p-1 pr-2"
                     >
-                        <input
+                        <select
                             name="tournament_id"
-                            placeholder="Tournament ID"
-                            className="bg-transparent px-3 py-1 text-xs font-bold text-white outline-none placeholder:text-zinc-600 w-32"
+                            className="bg-transparent px-3 py-1 text-xs font-bold text-white outline-none w-48 appearance-none"
                             required
-                        />
-                        <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20">
+                            defaultValue=""
+                        >
+                            <option value="" disabled className="text-zinc-500">Select Tournament</option>
+                            {tournaments.map(t => (
+                                <option key={t.id} value={t.id} className="text-black">
+                                    {t.name} ({t.status})
+                                </option>
+                            ))}
+                        </select>
+                        <div className="h-4 w-[1px] bg-white/10" />
+                        <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20 transition-colors">
                             <RotateCcw size={14} />
                         </button>
                     </form>
