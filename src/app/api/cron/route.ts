@@ -37,6 +37,15 @@ export async function GET() {
         results.push({ type: "Ingestion Error", message: e.message });
     }
 
+    // --- PART 1.5: SPORTS RESOLUTION ---
+    try {
+        const resolveLogs = await sportsService.resolveGames();
+        resolveLogs.forEach((log: string) => results.push({ type: "Sports Resolution", log }));
+    } catch (e: any) {
+        console.error("Sports Resolution Failed:", e);
+        results.push({ type: "Resolution Error", message: e.message });
+    }
+
     // Keep crypto mock for now as it's useful
     const CRYPTO_MOCKS = [
         {

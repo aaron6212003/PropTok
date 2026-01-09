@@ -289,5 +289,207 @@ export const sportsService = {
         logs.push(`Process Complete. Added: ${addedCount}, Skipped/Duplicates: ${skippedCount}`);
         console.log(`[sportsService] ${logs[logs.length - 1]}`);
         return logs;
+    },
+
+    async fetchScores(sport: string, daysFrom: number = 3) {
+        const apiKey = process.env.THE_ODDS_API_KEY;
+        if (!apiKey) return { error: "API Key Missing", data: [] };
+
+        try {
+            // Fetch scores for completed games
+            const url = `${BASE_URL}/${sport}/scores/?apiKey=${apiKey}&daysFrom=${daysFrom}&dateFormat=iso`;
+            const response = await fetch(url);
+
+            if (!response.ok) return { error: `API Error ${response.status}`, data: [] };
+
+            const data = await response.json();
+            // Filter for completed games only
+            const completed = Array.isArray(data) ? data.filter((g: any) => g.completed) : [];
+
+            console.log(`[sportsService] Fetched ${completed.length} completed games for ${sport}`);
+            return { data: completed };
+        } catch (error: any) {
+            console.error(`[sportsService] Score fetch error for ${sport}:`, error);
+            return { error: error.message, data: [] };
+        }
+    },
+
+    async resolveGames() {
+        console.log("[sportsService] Starting Resolution Process...");
+        const logs: string[] = [];
+        const supabase = createAdminClient();
+
+        if (!supabase) {
+            logs.push("Resolution Aborted: Admin client missing.");
+            return logs;
+        }
+
+        // 1. Fetch all UNRESOLVED predictions with an external_id (live sports)
+        const { data: predictions, error: fetchError } = await supabase
+            .from("predictions")
+            .select("*")
+            .eq("resolved", false)
+            .not("external_id", "is", null);
+
+        if (fetchError || !predictions || predictions.length === 0) {
+            logs.push("No unresolved sports predictions found.");
+            return logs;
+        }
+
+        console.log(`[sportsService] Found ${predictions.length} predictions to check.`);
+
+        // 2. Map predictions to Sports so we know which score APIs to hit.
+        // We can infer sport from matching logic, but better to hit all active sports.
+        const sports = [
+            "americanfootball_nfl",
+            "basketball_nba",
+            "icehockey_nhl",
+            "soccer_epl",
+            "soccer_uefa_champions_league",
+            "basketball_ncaab",
+            "americanfootball_ncaaf"
+        ];
+
+        // 3. Fetch scores for all sports
+        const allScores: any[] = [];
+        for (const sport of sports) {
+            const res = await this.fetchScores(sport);
+            if (!res.error && res.data) {
+                allScores.push(...res.data);
+            }
+        }
+
+        const scoreMap = new Map(); // GameID -> ScoreData
+        allScores.forEach(game => scoreMap.set(game.id, game));
+
+        logs.push(`Fetched scores for ${allScores.length} finished games.`);
+
+        // 4. Grading Logic
+        let resolvedCount = 0;
+
+        for (const p of predictions) {
+            // Breakdown external_id: "gameId-market-identifier"
+            const parts = p.external_id.split('-');
+            const gameId = parts[0];
+            // Note: split isn't perfect if gameId has hyphens? 
+            // The Odds API game ids are usually 32-char hex strings without hyphens.
+
+            // Check if we have a score for this game
+            const gameResult = scoreMap.get(gameId);
+            if (!gameResult || !gameResult.completed || !gameResult.scores) continue;
+
+            const marketKey = parts[1]; // e.g., 'h2h', 'spreads', 'totals'
+
+            // Skip player props for now (no score data usually)
+            if (marketKey.startsWith('player_')) continue;
+
+            // Get Scores
+            let homeScore = 0;
+            let awayScore = 0;
+            // The Odds API scores array: [{name: "Home", score: "10"}, {name: "Away", score: "5"}]
+            // We match by team name in `gameResult.home_team` / `gameResult.away_team`
+
+            const homeScoreObj = gameResult.scores.find((s: any) => s.name === gameResult.home_team);
+            const awayScoreObj = gameResult.scores.find((s: any) => s.name === gameResult.away_team);
+
+            if (!homeScoreObj || !awayScoreObj) continue; // Data issue
+
+            homeScore = parseInt(homeScoreObj.score);
+            awayScore = parseInt(awayScoreObj.score);
+
+            let outcome: 'YES' | 'NO' | null = null;
+
+            // --- GRADE H2H ---
+            if (marketKey === 'h2h') {
+                // p.question: "Will [Team] win...?"
+                // primaryOutcome stored in external_id... wait.
+                // We reconstructed external_id = `${game.id}-${market.key}-${primaryOutcome.name}`
+                // but we LOWERCASED and REGEX replaced it.
+                // Re-parsing is hard.
+
+                // Better approach: Use `p.raw_odds` if available?
+                // `raw_odds` stores the GAME object. It doesn't tell us which SIDE this prediction is for.
+                // BUT we know: Prediction is ALWAYS "Will [YesOutcome] win?".
+                // We need to know who [YesOutcome] is.
+                // We can parse it from `p.question`. "Will [TEAM] win..."
+
+                // Helper to extract team name from question
+                // "Will Los Angeles Lakers win against...?"
+                const match = p.question.match(/Will (.+?) win against/);
+                if (match) {
+                    const pickedTeam = match[1]; // "Los Angeles Lakers"
+                    // Compare with winner
+                    const winner = homeScore > awayScore ? gameResult.home_team : gameResult.away_team;
+                    // Fuzzy match names? The Odds API names should be consistent.
+                    if (pickedTeam === winner) outcome = 'YES';
+                    else outcome = 'NO';
+                }
+            }
+
+            // --- GRADE TOTALS ---
+            else if (marketKey === 'totals') {
+                // "Will [Home] vs [Away] go OVER 210.5 points?"
+                const totalScore = homeScore + awayScore;
+
+                // Extract line and direction from Question
+                // "go OVER 100 points?"
+                const isOver = p.question.toUpperCase().includes("OVER");
+                const lineMatch = p.question.match(/ (OVER|UNDER) ([\d\.]+) /i);
+
+                if (lineMatch) {
+                    const line = parseFloat(lineMatch[2]);
+                    if (isOver) {
+                        outcome = totalScore > line ? 'YES' : 'NO';
+                    } else {
+                        outcome = totalScore < line ? 'YES' : 'NO';
+                    }
+                }
+            }
+
+            // --- GRADE SPREADS ---
+            else if (marketKey === 'spreads') {
+                // "Will [Team] cover -5.5 vs [Opponent]?"
+                const spreadMatch = p.question.match(/Will (.+?) cover ([\+\-\d\.]+) vs/);
+
+                if (spreadMatch) {
+                    const pickedTeam = spreadMatch[1];
+                    const spread = parseFloat(spreadMatch[2]);
+
+                    let adjustedScore = 0;
+                    let opponentScore = 0;
+
+                    if (pickedTeam === gameResult.home_team) {
+                        adjustedScore = homeScore + spread;
+                        opponentScore = awayScore;
+                    } else if (pickedTeam === gameResult.away_team) {
+                        adjustedScore = awayScore + spread;
+                        opponentScore = homeScore;
+                    } else {
+                        continue; // Team name mismatch
+                    }
+
+                    outcome = adjustedScore > opponentScore ? 'YES' : 'NO';
+                }
+            }
+
+
+            if (outcome) {
+                // 5. CALL RESOLUTION RPC
+                const { error } = await supabase.rpc('resolve_prediction', {
+                    p_id: p.id,
+                    p_outcome: outcome
+                });
+
+                if (!error) {
+                    logs.push(`RESOLVED: ${p.question} -> ${outcome} (Score: ${homeScore}-${awayScore})`);
+                    resolvedCount++;
+                } else {
+                    logs.push(`ERROR resolving ${p.id}: ${error.message}`);
+                }
+            }
+        }
+
+        logs.push(`Resolution Complete. Resolved ${resolvedCount} games.`);
+        return logs;
     }
 };
