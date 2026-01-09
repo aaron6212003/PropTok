@@ -42,7 +42,7 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
             const diff = currentY - startY;
 
             // 1. Must be pulling DOWN
-            if (diff > 0) {
+            if (diff > 5) { // Dead zone of 5px to prevent jittery triggers
                 // 2. Check scroll position again (in case it changed)
                 const currentScroll = scrollContainerRef?.current?.scrollTop ?? window.scrollY ?? 0;
                 if (currentScroll > 0) return;
@@ -57,7 +57,8 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
 
                 // LINEAR DAMPENING (Factor 0.5)
                 // Reliable, consistent, no weird math.
-                const resistance = Math.min(diff * 0.5, MAX_PULL);
+                // Subtract dead zone so it starts at 0
+                const resistance = Math.min((diff - 5) * 0.5, MAX_PULL);
 
                 pullY.set(resistance);
                 setPullDistance(resistance);
@@ -112,6 +113,7 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
         <div
             className={cn("relative h-full w-full", className)}
             onTouchStart={handleTouchStart}
+            style={{ touchAction: 'pan-y' }} // Allow vertical scroll but let JS handle overrides
         >
             {/* Refresh Indicator */}
             <div className="absolute left-0 right-0 top-6 z-50 flex justify-center pointer-events-none">

@@ -39,6 +39,11 @@ export default function BottomNavBar() {
                                 whileTap={{ scale: 0.8, rotate: isActive ? 0 : [0, -10, 10, 0] }}
                                 whileHover={{ y: -2 }}
                                 animate={isActive ? { scale: 1.15 } : { scale: 1 }}
+                                onClick={() => {
+                                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                                        navigator.vibrate(5); // Light tap on switch
+                                    }
+                                }}
                             >
                                 <Icon
                                     size={24}

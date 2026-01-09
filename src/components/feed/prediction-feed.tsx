@@ -114,7 +114,10 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                 {/* Filter Trigger Badge */}
                 <div className="pointer-events-auto">
                     <button
-                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        onClick={() => {
+                            setIsFilterOpen(!isFilterOpen);
+                            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
+                        }}
                         className={cn(
                             "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md border shadow-lg transition-all",
                             isFilterOpen || selectedCategories.length > 0
@@ -153,7 +156,10 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                                 <div className="rounded-2xl bg-black/90 border border-white/10 backdrop-blur-xl shadow-2xl p-3">
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
-                                            onClick={() => setSelectedCategories([])}
+                                            onClick={() => {
+                                                setSelectedCategories([]);
+                                                if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
+                                            }}
                                             className={cn(
                                                 "col-span-2 flex items-center justify-between px-4 py-3 rounded-xl transition-all border",
                                                 selectedCategories.length === 0
@@ -168,7 +174,10 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                                         {availableCategories.map(cat => (
                                             <button
                                                 key={cat}
-                                                onClick={() => toggleCategory(cat)}
+                                                onClick={() => {
+                                                    toggleCategory(cat);
+                                                    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5);
+                                                }}
                                                 className={cn(
                                                     "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border",
                                                     selectedCategories.includes(cat)
