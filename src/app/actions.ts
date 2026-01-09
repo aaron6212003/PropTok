@@ -106,8 +106,8 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
         return { error: error.message };
     }
 
-    revalidatePath("/");
-    revalidatePath("/profile");
+    revalidatePath("/", "layout");
+    revalidatePath("/profile", "layout");
     return { success: true };
 }
 
@@ -178,13 +178,9 @@ export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
         p_outcome: outcome
     });
 
-    if (error) {
-        console.error("Resolve error:", error);
-        return { error: error.message };
-    }
-
-    revalidatePath("/");
-    revalidatePath("/admin");
+    revalidatePath("/", "layout");
+    revalidatePath("/profile", "layout");
+    revalidatePath("/admin", "layout");
     return { success: true };
 }
 
@@ -251,9 +247,9 @@ export async function undoResolvePrediction(id: string) {
         return { error: error.message };
     }
 
-    revalidatePath("/");
-    revalidatePath("/admin");
-    revalidatePath("/profile");
+    revalidatePath("/", "layout");
+    revalidatePath("/profile", "layout");
+    revalidatePath("/admin", "layout");
     return { success: true };
 }
 
@@ -439,8 +435,8 @@ export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', m
     const { error: legsError } = await supabase.from("bundle_legs").insert(bundleLegs);
     if (legsError) return { error: "Failed to create bundle legs" };
 
-    revalidatePath("/profile");
-    revalidatePath("/");
+    revalidatePath("/", "layout");
+    revalidatePath("/profile", "layout");
     return { success: true };
 }
 
