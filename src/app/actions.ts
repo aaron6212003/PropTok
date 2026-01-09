@@ -178,6 +178,11 @@ export async function resolvePrediction(id: string, outcome: 'YES' | 'NO') {
         p_outcome: outcome
     });
 
+    if (error) {
+        console.error("Resolve error:", error);
+        return { error: error.message };
+    }
+
     revalidatePath("/", "layout");
     revalidatePath("/profile", "layout");
     revalidatePath("/admin", "layout");
