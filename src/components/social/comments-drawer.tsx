@@ -33,18 +33,18 @@ export default function CommentsDrawer({
         checkUser();
     }, []);
 
-    useEffect(() => {
-        if (isOpen && predictionId) {
-            fetchComments();
-        }
-    }, [isOpen, predictionId]);
-
     const fetchComments = async () => {
         setIsLoading(true);
         const data = await getComments(predictionId);
         setComments(data);
         setIsLoading(false);
     };
+
+    useEffect(() => {
+        if (isOpen && predictionId) {
+            fetchComments();
+        }
+    }, [isOpen, predictionId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

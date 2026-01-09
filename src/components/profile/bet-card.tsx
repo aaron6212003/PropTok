@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, Clock, Layers, ChevronDown, ChevronUp, Trophy, Trash2 } from "lucide-react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { hideBet } from "@/app/actions";
 import { toast } from "sonner";
 
@@ -28,8 +28,6 @@ interface BetCardProps {
 export default function BetCard({ bet }: BetCardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [dragX, setDragX] = useState(0);
-    const dragControls = useDragControls();
 
     const isBundle = bet.isBundle || !!bet.legs;
 
@@ -68,12 +66,12 @@ export default function BetCard({ bet }: BetCardProps) {
 
     return (
         <div className="relative overflow-hidden rounded-2xl">
-            {/* Background Delete Button */}
+            {/* Background Delete Button - Behind the card */}
             <div className="absolute inset-0 flex items-center justify-end bg-destructive px-6">
                 <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 text-white active:scale-95 transition-transform"
                 >
                     <Trash2 size={20} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Delete</span>
@@ -83,21 +81,21 @@ export default function BetCard({ bet }: BetCardProps) {
             {/* Draggable Card Content */}
             <motion.div
                 drag="x"
-                dragControls={dragControls}
                 dragConstraints={{ left: -100, right: 0 }}
-                onDrag={(_, info) => setDragX(info.offset.x)}
+                dragElastic={0.1}
+                dragSnapToOrigin={false}
                 onDragEnd={(_, info) => {
+                    // If they dragged halfway or more, stay open, else snap back
                     if (info.offset.x > -50) {
-                        setDragX(0); // Snap back
+                        // This is handled by animate prop below or automatic snap
                     }
                 }}
-                animate={{ x: dragX === 0 ? 0 : -80 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                onClick={() => setIsExpanded(!isExpanded)}
+                whileDrag={{ cursor: "grabbing" }}
                 className={cn(
-                    "group relative flex flex-col gap-3 rounded-2xl border transition-all cursor-pointer",
-                    isExpanded ? "border-white/20 bg-zinc-900 shadow-2xl" : "border-white/5 bg-zinc-900/50 hover:bg-zinc-900"
+                    "group relative flex flex-col gap-3 rounded-2xl border transition-all cursor-pointer bg-zinc-900 border-white/5",
+                    isExpanded ? "border-white/20 shadow-2xl" : "hover:bg-zinc-800"
                 )}
+                onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="p-4 flex flex-col gap-3">
                     <div className="flex items-center justify-between">

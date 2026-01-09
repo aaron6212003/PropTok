@@ -150,7 +150,7 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
 
                         <div className="w-full space-y-4">
                             <div className="text-sm font-medium text-zinc-400 line-clamp-3 px-4">
-                                "{currentResult.question}"
+                                &ldquo;{currentResult.question}&rdquo;
                             </div>
 
                             <button

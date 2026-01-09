@@ -302,9 +302,6 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
         query = query.eq("acknowledged", false);
     }
 
-    // Filter hidden bets
-    query = query.eq("hidden_by_user", false);
-
     if (limit > 0) {
         query = query.limit(limit);
     }
@@ -316,7 +313,8 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
         return [];
     }
 
-    return data;
+    // JS-side filter to be resilient to missing columns during migration
+    return (data || []).filter((v: any) => v.hidden_by_user !== true);
 }
 
 export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boolean = false) {
@@ -351,9 +349,6 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
         query = query.eq("acknowledged", false);
     }
 
-    // Filter hidden bets
-    query = query.eq("hidden_by_user", false);
-
     if (limit > 0) {
         query = query.limit(limit);
     }
@@ -365,7 +360,8 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
         return [];
     }
 
-    return data;
+    // JS-side filter to be resilient to missing columns during migration
+    return (data || []).filter((b: any) => b.hidden_by_user !== true);
 }
 
 export async function acknowledgeResults() {
@@ -657,7 +653,7 @@ export async function hideBet(id: string, isBundle: boolean) {
     if (!user) return { error: "Not authenticated" };
 
     const table = isBundle ? "bundles" : "votes";
-    
+
     const { error } = await supabase
         .from(table)
         .update({ hidden_by_user: true })
