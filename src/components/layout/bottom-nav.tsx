@@ -1,12 +1,14 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Home, Trophy, PlusCircle, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function BottomNavBar() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const tournamentId = searchParams.get('tournament');
 
     const navItems = [
         { label: 'Feed', href: '/', icon: Home },
@@ -21,11 +23,12 @@ export default function BottomNavBar() {
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
+                    const href = tournamentId ? `${item.href}?tournament=${tournamentId}` : item.href;
 
                     return (
                         <Link
                             key={item.href}
-                            href={item.href}
+                            href={href}
                             className={cn(
                                 "flex flex-col items-center justify-center gap-1 p-2 transition-colors duration-200",
                                 isActive ? "text-brand" : "text-zinc-500 hover:text-zinc-300"

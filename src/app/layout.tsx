@@ -16,6 +16,7 @@ export const viewport: Viewport = {
 };
 
 import { BetSlipProvider } from "@/lib/context/bet-slip-context";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -25,11 +26,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-black text-white antialiased selection:bg-brand selection:text-white">
-        <BetSlipProvider>
-          <MobileContainer>
-            {children}
-          </MobileContainer>
-        </BetSlipProvider>
+        <Suspense fallback={null}>
+          <BetSlipProvider>
+            <MobileContainer>
+              {children}
+            </MobileContainer>
+          </BetSlipProvider>
+        </Suspense>
       </body>
     </html>
   );
