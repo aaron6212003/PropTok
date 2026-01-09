@@ -11,10 +11,11 @@ export async function GET() {
 
     // --- PART 1: LIVE INGESTION ---
     try {
-        const liveItems = await sportsService.ingestGames();
-        (liveItems || []).forEach(item => results.push({ type: "Live Ingestion", item }));
-    } catch (e) {
+        const liveLogs = await sportsService.ingestGames();
+        liveLogs.forEach(log => results.push({ type: "Live Ingestion", log }));
+    } catch (e: any) {
         console.error("Sports Ingestion Failed:", e);
+        results.push({ type: "Ingestion Error", message: e.message });
     }
 
     // Keep crypto mock for now as it's useful

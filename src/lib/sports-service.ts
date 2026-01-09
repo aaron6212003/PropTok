@@ -16,7 +16,7 @@ export interface SportsMarket {
             key: string;
             outcomes: Array<{
                 name: string;
-                price: number; // Decimal odds from API usually
+                price: number;
                 point?: number;
             }>;
         }>;
@@ -24,13 +24,7 @@ export interface SportsMarket {
 }
 
 export const sportsService = {
-    /**
-     * Convert American Odds to PropTok Multipliers
-     * The Odds API usually returns decimals by default, but let's be safe.
-     */
     decimalToMultiplier(decimal: number): number {
-        // PropTok takes a tiny 5% vig on the multiplier for platform stability if we want
-        // but for now let's just use the direct sportsbook multiplier
         return Number(decimal.toFixed(2));
     },
 
@@ -43,9 +37,6 @@ export const sportsService = {
         }
     },
 
-    /**
-     * Map a market outcome to a PropTok Question
-     */
     generateQuestion(marketType: string, game: SportsMarket, outcome: any): string {
         const team = outcome.name;
         if (marketType === 'h2h') {
@@ -61,57 +52,74 @@ export const sportsService = {
         return `Will ${team} win?`;
     },
 
-    /**
-     * Ingest live games from the API
-     */
     async fetchLiveOdds(sport: string = "americanfootball_nfl") {
+        console.log(`[sportsService] Fetching ${sport}...`);
         if (!ODDS_API_KEY) {
-            console.warn("THE_ODDS_API_KEY is missing. Ingestion skipped.");
-            return [];
+            console.error("[sportsService] CRITICAL: THE_ODDS_API_KEY is missing from environment variables.");
+            return { error: "API Key Missing", data: [] };
         }
 
         try {
             const url = `${BASE_URL}/${sport}/odds/?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal`;
             const response = await fetch(url);
-            const data: SportsMarket[] = await response.json();
 
-            if (!Array.isArray(data)) {
-                console.error("The Odds API error:", data);
-                return [];
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`[sportsService] API Error (${response.status}):`, errorData);
+                return { error: `API Error ${response.status}`, data: [] };
             }
 
-            return data;
-        } catch (error) {
-            console.error("Failed to fetch sports odds:", error);
-            return [];
+            const data = await response.json();
+            console.log(`[sportsService] Received ${Array.isArray(data) ? data.length : 0} events for ${sport}`);
+
+            if (!Array.isArray(data)) {
+                return { error: "API returned non-array data", data: [] };
+            }
+
+            return { data };
+        } catch (error: any) {
+            console.error("[sportsService] Network/Fetch error:", error);
+            return { error: error.message, data: [] };
         }
     },
 
     async ingestGames() {
-        // Fetch both NFL and NBA to ensure we have data
-        const nflGames = await this.fetchLiveOdds("americanfootball_nfl");
-        const nbaGames = await this.fetchLiveOdds("basketball_nba");
-        const games = [...nflGames, ...nbaGames];
+        console.log("[sportsService] Starting Ingestion Process...");
+        const logs: string[] = [];
+
+        const nflRes = await this.fetchLiveOdds("americanfootball_nfl");
+        const nbaRes = await this.fetchLiveOdds("basketball_nba");
+
+        if (nflRes.error) logs.push(`NFL Error: ${nflRes.error}`);
+        if (nbaRes.error) logs.push(`NBA Error: ${nbaRes.error}`);
+
+        const games = [...(nflRes.data || []), ...(nbaRes.data || [])];
+        logs.push(`Total games fetched: ${games.length}`);
 
         const supabase = createAdminClient();
         if (!supabase) {
-            console.error("Sports Ingestion Failed: Could not create admin client");
-            return [];
+            const msg = "Ingestion Aborted: Admin client could not be initialized.";
+            console.error(`[sportsService] ${msg}`);
+            logs.push(msg);
+            return logs;
         }
-        const results = [];
+
+        let addedCount = 0;
+        let skippedCount = 0;
 
         for (const game of games) {
-            // Find the best bookmaker (usually DraftKings or FanDuel for US)
-            const bookie = game.bookmakers.find(b => ["draftkings", "fanduel", "betmgm"].includes(b.key)) || game.bookmakers[0];
-            if (!bookie) continue;
+            // Priority: DraftKings -> FanDuel -> BetMGM -> First available
+            const preferredBookies = ["draftkings", "fanduel", "betmgm"];
+            const bookie = game.bookmakers.find(b => preferredBookies.includes(b.key)) || game.bookmakers[0];
+
+            if (!bookie) {
+                skippedCount++;
+                continue;
+            }
 
             for (const market of bookie.markets) {
-                // Focus on primary outcomes for YES/NO translation
-                // For spreads/totals, outcomes[0] is typically 'Over' or 'Team1'
-                // We'll create a prediction for each major outcome where appropriate.
-
-                // For MVP: Let's just do Spreads and Totals as they map best to PropTok questions
-                if (market.key === 'h2h') continue; // Moneyline is simpler, but let's stick to spreads for now
+                // Focus on spreads and totals for now
+                if (market.key !== 'spreads' && market.key !== 'totals') continue;
 
                 const outcome = market.outcomes[0];
                 const oppositeOutcome = market.outcomes[1];
@@ -119,20 +127,23 @@ export const sportsService = {
 
                 const externalId = `${game.id}-${market.key}-${outcome.name}`;
 
-                // Check if already exists
+                // Duplicate check
                 const { data: existing } = await supabase
                     .from("predictions")
                     .select("id")
                     .eq("external_id", externalId)
                     .single();
 
-                if (existing) continue;
+                if (existing) {
+                    skippedCount++;
+                    continue;
+                }
 
                 const question = this.generateQuestion(market.key, game, outcome);
                 const yesMultiplier = this.decimalToMultiplier(outcome.price);
                 const noMultiplier = this.decimalToMultiplier(oppositeOutcome.price);
 
-                const { error } = await supabase.from("predictions").insert({
+                const { error: insertError } = await supabase.from("predictions").insert({
                     question,
                     category: 'Sports',
                     expires_at: game.commence_time,
@@ -146,14 +157,18 @@ export const sportsService = {
                     volume: 0
                 });
 
-                if (!error) {
-                    results.push(question);
+                if (!insertError) {
+                    addedCount++;
+                    logs.push(`INGESTED: ${question}`);
                 } else {
-                    console.error("Ingestion insert error:", error);
+                    console.error("[sportsService] Insert Error:", insertError);
+                    logs.push(`FAILED: ${question} (${insertError.message})`);
                 }
             }
         }
 
-        return results;
+        logs.push(`Process Complete. Added: ${addedCount}, Skipped/Duplicates: ${skippedCount}`);
+        console.log(`[sportsService] ${logs[logs.length - 1]}`);
+        return logs;
     }
 };
