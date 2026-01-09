@@ -201,6 +201,17 @@ export const sportsService = {
         const preferredBookies = ["draftkings", "fanduel", "betmgm", "betrivers", "williamhill_us"];
 
         for (const game of allFetchedGames) {
+            // DATA INTEGRITY FILTER: Skip games > 72 hours (3 days) away to avoid "Futures" pollution
+            const gameTime = new Date(game.commence_time).getTime();
+            const now = Date.now();
+            const hoursDiff = (gameTime - now) / (1000 * 60 * 60);
+
+            if (hoursDiff > 72) {
+                // logs.push(`SKIPPED (Too far out): ${game.home_team} vs ${game.away_team} (${Math.round(hoursDiff)}h away)`);
+                skippedCount++;
+                continue;
+            }
+
             const bookie = game.bookmakers.find((b: { key: string }) => preferredBookies.includes(b.key)) || game.bookmakers[0];
 
             if (!bookie) {
