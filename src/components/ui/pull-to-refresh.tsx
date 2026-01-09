@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { motion, useMotionValue, useTransform, animate, AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,30 +13,24 @@ interface PullToRefreshProps {
 }
 
 const PULL_THRESHOLD = 80;
-const MAX_PULL = 200;
+const MAX_PULL = 180;
 
 export default function PullToRefresh({ onRefresh, children, className, scrollContainerRef }: PullToRefreshProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
-    const [pullDistance, setPullDistance] = useState(0); // State for UI logic
+    const [pullDistance, setPullDistance] = useState(0);
 
     // Motion value for performant animations
     const pullY = useMotionValue(0);
 
-    // Transforms for the indicator
+    // Simplest transforms for maximum stability
     const rotate = useTransform(pullY, [0, PULL_THRESHOLD], [0, 180]);
-    const opacity = useTransform(pullY, [0, PULL_THRESHOLD / 2, PULL_THRESHOLD], [0, 0.5, 1]);
-    const scale = useTransform(pullY, [0, PULL_THRESHOLD], [0.5, 1]); // Starts smaller
-
-    // Dynamic background resistance (Rubber Banding)
-    const calculateResistance = (diff: number) => {
-        // Logarithmic decay formula for "heavy" feel
-        return (diff * 0.5) * (1 - Math.min(diff, MAX_PULL * 2) / (MAX_PULL * 3));
-    };
+    const opacity = useTransform(pullY, [20, PULL_THRESHOLD], [0, 1]);
+    const scale = useTransform(pullY, [0, PULL_THRESHOLD], [0.8, 1]);
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        // 1. Check if we are at the top
-        const scrollTop = scrollContainerRef?.current?.scrollTop || window.scrollY || 0;
+        // Strict Scroll Check: Only allow pull if we are EXACTLY at the top
+        const scrollTop = scrollContainerRef?.current?.scrollTop ?? window.scrollY ?? 0;
 
         if (scrollTop > 0 || isRefreshing) return;
 
@@ -47,22 +41,26 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
             const currentY = moveEvent.touches[0].pageY;
             const diff = currentY - startY;
 
-            // Only engage if pulling DOWN and at Top
+            // 1. Must be pulling DOWN
             if (diff > 0) {
-                // If we scroll DOWN during pull, ignore
-                if ((scrollContainerRef?.current?.scrollTop || window.scrollY) > 0) return;
+                // 2. Check scroll position again (in case it changed)
+                const currentScroll = scrollContainerRef?.current?.scrollTop ?? window.scrollY ?? 0;
+                if (currentScroll > 0) return;
 
-                // Engage pull gesture
+                // 3. Engage Pull
                 isPulling = true;
 
-                // Prevent native scroll/refresh
-                if (diff < MAX_PULL && moveEvent.cancelable) {
+                // Prevent browser refresh/scroll
+                if (moveEvent.cancelable) {
                     moveEvent.preventDefault();
                 }
 
-                const resistedPull = calculateResistance(diff);
-                pullY.set(resistedPull);
-                setPullDistance(resistedPull);
+                // LINEAR DAMPENING (Factor 0.5)
+                // Reliable, consistent, no weird math.
+                const resistance = Math.min(diff * 0.5, MAX_PULL);
+
+                pullY.set(resistance);
+                setPullDistance(resistance);
             }
         };
 
@@ -75,31 +73,27 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
             const finalPull = pullY.get();
 
             if (finalPull >= PULL_THRESHOLD) {
-                // Trigger Refresh
+                // Refresh Triggered
                 setIsRefreshing(true);
+                animate(pullY, PULL_THRESHOLD, { type: "spring", stiffness: 300, damping: 30 });
 
-                // Snap to threshold (Tighter Spring)
-                animate(pullY, PULL_THRESHOLD, { type: "spring", stiffness: 400, damping: 25 });
-
-                // Haptic feedback if available (Mobile only)
                 if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
 
                 try {
                     await onRefresh();
 
-                    // Success State
                     setIsComplete(true);
                     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([10, 30, 10]);
 
                     setTimeout(() => {
-                        closeRefresh();
+                        reset();
                     }, 800);
                 } catch (e) {
-                    closeRefresh();
+                    reset();
                 }
             } else {
-                // Cancel (Snap back quickly)
-                closeRefresh();
+                // Cancelled
+                reset();
             }
         };
 
@@ -107,11 +101,11 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
         document.addEventListener("touchend", handleTouchEnd);
     };
 
-    const closeRefresh = () => {
+    const reset = () => {
         setIsComplete(false);
         setIsRefreshing(false);
         setPullDistance(0);
-        animate(pullY, 0, { type: "spring", stiffness: 500, damping: 35 });
+        animate(pullY, 0, { type: "spring", stiffness: 300, damping: 30 });
     };
 
     return (
@@ -119,7 +113,7 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
             className={cn("relative h-full w-full", className)}
             onTouchStart={handleTouchStart}
         >
-            {/* Refresh Indicator Bubble */}
+            {/* Refresh Indicator */}
             <div className="absolute left-0 right-0 top-6 z-50 flex justify-center pointer-events-none">
                 <motion.div
                     style={{
@@ -128,9 +122,8 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
                         y: useTransform(pullY, [0, PULL_THRESHOLD], [-40, 0])
                     }}
                     className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-full border bg-zinc-950/80 backdrop-blur-md shadow-xl transition-colors duration-300",
-                        isComplete ? "border-success/50 bg-success/10" :
-                            pullDistance >= PULL_THRESHOLD ? "border-brand/50 bg-brand/10" : "border-white/10"
+                        "flex h-10 w-10 items-center justify-center rounded-full border bg-zinc-950/90 backdrop-blur-md shadow-xl transition-colors duration-300",
+                        isComplete ? "border-success/50 bg-success/10" : "border-zinc-800"
                     )}
                 >
                     <AnimatePresence mode="wait">
@@ -167,7 +160,7 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
                 </motion.div>
             </div>
 
-            {/* Main Content (Pushes Down) */}
+            {/* Content w/ Transform */}
             <motion.div
                 style={{ y: pullY }}
                 className="h-full w-full"
