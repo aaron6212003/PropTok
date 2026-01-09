@@ -38,6 +38,8 @@ export const sportsService = {
 
     generateQuestion(marketType: string, game: SportsMarket, outcome: any): string {
         const team = outcome.name;
+
+        // --- 1. GAME LINES ---
         if (marketType === 'h2h') {
             return `Will ${team} win against ${team === game.home_team ? game.away_team : game.home_team}?`;
         }
@@ -47,8 +49,41 @@ export const sportsService = {
         }
         if (marketType === 'totals') {
             // Outcome name is usually 'Over' or 'Under'
-            return `Will ${game.home_team} vs ${game.away_team} go ${outcome.name.toUpperCase()} ${outcome.point} total points?`;
+            return `Will ${game.home_team} vs ${game.away_team} go ${outcome.name.toUpperCase()} ${outcome.point} points?`;
         }
+
+        // --- 2. PLAYER PROPS ---
+        // Format: "Over 25.5" or "Under 25.5"
+        // The API returns outcome.name as "Over" or "Under", and description as "LeBron James"
+        if (marketType.startsWith('player_')) {
+            const player = outcome.description; // API provides player name here
+            const line = outcome.point;
+            const type = outcome.name; // "Over" or "Under"
+
+            if (!player) return `Will ${team} win?`; // Fallback
+
+            switch (marketType) {
+                case 'player_points':
+                    return `Will ${player} score ${type} ${line} Points?`;
+                case 'player_assists':
+                    return `Will ${player} record ${type} ${line} Assists?`;
+                case 'player_rebounds':
+                    return `Will ${player} grab ${type} ${line} Rebounds?`;
+                case 'player_threes':
+                    return `Will ${player} make ${type} ${line} Three-Pointers?`;
+                case 'player_pass_tds':
+                    return `Will ${player} throw ${type} ${line} Touchdowns?`;
+                case 'player_rush_yds':
+                    return `Will ${player} rush for ${type} ${line} Yards?`;
+                case 'player_reception_yds':
+                    return `Will ${player} have ${type} ${line} Receiving Yards?`;
+                case 'player_anytime_scorer':
+                    return `Will ${player} score a Touchdown anytime?`;
+                default:
+                    return `Will ${player} hit ${type} ${line} in ${marketType.replace('player_', '')}?`;
+            }
+        }
+
         return `Will ${team} win?`;
     },
 
@@ -62,11 +97,39 @@ export const sportsService = {
         }
 
         try {
-            const url = `${BASE_URL}/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal`;
+            // Updated to include Player Props markets tailored to each sport
+            // Requesting "player_pass_tds" for NBA causes a 422 Error.
+
+            let markets = "h2h,spreads,totals"; // Defaults
+
+            if (sport.includes("basketball_nba")) {
+                markets += ",player_points,player_assists,player_rebounds,player_threes";
+            } else if (sport.includes("americanfootball_nfl")) {
+                markets += ",player_pass_tds,player_rush_yds,player_reception_yds,player_anytime_scorer";
+            } else if (sport.includes("icehockey_nhl")) {
+                markets += ",player_points,player_assists"; // NHL "points" = goals + assists
+            }
+            // Soccer typically uses different prop names or just h2h/totals in basic plans.
+            // keeping soccer simple for now to avoid 422s.
+
+            const url = `${BASE_URL}/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=${markets}&oddsFormat=decimal`;
             const response = await fetch(url);
 
             if (!response.ok) {
-                const errorData = await response.json();
+                // FALLBACK: If API returns 422 (likely due to invalid markets or plan limits), try fetching ONLY basic markets.
+                if (response.status === 422 && markets !== "h2h,spreads,totals") {
+                    console.warn(`[sportsService] 422 Error for ${sport} (Likely Props restricted). Retrying with basic markets...`);
+                    const fallbackUrl = `${BASE_URL}/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal`;
+                    const fallbackResponse = await fetch(fallbackUrl);
+
+                    if (fallbackResponse.ok) {
+                        const fallbackData = await fallbackResponse.json();
+                        console.log(`[sportsService] Fallback successful for ${sport}: Received ${Array.isArray(fallbackData) ? fallbackData.length : 0} events.`);
+                        return { data: fallbackData };
+                    }
+                }
+
+                const errorData = await response.json().catch(() => ({}));
                 console.error(`[sportsService] API Error (${response.status}) for ${sport}:`, errorData);
                 return { error: `API Error ${response.status}`, data: [] };
             }
@@ -142,22 +205,31 @@ export const sportsService = {
             }
 
             for (const market of bookie.markets) {
-                // Support H2H, Spreads, and Totals
-                if (!['h2h', 'spreads', 'totals'].includes(market.key)) continue;
+                // Expanded support to include player props
+                const supportedMarkets = [
+                    'h2h', 'spreads', 'totals',
+                    'player_points', 'player_assists', 'player_rebounds', 'player_threes',
+                    'player_pass_tds', 'player_rush_yds', 'player_reception_yds'
+                ];
+
+                if (!supportedMarkets.includes(market.key)) continue;
 
                 const outcomes = market.outcomes;
                 if (outcomes.length < 2) continue;
 
                 // For simple markets, we take the first outcome as "YES" and its natural opposite as "NO" logic
-                // In PropTok, every prop is a YES/NO.
-                // For H2H: "Will Lakers win?" (Outcome: Lakers)
-                // For Spreads: "Will Lakers cover -4.5?" (Outcome: Lakers)
-                // For Totals: "Will it go Over 220.5?" (Outcome: Over)
-
                 const primaryOutcome = outcomes[0];
                 const secondaryOutcome = outcomes[1];
 
-                const externalId = `${game.id}-${market.key}-${primaryOutcome.name}`.replace(/\s+/g, '-').toLowerCase();
+                // Ensure unique ID includes player name for props
+                // For Game Lines: "id-h2h-Lakers"
+                // For Player Props: "id-player_points-LeBron James-Over-25.5"
+                let uniqueIdentifier = `${primaryOutcome.name}`;
+                if (market.key.startsWith('player_')) {
+                    uniqueIdentifier = `${primaryOutcome.description}-${primaryOutcome.name}-${primaryOutcome.point}`;
+                }
+
+                const externalId = `${game.id}-${market.key}-${uniqueIdentifier}`.replace(/[^a-z0-9]/gi, '-').toLowerCase();
 
                 const category = sportCategoryMap[game.sport_key] || 'Sports';
 
