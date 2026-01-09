@@ -1,6 +1,5 @@
 import { createAdminClient } from "./supabase/admin";
 
-const ODDS_API_KEY = process.env.THE_ODDS_API_KEY;
 const BASE_URL = "https://api.the-odds-api.com/v4/sports";
 
 export interface SportsMarket {
@@ -53,14 +52,16 @@ export const sportsService = {
     },
 
     async fetchLiveOdds(sport: string = "americanfootball_nfl") {
-        console.log(`[sportsService] Fetching ${sport}...`);
-        if (!ODDS_API_KEY) {
-            console.error("[sportsService] CRITICAL: THE_ODDS_API_KEY is missing from environment variables.");
+        const apiKey = process.env.THE_ODDS_API_KEY;
+        console.log(`[sportsService] Fetching ${sport}... (Key length: ${apiKey?.length || 0})`);
+
+        if (!apiKey) {
+            console.error("[sportsService] CRITICAL: THE_ODDS_API_KEY is missing from process.env.");
             return { error: "API Key Missing", data: [] };
         }
 
         try {
-            const url = `${BASE_URL}/${sport}/odds/?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal`;
+            const url = `${BASE_URL}/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal`;
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -98,7 +99,7 @@ export const sportsService = {
 
         const supabase = createAdminClient();
         if (!supabase) {
-            const msg = "Ingestion Aborted: Admin client could not be initialized.";
+            const msg = "Ingestion Aborted: Admin client could not be initialized (Check SUPABASE_SERVICE_ROLE_KEY).";
             console.error(`[sportsService] ${msg}`);
             logs.push(msg);
             return logs;
