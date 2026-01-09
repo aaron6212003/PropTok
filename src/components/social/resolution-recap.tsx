@@ -23,18 +23,19 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPending, setIsPending] = useState(false);
+    const [hasAcknowledged, setHasAcknowledged] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        // Only trigger if we have results and hasn't been closed in this mount
-        if (results.length > 0) {
+        // Only trigger if we have results and haven't already acknowledged in this mount
+        if (results.length > 0 && !hasAcknowledged) {
             setIsOpen(true);
         } else {
             setIsOpen(false);
         }
-    }, [results]);
+    }, [results, hasAcknowledged]);
 
-    if (results.length === 0 || !isOpen) return null;
+    if (results.length === 0 || !isOpen || hasAcknowledged) return null;
 
     const currentResult = results[currentIndex];
     const winnings = currentResult.wager * currentResult.multiplier;
@@ -47,6 +48,7 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
                 const res = await acknowledgeResults();
                 if (res.success) {
                     toast.success("Results acknowledged");
+                    setHasAcknowledged(true);
                     setIsOpen(false);
                     router.refresh();
                 } else {
