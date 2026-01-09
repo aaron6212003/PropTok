@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import PullToRefresh from '../ui/pull-to-refresh';
 import PredictionCard from './prediction-card';
 import { useScroll, useTransform } from 'framer-motion';
 import { Prediction } from "@/lib/types";
@@ -8,6 +10,7 @@ import { Flame, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBetSlip } from '@/lib/context/bet-slip-context';
 import EmptyState from '../ui/empty-state';
+import { toast } from 'sonner';
 
 interface PredictionFeedProps {
     initialPredictions: any[];
@@ -19,6 +22,7 @@ type SortOption = 'trending' | 'ending' | 'new';
 
 export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
     const [sortBy, setSortBy] = useState<SortOption>('trending');
+    const router = useRouter();
 
     // Sort Predictions
     const sortedPredictions = useMemo(() => {
@@ -35,8 +39,14 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
         }
     }, [initialPredictions, sortBy]);
 
+    const handleRefresh = async () => {
+        router.refresh();
+        // Give it a tiny bit of time to "feel" like it's working
+        await new Promise(resolve => setTimeout(resolve, 800));
+    };
+
     return (
-        <div className="relative h-full w-full">
+        <PullToRefresh onRefresh={handleRefresh} className="h-full w-full">
             {/* Sorting Tabs - Floating Header */}
             <div className="fixed top-[72px] left-0 right-0 z-40 flex justify-center pointer-events-none">
                 <div className="flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-md border border-white/10 shadow-xl pointer-events-auto">
@@ -110,6 +120,6 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                     />
                 )}
             </div>
-        </div>
+        </PullToRefresh>
     );
 }
