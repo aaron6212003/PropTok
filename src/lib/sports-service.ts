@@ -159,14 +159,24 @@ export const sportsService = {
 
                 const externalId = `${game.id}-${market.key}-${primaryOutcome.name}`.replace(/\s+/g, '-').toLowerCase();
 
+                const category = sportCategoryMap[game.sport_key] || 'Sports';
+
                 // Duplicate check
                 const { data: existing } = await supabase
                     .from("predictions")
-                    .select("id")
+                    .select("id, category")
                     .eq("external_id", externalId)
                     .single();
 
                 if (existing) {
+                    // FIX: If existing game has generic 'Sports' category, update it to specific (e.g. 'NBA')
+                    if (existing.category === 'Sports' && category !== 'Sports') {
+                        await supabase
+                            .from("predictions")
+                            .update({ category, odds_source: bookie.title }) // Keep odds fresh too
+                            .eq("id", existing.id);
+                        logs.push(`UPDATED CATEGORY: ${externalId} -> ${category}`);
+                    }
                     skippedCount++;
                     continue;
                 }
@@ -174,7 +184,7 @@ export const sportsService = {
                 const question = this.generateQuestion(market.key, game, primaryOutcome);
                 const yesMultiplier = this.decimalToMultiplier(primaryOutcome.price);
                 const noMultiplier = this.decimalToMultiplier(secondaryOutcome.price);
-                const category = sportCategoryMap[game.sport_key] || 'Sports';
+                // category is already defined above
 
                 const { error: insertError } = await supabase.from("predictions").insert({
                     question,
