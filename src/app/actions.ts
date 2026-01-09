@@ -647,31 +647,50 @@ export async function likeComment(commentId: string) {
 }
 
 export async function hideBet(id: string, isBundle: boolean) {
+    console.log(`[hideBet] Initializing for ID: ${id}, isBundle: ${isBundle}`);
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-        console.error("Auth error in hideBet:", authError);
-        return { error: "You must be logged in to hide bets" };
+        console.error("[hideBet] Auth failure:", authError);
+        return { error: `Authentication failed: ${authError?.message || 'No user session'}` };
     }
 
+    console.log(`[hideBet] User authenticated: ${user.id}`);
+
     const table = isBundle ? "bundles" : "votes";
+
+    // First, check if the row exists and belongs to the user
+    const { data: existing, error: checkError } = await supabase
+        .from(table)
+        .select("id, user_id")
+        .eq("id", id)
+        .single();
+
+    if (checkError) {
+        console.error(`[hideBet] Lookup error in ${table}:`, checkError);
+        return { error: `Could not find this bet in the database (${checkError.message})` };
+    }
+
+    if (existing.user_id !== user.id) {
+        console.warn(`[hideBet] Ownership mismatch. User ${user.id} tried to hide bet ${id} belonging to ${existing.user_id}`);
+        return { error: "You do not have permission to hide this bet (Owner mismatch)" };
+    }
 
     const { error: dbError } = await supabase
         .from(table)
         .update({ hidden_by_user: true })
-        .eq("id", id)
-        .eq("user_id", user.id);
+        .eq("id", id);
 
     if (dbError) {
-        console.error(`Error hiding bet in ${table}:`, dbError);
-        // If it's a 42703 (missing column), it means migration hasn't run
+        console.error(`[hideBet] Update error in ${table}:`, dbError);
         if (dbError.code === '42703') {
-            return { error: "Database update pending. Please try again in a few minutes." };
+            return { error: "Development update required: 'hidden_by_user' column missing in database." };
         }
-        return { error: `Database error: ${dbError.message}` };
+        return { error: `Database update failed: ${dbError.message}` };
     }
 
+    console.log(`[hideBet] Success! Bet ${id} hidden.`);
     revalidatePath("/profile");
     return { success: true };
 }

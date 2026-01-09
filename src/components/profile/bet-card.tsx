@@ -73,17 +73,20 @@ export default function BetCard({ bet }: BetCardProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
-            transition={{ type: "spring", stiffness: 500, damping: 50, mass: 1 }}
-            className="relative rounded-2xl overflow-hidden"
+            transition={{ type: "spring", stiffness: 500, damping: 50 }}
+            className="relative rounded-2xl overflow-hidden bg-black"
         >
-            {/* Background Delete Button - Behind the card */}
-            <div className="absolute inset-0 flex items-center justify-end bg-destructive px-6">
+            {/* Background Delete Button - Anchored to the right only */}
+            <div className="absolute inset-y-0 right-0 w-[100px] flex items-center justify-center bg-destructive">
                 <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="flex flex-col items-center gap-1 text-white active:scale-95 transition-transform"
+                    className={cn(
+                        "flex flex-col items-center gap-1 text-white transition-all duration-300",
+                        isRevealed ? "scale-100 opacity-100" : "scale-75 opacity-0"
+                    )}
                 >
-                    <Trash2 size={20} />
+                    <Trash2 size={20} className={cn(isDeleting && "animate-pulse")} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Delete</span>
                 </button>
             </div>
@@ -92,8 +95,8 @@ export default function BetCard({ bet }: BetCardProps) {
             <motion.div
                 drag="x"
                 dragConstraints={{ left: -100, right: 0 }}
-                dragElastic={0.05}
-                animate={{ x: isRevealed ? -80 : 0 }}
+                dragElastic={0.02} // Very stiff to prevent bleeding
+                animate={{ x: isRevealed ? -100 : 0 }}
                 onDragEnd={(_, info) => {
                     if (info.offset.x < -30) {
                         setIsRevealed(true);
