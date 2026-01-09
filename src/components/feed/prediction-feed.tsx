@@ -132,50 +132,71 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
             {/* Dropdown Menu Overlay */}
             <AnimatePresence>
                 {isFilterOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-                        className="fixed top-[130px] left-0 right-0 z-50 flex justify-center pointer-events-none px-4"
-                    >
-                        <div className="w-full max-w-[320px] rounded-2xl bg-black/90 border border-white/10 backdrop-blur-xl shadow-2xl p-3 pointer-events-auto">
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => setSelectedCategories([])}
-                                    className={cn(
-                                        "col-span-2 flex items-center justify-between px-4 py-3 rounded-xl transition-all border",
-                                        selectedCategories.length === 0
-                                            ? "bg-white text-black border-white font-bold"
-                                            : "bg-white/5 border-transparent hover:bg-white/10 text-zinc-400"
-                                    )}
-                                >
-                                    <span className="text-xs font-bold uppercase tracking-wider">All Sports</span>
-                                    {selectedCategories.length === 0 && <Check size={16} className="text-black" />}
-                                </button>
+                    <>
+                        {/* Backdrop to close on click outside */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+                            onClick={() => setIsFilterOpen(false)}
+                        />
 
-                                {availableCategories.map(cat => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => toggleCategory(cat)}
-                                        className={cn(
-                                            "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border",
-                                            selectedCategories.includes(cat)
-                                                ? "bg-white/10 border-white/20 text-white"
-                                                : "bg-transparent border-transparent hover:bg-white/5 text-zinc-400"
-                                        )}
-                                    >
-                                        <div
-                                            className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]"
-                                            style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'], color: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
-                                        />
-                                        <span className="text-xs font-bold uppercase tracking-wider">{cat}</span>
-                                        {selectedCategories.includes(cat) && <Check size={12} className="ml-auto text-success" />}
-                                    </button>
-                                ))}
+                        <motion.div
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+                            className="fixed top-[130px] left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+                        >
+                            <div className="w-full max-w-[320px] pointer-events-auto flex flex-col gap-2">
+                                <div className="rounded-2xl bg-black/90 border border-white/10 backdrop-blur-xl shadow-2xl p-3">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => setSelectedCategories([])}
+                                            className={cn(
+                                                "col-span-2 flex items-center justify-between px-4 py-3 rounded-xl transition-all border",
+                                                selectedCategories.length === 0
+                                                    ? "bg-white text-black border-white font-bold"
+                                                    : "bg-white/5 border-transparent hover:bg-white/10 text-zinc-400"
+                                            )}
+                                        >
+                                            <span className="text-xs font-bold uppercase tracking-wider">All Sports</span>
+                                            {selectedCategories.length === 0 && <Check size={16} className="text-black" />}
+                                        </button>
+
+                                        {availableCategories.map(cat => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => toggleCategory(cat)}
+                                                className={cn(
+                                                    "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border",
+                                                    selectedCategories.includes(cat)
+                                                        ? "bg-white/10 border-white/20 text-white"
+                                                        : "bg-transparent border-transparent hover:bg-white/5 text-zinc-400"
+                                                )}
+                                            >
+                                                <div
+                                                    className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]"
+                                                    style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'], color: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
+                                                />
+                                                <span className="text-xs font-bold uppercase tracking-wider">{cat}</span>
+                                                {selectedCategories.includes(cat) && <Check size={12} className="ml-auto text-success" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Done Button */}
+                                <button
+                                    onClick={() => setIsFilterOpen(false)}
+                                    className="w-full bg-white text-black font-black uppercase tracking-widest text-xs py-3 rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+                                >
+                                    Done
+                                </button>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
