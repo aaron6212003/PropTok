@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { getComments, postComment } from '@/app/actions';
 import CommentItem from './comment-item';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CommentsDrawer({
     isOpen,
@@ -21,6 +22,16 @@ export default function CommentsDrawer({
     const [newComment, setNewComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<any>(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data } = await supabase.auth.getUser();
+            setUser(data.user);
+        };
+        checkUser();
+    }, []);
 
     useEffect(() => {
         if (isOpen && predictionId) {
@@ -117,27 +128,39 @@ export default function CommentsDrawer({
 
                         {/* Input Area - Glassmorphism */}
                         <div className="p-6 pb-12 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md">
-                            <form
-                                onSubmit={handleSubmit}
-                                className="relative flex items-center gap-3 bg-white/5 rounded-[28px] p-2 pr-3 border border-white/5 focus-within:border-brand/40 focus-within:bg-white/10 transition-all shadow-2xl"
-                            >
-                                <input
-                                    type="text"
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    placeholder="Drop a take..."
-                                    className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-zinc-600 font-medium text-white"
-                                />
-                                <button
-                                    disabled={!newComment.trim() || isSubmitting}
-                                    className={cn(
-                                        "flex h-10 w-10 items-center justify-center rounded-full transition-all",
-                                        newComment.trim() ? "bg-brand text-white shadow-lg shadow-brand/20 active:scale-90" : "bg-white/5 text-zinc-700"
-                                    )}
+                            {!user ? (
+                                <div className="flex flex-col items-center gap-4 py-4 rounded-3xl bg-brand/5 border border-brand/10">
+                                    <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Login to join the debate</p>
+                                    <button
+                                        onClick={() => window.location.href = '/login'}
+                                        className="rounded-full bg-white px-8 py-2.5 text-xs font-black uppercase tracking-widest text-black shadow-xl active:scale-95"
+                                    >
+                                        Log In
+                                    </button>
+                                </div>
+                            ) : (
+                                <form
+                                    onSubmit={handleSubmit}
+                                    className="relative flex items-center gap-3 bg-white/5 rounded-[28px] p-2 pr-3 border border-white/5 focus-within:border-brand/40 focus-within:bg-white/10 transition-all shadow-2xl"
                                 >
-                                    <Send size={18} />
-                                </button>
-                            </form>
+                                    <input
+                                        type="text"
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Drop a take..."
+                                        className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-zinc-600 font-medium text-white"
+                                    />
+                                    <button
+                                        disabled={!newComment.trim() || isSubmitting}
+                                        className={cn(
+                                            "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                                            newComment.trim() ? "bg-brand text-white shadow-lg shadow-brand/20 active:scale-90" : "bg-white/5 text-zinc-700"
+                                        )}
+                                    >
+                                        <Send size={18} />
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </motion.div>
                 </>
