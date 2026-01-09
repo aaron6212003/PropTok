@@ -4,15 +4,13 @@ import BottomNavBar from '@/components/layout/bottom-nav';
 export const dynamic = 'force-dynamic';
 import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getUserVotes, getUserBundles, getUserTournamentEntries } from '@/app/actions';
 import AdminAccessButton from '@/components/profile/admin-access-button';
-import BetCard from '@/components/profile/bet-card';
+import HistoryList from '@/components/profile/history-list';
 import ResolutionRecap from '@/components/social/resolution-recap';
 import WalletToggle from '@/components/layout/wallet-toggle';
-import EmptyState from '@/components/ui/empty-state';
 
 function StatCard({
     label,
@@ -190,26 +188,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     <span className="text-[10px] font-bold text-zinc-600">{history.length} Recent</span>
                 </div>
 
-                <div className="space-y-3">
-                    <AnimatePresence mode="popLayout">
-                        {history.map((bet: any) => (
-                            <BetCard key={bet.id} bet={bet} />
-                        ))}
-                    </AnimatePresence>
-
-                    {history.length === 0 && (
-                        <EmptyState
-                            icon={Clock}
-                            title="No Bets Yet"
-                            description="You haven't placed any bets yet. Head over to the feed to start predicting!"
-                            actionText="Explore Markets"
-                            onAction={() => window.location.href = '/'}
-                            className="py-12"
-                        />
-                    )}
-                </div>
+                <HistoryList history={history} />
             </div>
-
             <nav className="fixed bottom-0 left-0 right-0 z-50">
                 <BottomNavBar />
             </nav>
