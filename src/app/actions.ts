@@ -302,6 +302,9 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
         query = query.eq("acknowledged", false);
     }
 
+    // Filter hidden bets
+    query = query.eq("hidden_by_user", false);
+
     if (limit > 0) {
         query = query.limit(limit);
     }
@@ -347,6 +350,9 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
     if (onlyUnacknowledged) {
         query = query.eq("acknowledged", false);
     }
+
+    // Filter hidden bets
+    query = query.eq("hidden_by_user", false);
 
     if (limit > 0) {
         query = query.limit(limit);
@@ -641,5 +647,28 @@ export async function likeComment(commentId: string) {
     }
 
     revalidatePath("/", "layout");
+    return { success: true };
+}
+
+export async function hideBet(id: string, isBundle: boolean) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Not authenticated" };
+
+    const table = isBundle ? "bundles" : "votes";
+    
+    const { error } = await supabase
+        .from(table)
+        .update({ hidden_by_user: true })
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+    if (error) {
+        console.error("Hide Bet Error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath("/profile");
     return { success: true };
 }
