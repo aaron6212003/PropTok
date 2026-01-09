@@ -35,7 +35,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
         } else {
             params.delete('tournament');
         }
-        router.push(`/?${params.toString()}`);
+        router.push(`${window.location.pathname}?${params.toString()}`);
         setIsOpen(false);
     };
 

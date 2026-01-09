@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface BetSlipProps {
     bankroll: number;
@@ -15,6 +16,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
     const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId } = useBetSlip();
     const [wager, setWager] = useState(Math.min(25, bankroll));
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const router = useRouter();
 
     // Context sync: Clamp wager if bankroll decreases (e.g. switching wallets)
     useEffect(() => {
@@ -40,6 +42,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 else {
                     alert("Bet Placed!");
                     clearSlip();
+                    router.refresh();
                 }
             } else {
                 // Bundle
@@ -49,6 +52,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 else {
                     alert("Bundle Placed!");
                     clearSlip();
+                    router.refresh();
                 }
             }
         } catch (e) {

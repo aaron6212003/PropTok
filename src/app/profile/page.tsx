@@ -4,10 +4,11 @@ import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getUserVotes, getUserBundles } from '@/app/actions';
+import { getUserVotes, getUserBundles, getUserTournamentEntries } from '@/app/actions';
 import AdminAccessButton from '@/components/profile/admin-access-button';
 import BetCard from '@/components/profile/bet-card';
 import ResolutionRecap from '@/components/social/resolution-recap';
+import WalletToggle from '@/components/layout/wallet-toggle';
 
 function StatCard({
     label,
@@ -31,7 +32,8 @@ function StatCard({
     );
 }
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
+    const { tournament: tournamentId } = await searchParams;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -40,13 +42,28 @@ export default async function ProfilePage() {
     }
 
     // Fetch data in parallel
-    const [profileRes, votes, bundles] = await Promise.all([
+    const [profileRes, votes, bundles, entriesRes] = await Promise.all([
         supabase.from('users').select('*').eq('id', user.id).single(),
         getUserVotes(50),
-        getUserBundles(50)
+        getUserBundles(50),
+        getUserTournamentEntries()
     ]);
 
     const profile = profileRes.data;
+    const tournamentEntries = entriesRes;
+
+    let tournamentStack = null;
+    if (tournamentId) {
+        const { data } = await supabase
+            .from("tournament_entries")
+            .select("current_stack")
+            .eq("tournament_id", tournamentId)
+            .eq("user_id", user.id)
+            .single();
+        tournamentStack = data?.current_stack;
+    }
+
+    const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.bankroll || 0);
 
     // Fetch UNSEEN results for the recap
     const unseenVotes = await getUserVotes(50, true);
@@ -125,12 +142,18 @@ export default async function ProfilePage() {
             {/* Bankroll Highlights */}
             <div className="mt-6 px-6">
                 <div className="flex flex-col items-center rounded-3xl border border-brand/20 bg-brand/5 p-8 text-center backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(37,99,235,0.1)]">
-                    <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-brand/20">
-                        <Coins className="h-6 w-6 text-brand" />
+                    <div className="mb-4">
+                        <WalletToggle
+                            bankroll={profile?.bankroll || 0}
+                            entries={tournamentEntries}
+                            activeTournamentId={tournamentId || null}
+                        />
                     </div>
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-brand/80">Available PropCash</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-brand/80">
+                        {tournamentId ? "Tournament Stack" : "Available PropCash"}
+                    </span>
                     <h2 className="mt-1 text-5xl font-black tracking-tighter text-white">
-                        ${(profile?.bankroll || 0).toLocaleString()}
+                        ${activeBankroll.toLocaleString()}
                     </h2>
                     <div className="mt-4 flex gap-4">
                         <div className="flex flex-col">
