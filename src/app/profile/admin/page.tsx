@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition, useState, useEffect } from "react";
-import { createPrediction, resolvePrediction, autoResolvePrediction, undoResolvePrediction, getPredictions, clearDatabase } from "@/app/actions";
+import { createPrediction, resolvePrediction, autoResolvePrediction, undoResolvePrediction, getPredictions, clearDatabase, adminResetTournament } from "@/app/actions";
 import { Trash2, Plus, Clock, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
 import { toast } from "sonner";
 
@@ -42,14 +42,39 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-black italic tracking-tighter text-brand">ADMIN<span className="text-white">ORACLE</span></h1>
                 </div>
 
-                <button
-                    onClick={handleClear}
-                    disabled={isPending}
-                    className="flex w-fit items-center gap-2 rounded-full bg-destructive/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-destructive transition-colors hover:bg-destructive/20"
-                >
-                    <Trash2 size={14} />
-                    <span>Wipe All Data</span>
-                </button>
+                <div className="flex gap-2">
+                    <form
+                        action={async (formData) => {
+                            const id = formData.get('tournament_id') as string;
+                            if (!id) return;
+                            if (confirm(`RESET Tournament ${id}? This will wipe active stacks and bets.`)) {
+                                const res = await adminResetTournament(id);
+                                if (res?.error) toast.error(res.error);
+                                else toast.success("Tournament Reset!");
+                            }
+                        }}
+                        className="flex items-center gap-2 rounded-full bg-white/5 p-1 pr-2"
+                    >
+                        <input
+                            name="tournament_id"
+                            placeholder="Tournament ID"
+                            className="bg-transparent px-3 py-1 text-xs font-bold text-white outline-none placeholder:text-zinc-600 w-32"
+                            required
+                        />
+                        <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20">
+                            <RotateCcw size={14} />
+                        </button>
+                    </form>
+
+                    <button
+                        onClick={handleClear}
+                        disabled={isPending}
+                        className="flex w-fit items-center gap-2 rounded-full bg-destructive/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-destructive transition-colors hover:bg-destructive/20"
+                    >
+                        <Trash2 size={14} />
+                        <span>Wipe All Data</span>
+                    </button>
+                </div>
             </header>
 
             <div className="grid gap-8 lg:grid-cols-2">

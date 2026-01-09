@@ -611,7 +611,7 @@ export async function getComments(predictionId: string) {
     return data;
 }
 
-export async function postComment(predictionId: string, text: string) {
+export async function postComment(predictionId: string, text: string, parentId?: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -620,7 +620,8 @@ export async function postComment(predictionId: string, text: string) {
     const { error } = await supabase.from("comments").insert({
         prediction_id: predictionId,
         user_id: user.id,
-        text
+        text,
+        parent_id: parentId || null
     });
 
     if (error) return { error: error.message };
@@ -710,7 +711,27 @@ export async function hideBet(id: string, isBundle: boolean) {
         return { error: `Database update failed: ${dbError.message}` };
     }
 
-    console.log(`[hideBet] Success! Bet ${id} hidden.`);
     revalidatePath("/profile");
+    return { success: true };
+}
+
+export async function adminResetTournament(tournamentId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    const { error } = await supabase.rpc('admin_reset_tournament', {
+        p_tournament_id: tournamentId
+    });
+
+    if (error) {
+        console.error("Reset Tournament Error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin", "layout");
+    revalidatePath("/profile", "layout");
     return { success: true };
 }

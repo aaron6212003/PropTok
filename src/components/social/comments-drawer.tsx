@@ -20,6 +20,7 @@ export default function CommentsDrawer({
 }) {
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
+    const [replyingTo, setReplyingTo] = useState<{ id: string, username: string } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
@@ -51,10 +52,11 @@ export default function CommentsDrawer({
         if (!newComment.trim() || isSubmitting) return;
 
         setIsSubmitting(true);
-        const res = await postComment(predictionId, newComment);
+        const res = await postComment(predictionId, newComment, replyingTo?.id);
 
         if (res.success) {
             setNewComment("");
+            setReplyingTo(null);
             fetchComments();
         } else {
             toast.error(res.error || "Failed to post comment");
@@ -118,12 +120,16 @@ export default function CommentsDrawer({
                                     <p className="text-sm text-zinc-500 max-w-[200px] leading-relaxed">The debate is empty. Drop your take below!</p>
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    {comments.map((comment) => (
+                                <div className="space-y-4 px-4">
+                                    {comments.filter(c => !c.parent_id).map((comment) => (
                                         <CommentItem
                                             key={comment.id}
                                             comment={comment}
-                                            onReply={(username) => setNewComment(`@${username} `)}
+                                            replies={comments.filter(r => r.parent_id === comment.id)}
+                                            onReply={(id, username) => {
+                                                setReplyingTo({ id, username });
+                                                setNewComment(`@${username} `);
+                                            }}
                                         />
                                     ))}
                                 </div>
@@ -143,27 +149,38 @@ export default function CommentsDrawer({
                                     </button>
                                 </div>
                             ) : (
-                                <form
-                                    onSubmit={handleSubmit}
-                                    className="relative flex items-center gap-3 bg-white/5 rounded-[28px] p-2 pr-3 border border-white/5 focus-within:border-brand/40 focus-within:bg-white/10 transition-all shadow-2xl"
-                                >
-                                    <input
-                                        type="text"
-                                        value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                        placeholder="Drop a take..."
-                                        className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-zinc-600 font-medium text-white"
-                                    />
-                                    <button
-                                        disabled={!newComment.trim() || isSubmitting}
-                                        className={cn(
-                                            "flex h-10 w-10 items-center justify-center rounded-full transition-all",
-                                            newComment.trim() ? "bg-brand text-white shadow-lg shadow-brand/20 active:scale-90" : "bg-white/5 text-zinc-700"
-                                        )}
+                                <div className="space-y-2">
+                                    {replyingTo && (
+                                        <div className="flex items-center justify-between px-3 text-xs text-zinc-400">
+                                            <span>Replying to <span className="font-bold text-brand">@{replyingTo.username}</span></span>
+                                            <button onClick={() => { setReplyingTo(null); setNewComment(""); }} className="hover:text-white">
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <form
+                                        onSubmit={handleSubmit}
+                                        className="relative flex items-center gap-3 bg-white/5 rounded-[28px] p-2 pr-3 border border-white/5 focus-within:border-brand/40 focus-within:bg-white/10 transition-all shadow-2xl"
                                     >
-                                        <Send size={18} />
-                                    </button>
-                                </form>
+                                        <input
+                                            type="text"
+                                            value={newComment}
+                                            onChange={(e) => setNewComment(e.target.value)}
+                                            placeholder={replyingTo ? "Add a reply..." : "Drop a take..."}
+                                            className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-zinc-600 font-medium text-white"
+                                            autoFocus={!!replyingTo}
+                                        />
+                                        <button
+                                            disabled={!newComment.trim() || isSubmitting}
+                                            className={cn(
+                                                "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                                                newComment.trim() ? "bg-brand text-white shadow-lg shadow-brand/20 active:scale-90" : "bg-white/5 text-zinc-700"
+                                            )}
+                                        >
+                                            <Send size={18} />
+                                        </button>
+                                    </form>
+                                </div>
                             )}
                         </div>
                     </motion.div>
