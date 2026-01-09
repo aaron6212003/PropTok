@@ -46,12 +46,13 @@ export const sportsService = {
             return `Will ${team} cover ${points} vs ${team === game.home_team ? game.away_team : game.home_team}?`;
         }
         if (marketType === 'totals') {
-            return `Will ${game.home_team} vs ${game.away_team} go ${outcome.name.toUpperCase()} ${outcome.point} points?`;
+            // Outcome name is usually 'Over' or 'Under'
+            return `Will ${game.home_team} vs ${game.away_team} go ${outcome.name.toUpperCase()} ${outcome.point} total points?`;
         }
         return `Will ${team} win?`;
     },
 
-    async fetchLiveOdds(sport: string = "americanfootball_nfl") {
+    async fetchLiveOdds(sport: string) {
         const apiKey = process.env.THE_ODDS_API_KEY;
         console.log(`[sportsService] Fetching ${sport}... (Key length: ${apiKey?.length || 0})`);
 
@@ -66,7 +67,7 @@ export const sportsService = {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error(`[sportsService] API Error (${response.status}):`, errorData);
+                console.error(`[sportsService] API Error (${response.status}) for ${sport}:`, errorData);
                 return { error: `API Error ${response.status}`, data: [] };
             }
 
@@ -79,7 +80,7 @@ export const sportsService = {
 
             return { data };
         } catch (error: any) {
-            console.error("[sportsService] Network/Fetch error:", error);
+            console.error(`[sportsService] Network/Fetch error for ${sport}:`, error);
             return { error: error.message, data: [] };
         }
     },
@@ -88,14 +89,27 @@ export const sportsService = {
         console.log("[sportsService] Starting Ingestion Process...");
         const logs: string[] = [];
 
-        const nflRes = await this.fetchLiveOdds("americanfootball_nfl");
-        const nbaRes = await this.fetchLiveOdds("basketball_nba");
+        // Expanded Sports List
+        const sports = [
+            "americanfootball_nfl",
+            "basketball_nba",
+            "icehockey_nhl",
+            "soccer_epl",
+            "soccer_uefa_champions_league"
+        ];
 
-        if (nflRes.error) logs.push(`NFL Error: ${nflRes.error}`);
-        if (nbaRes.error) logs.push(`NBA Error: ${nbaRes.error}`);
+        const allFetchedGames: any[] = [];
 
-        const games = [...(nflRes.data || []), ...(nbaRes.data || [])];
-        logs.push(`Total games fetched: ${games.length}`);
+        for (const sport of sports) {
+            const res = await this.fetchLiveOdds(sport);
+            if (res.error) {
+                logs.push(`${sport} Error: ${res.error}`);
+            } else {
+                allFetchedGames.push(...(res.data || []));
+            }
+        }
+
+        logs.push(`Total games fetched across all sports: ${allFetchedGames.length}`);
 
         const supabase = createAdminClient();
         if (!supabase) {
@@ -108,9 +122,10 @@ export const sportsService = {
         let addedCount = 0;
         let skippedCount = 0;
 
-        for (const game of games) {
-            // Priority: DraftKings -> FanDuel -> BetMGM -> First available
-            const preferredBookies = ["draftkings", "fanduel", "betmgm"];
+        // Dedup bookmaker priority
+        const preferredBookies = ["draftkings", "fanduel", "betmgm", "betrivers", "williamhill_us"];
+
+        for (const game of allFetchedGames) {
             const bookie = game.bookmakers.find((b: { key: string }) => preferredBookies.includes(b.key)) || game.bookmakers[0];
 
             if (!bookie) {
@@ -119,14 +134,22 @@ export const sportsService = {
             }
 
             for (const market of bookie.markets) {
-                // Focus on spreads and totals for now
-                if (market.key !== 'spreads' && market.key !== 'totals') continue;
+                // Support H2H, Spreads, and Totals
+                if (!['h2h', 'spreads', 'totals'].includes(market.key)) continue;
 
-                const outcome = market.outcomes[0];
-                const oppositeOutcome = market.outcomes[1];
-                if (!outcome || !oppositeOutcome) continue;
+                const outcomes = market.outcomes;
+                if (outcomes.length < 2) continue;
 
-                const externalId = `${game.id}-${market.key}-${outcome.name}`;
+                // For simple markets, we take the first outcome as "YES" and its natural opposite as "NO" logic
+                // In PropTok, every prop is a YES/NO.
+                // For H2H: "Will Lakers win?" (Outcome: Lakers)
+                // For Spreads: "Will Lakers cover -4.5?" (Outcome: Lakers)
+                // For Totals: "Will it go Over 220.5?" (Outcome: Over)
+
+                const primaryOutcome = outcomes[0];
+                const secondaryOutcome = outcomes[1];
+
+                const externalId = `${game.id}-${market.key}-${primaryOutcome.name}`.replace(/\s+/g, '-').toLowerCase();
 
                 // Duplicate check
                 const { data: existing } = await supabase
@@ -140,9 +163,9 @@ export const sportsService = {
                     continue;
                 }
 
-                const question = this.generateQuestion(market.key, game, outcome);
-                const yesMultiplier = this.decimalToMultiplier(outcome.price);
-                const noMultiplier = this.decimalToMultiplier(oppositeOutcome.price);
+                const question = this.generateQuestion(market.key, game, primaryOutcome);
+                const yesMultiplier = this.decimalToMultiplier(primaryOutcome.price);
+                const noMultiplier = this.decimalToMultiplier(secondaryOutcome.price);
 
                 const { error: insertError } = await supabase.from("predictions").insert({
                     question,

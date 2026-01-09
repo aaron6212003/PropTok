@@ -23,6 +23,7 @@ type SortOption = 'trending' | 'ending' | 'new';
 export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
     const [sortBy, setSortBy] = useState<SortOption>('trending');
     const router = useRouter();
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Sort Predictions
     const sortedPredictions = useMemo(() => {
@@ -46,7 +47,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     };
 
     return (
-        <PullToRefresh onRefresh={handleRefresh} className="h-full w-full">
+        <PullToRefresh onRefresh={handleRefresh} className="h-full w-full" scrollContainerRef={scrollRef}>
             {/* Sorting Tabs - Floating Header */}
             <div className="fixed top-[72px] left-0 right-0 z-40 flex justify-center pointer-events-none">
                 <div className="flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-md border border-white/10 shadow-xl pointer-events-auto">
@@ -83,7 +84,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                 </div>
             </div>
 
-            <div className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar">
+            <div ref={scrollRef} className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar">
                 {sortedPredictions.map((prediction) => {
                     const fallbackYesMultiplier = Number((0.95 / Math.max(0.01, (prediction.yes_percent || 50) / 100)).toFixed(2));
                     const fallbackNoMultiplier = Number((0.95 / Math.max(0.01, 1 - (prediction.yes_percent || 50) / 100)).toFixed(2));

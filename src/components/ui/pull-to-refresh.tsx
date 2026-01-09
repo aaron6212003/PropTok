@@ -9,11 +9,12 @@ interface PullToRefreshProps {
     onRefresh: () => Promise<void>;
     children: React.ReactNode;
     className?: string;
+    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const PULL_THRESHOLD = 70; // Tightened from 100
 
-export default function PullToRefresh({ onRefresh, children, className }: PullToRefreshProps) {
+export default function PullToRefresh({ onRefresh, children, className, scrollContainerRef }: PullToRefreshProps) {
     const [pullDistance, setPullDistance] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
@@ -24,7 +25,12 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
     const rotate = useTransform(pullY, [0, PULL_THRESHOLD], [0, 360]);
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        if (isRefreshing || window.scrollY > 0) return;
+        // Correctly check if at the top of the relevant scroll container
+        const isAtTop = scrollContainerRef
+            ? (scrollContainerRef.current?.scrollTop || 0) <= 0
+            : window.scrollY <= 0;
+
+        if (isRefreshing || !isAtTop) return;
         const startY = e.touches[0].pageY;
 
         const handleTouchMove = (moveEvent: TouchEvent) => {
