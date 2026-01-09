@@ -21,7 +21,6 @@ export async function getPredictions(onlyOpen: boolean = false) {
         return [];
     }
 
-    revalidatePath("/", "layout");
     return data;
 }
 
@@ -377,7 +376,8 @@ export async function acknowledgeResults() {
         return { error: "Failed to acknowledge results" };
     }
 
-    revalidatePath("/profile");
+    revalidatePath("/", "layout");
+    revalidatePath("/profile", "layout");
     return { success: true };
 }
 
@@ -462,8 +462,8 @@ export async function adminHardReset() {
         best_streak: 0
     }).eq("id", user.id);
 
-    revalidatePath("/leaderboard");
-    revalidatePath("/");
+    revalidatePath("/", "layout");
+    revalidatePath("/admin", "layout");
     return { success: true };
 }
 
@@ -482,8 +482,8 @@ export async function clearDatabase() {
         return { error: error.message };
     }
 
-    revalidatePath("/");
-    revalidatePath("/admin");
+    revalidatePath("/", "layout");
+    revalidatePath("/admin", "layout");
     return { success: true };
 }
 
