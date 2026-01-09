@@ -15,11 +15,15 @@ export async function GET() {
         SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? "FOUND" : "MISSING",
         SUPABASE_ADMIN_KEY: process.env.SUPABASE_ADMIN_KEY ? "FOUND" : "MISSING",
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "FOUND" : "MISSING",
+        available_keys: Object.keys(process.env).filter(k => !k.includes('KEY') && !k.includes('SECRET')), // Safety first
+        supabase_keys: Object.keys(process.env).filter(k => k.includes('SUPABASE')),
+        odds_keys: Object.keys(process.env).filter(k => k.includes('ODDS')),
         meta: {
             url: process.env.VERCEL_URL || "local",
             region: process.env.VERCEL_REGION || "local",
             time: new Date().toISOString(),
-            node_env: process.env.NODE_ENV
+            node_env: process.env.NODE_ENV,
+            vercel_env: process.env.VERCEL_ENV || "unknown"
         }
     };
     results.push({ type: "Environment Diagnostics", ...envDiagnostics });
