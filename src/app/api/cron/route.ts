@@ -9,6 +9,15 @@ export async function GET() {
     const supabase = await createClient();
     const results: any[] = [];
 
+    // --- DIAGNOSTIC: ENV VAR CHECK ---
+    const envDiagnostics = {
+        THE_ODDS_API_KEY: process.env.THE_ODDS_API_KEY ? "FOUND (Length: " + process.env.THE_ODDS_API_KEY.length + ")" : "MISSING",
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? "FOUND" : "MISSING",
+        SUPABASE_ADMIN_KEY: process.env.SUPABASE_ADMIN_KEY ? "FOUND" : "MISSING",
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "FOUND" : "MISSING",
+    };
+    results.push({ type: "Environment Diagnostics", ...envDiagnostics });
+
     // --- PART 1: LIVE INGESTION ---
     try {
         const liveLogs = await sportsService.ingestGames();
