@@ -27,8 +27,11 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
     const router = useRouter();
 
     useEffect(() => {
-        // Only trigger if we have results and haven't already acknowledged in this mount
-        if (results.length > 0 && !hasAcknowledged) {
+        // Check session storage to see if we've already acknowledged this session
+        // This prevents the "pop back up" when navigating back to Profile
+        const sessionAck = typeof window !== 'undefined' && sessionStorage.getItem('prop_ack_complete');
+
+        if (results.length > 0 && !hasAcknowledged && !sessionAck) {
             setIsOpen(true);
         } else {
             setIsOpen(false);
@@ -48,6 +51,12 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
                 const res = await acknowledgeResults();
                 if (res.success) {
                     toast.success("Results acknowledged");
+
+                    // Persist locally for this session to kill flicker/repeat pops
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('prop_ack_complete', 'true');
+                    }
+
                     setHasAcknowledged(true);
                     setIsOpen(false);
                     router.refresh();

@@ -1,7 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getPredictions(onlyOpen: boolean = false) {
     const supabase = await createClient();
@@ -282,6 +283,9 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
 
     if (!user) return [];
 
+    // If fetching for recap, ensure we get FRESH data
+    const queryOptions = onlyUnacknowledged ? { head: false, count: null } : {};
+
     let query = supabase
         .from("votes")
         .select(`
@@ -352,8 +356,6 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
     return data;
 }
 
-import { createAdminClient } from "@/lib/supabase/admin";
-
 export async function acknowledgeResults() {
     // 1. Authenticate user as usual
     const supabase = await createClient();
@@ -362,9 +364,10 @@ export async function acknowledgeResults() {
     if (!user) return { error: "Not authenticated" };
 
     // 2. Use ADMIN client if available to bypass RLS, otherwise fallback to standard client
-    // Standard client works IF the RLS update policies are applied
     const admin = createAdminClient();
     const client = admin || supabase;
+
+    console.log(`Acknowledging results for user: ${user.id} using ${admin ? 'ADMIN' : 'USER'} client`);
 
     // Batch acknowledge both votes and bundles
     const [votesRes, bundlesRes] = await Promise.all([
@@ -385,8 +388,10 @@ export async function acknowledgeResults() {
         return { error: "Failed to acknowledge results. Check RLS policies." };
     }
 
+    // Force revalidate everything
     revalidatePath("/", "layout");
     revalidatePath("/profile", "layout");
+
     return { success: true };
 }
 
