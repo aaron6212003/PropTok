@@ -21,6 +21,7 @@ export async function getPredictions(onlyOpen: boolean = false) {
         return [];
     }
 
+    revalidatePath("/", "layout");
     return data;
 }
 
@@ -161,8 +162,8 @@ export async function createPrediction(formData: FormData) {
         return { error: error.message };
     }
 
-    revalidatePath("/");
-    revalidatePath("/admin");
+    revalidatePath("/", "layout");
+    revalidatePath("/admin", "layout");
     return { success: true };
 }
 
