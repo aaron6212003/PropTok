@@ -85,9 +85,11 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
 
             <div className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar">
                 {sortedPredictions.map((prediction) => {
-                    const yesProb = (prediction.yes_percent || 50) / 100;
-                    const yesMultiplier = Number((0.95 / Math.max(0.01, yesProb)).toFixed(2));
-                    const noMultiplier = Number((0.95 / Math.max(0.01, 1 - yesProb)).toFixed(2));
+                    const fallbackYesMultiplier = Number((0.95 / Math.max(0.01, (prediction.yes_percent || 50) / 100)).toFixed(2));
+                    const fallbackNoMultiplier = Number((0.95 / Math.max(0.01, 1 - (prediction.yes_percent || 50) / 100)).toFixed(2));
+
+                    const yesMultiplier = prediction.yes_multiplier || fallbackYesMultiplier;
+                    const noMultiplier = prediction.no_multiplier || fallbackNoMultiplier;
 
                     return (
                         <PredictionCard

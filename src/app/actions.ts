@@ -85,12 +85,25 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
 
     if (existingVote) return { error: "Already voted on this prediction" };
 
-    // 3. Implied Odds
-    const { data: prediction } = await supabase.from("predictions").select("yes_percent").eq("id", predictionId).single();
-    let yesProb = (prediction?.yes_percent || 50) / 100;
-    yesProb = Math.max(0.01, Math.min(0.99, yesProb));
-    const probability = side === 'YES' ? yesProb : (1 - yesProb);
-    const multiplier = Number((0.95 / probability).toFixed(2));
+    // 3. Multiplier Logic
+    const { data: prediction } = await supabase
+        .from("predictions")
+        .select("yes_percent, yes_multiplier, no_multiplier")
+        .eq("id", predictionId)
+        .single();
+
+    let multiplier: number;
+
+    // Use persisted multipliers if they exist and are not default 0 (or specifically for live data)
+    if (prediction?.yes_multiplier && prediction?.no_multiplier) {
+        multiplier = side === 'YES' ? prediction.yes_multiplier : prediction.no_multiplier;
+    } else {
+        // Fallback to crowd-implied odds
+        let yesProb = (prediction?.yes_percent || 50) / 100;
+        yesProb = Math.max(0.01, Math.min(0.99, yesProb));
+        const probability = side === 'YES' ? yesProb : (1 - yesProb);
+        multiplier = Number((0.95 / probability).toFixed(2));
+    }
 
     // 4. Insert Vote
     const { error } = await supabase.from("votes").insert({

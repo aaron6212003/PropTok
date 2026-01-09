@@ -19,9 +19,17 @@ export interface Prediction {
     expiresAt: string; // ISO date
     createdAt: string; // ISO date
 
-    // Fake "market" data
+    // Live Multipliers (from DB)
+    payoutMultiplierYes?: number;
+    payoutMultiplierNo?: number;
+
+    // Computed/Contextual multipliers (used by UI)
     yesMultiplier: number;
     noMultiplier: number;
+
+    // Live Data Sources
+    externalId?: string;
+    oddsSource?: string;
 }
 
 export interface Comment {
