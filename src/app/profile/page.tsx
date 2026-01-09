@@ -54,15 +54,40 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     const profile = profileRes.data;
     const tournamentEntries = entriesRes;
 
+    // Determine Active Stats (Cash vs. Tournament)
+    let stats = {
+        win_rate: Number(profile?.win_rate || 0),
+        streak: Number(profile?.streak || 0),
+        total_wins: Number(profile?.total_wins || 0), // Use new col or fallback
+        total_bets: Number(profile?.total_bets || 0), // (profile.wins * 100 / profile.win_rate) approx if missing
+        label: "Career Stats"
+    };
+
+    // Quick fallback calculation for legacy profile data if new cols are 0
+    if (stats.total_bets === 0 && profile?.total_bets) stats.total_bets = profile.total_bets;
+    if (stats.total_wins === 0 && profile?.wins) stats.total_wins = profile.wins; // Legacy column name 'wins'
+
     let tournamentStack = null;
+
     if (tournamentId) {
-        const { data } = await supabase
+        const { data: entry } = await supabase
             .from("tournament_entries")
-            .select("current_stack")
+            .select("*")
             .eq("tournament_id", tournamentId)
             .eq("user_id", user.id)
             .single();
-        tournamentStack = data?.current_stack;
+
+        if (entry) {
+            tournamentStack = entry.current_stack;
+            // Switch to Tournament Stats
+            stats = {
+                win_rate: Number(entry.win_rate || 0),
+                streak: Number(entry.streak || 0), // Use entry streak
+                total_wins: Number(entry.total_wins || 0),
+                total_bets: Number(entry.total_bets || 0),
+                label: "Tournament Stats"
+            };
+        }
     }
 
     const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.bankroll || 0);
@@ -160,21 +185,24 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     <div className="mt-4 flex gap-4">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wins</span>
-                            <span className="text-sm font-bold text-success">{profile?.wins || 0}</span>
+                            <span className="text-sm font-bold text-success">{stats.total_wins}</span>
                         </div>
                         <div className="h-8 w-px bg-white/10" />
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Total Bets</span>
-                            <span className="text-sm font-bold text-brand">{profile?.total_bets || 0}</span>
+                            <span className="text-sm font-bold text-brand">{stats.total_bets}</span>
                         </div>
+                    </div>
+                    <div className="mt-2 text-[10px] uppercase text-zinc-600 tracking-wider">
+                        ({stats.label})
                     </div>
                 </div>
             </div>
 
             {/* Stat Grid */}
             <div className="mt-6 grid grid-cols-2 gap-4 px-6 md:grid-cols-4">
-                <StatCard label="Win Rate" value={`${profile?.win_rate || 0}%`} icon={TrendingUp} colorClass="text-brand" />
-                <StatCard label="Streak" value={profile?.streak || 0} icon={Flame} colorClass="text-destructive" />
+                <StatCard label="Win Rate" value={`${stats.win_rate.toFixed(1)}%`} icon={TrendingUp} colorClass="text-brand" />
+                <StatCard label="Streak" value={stats.streak} icon={Flame} colorClass="text-destructive" />
             </div>
 
             <div className="px-6">
