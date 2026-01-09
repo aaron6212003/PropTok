@@ -88,7 +88,11 @@ export const sportsService = {
     },
 
     async ingestGames() {
-        const games = await this.fetchLiveOdds();
+        // Fetch both NFL and NBA to ensure we have data
+        const nflGames = await this.fetchLiveOdds("americanfootball_nfl");
+        const nbaGames = await this.fetchLiveOdds("basketball_nba");
+        const games = [...nflGames, ...nbaGames];
+
         const supabase = createAdminClient();
         if (!supabase) {
             console.error("Sports Ingestion Failed: Could not create admin client");
