@@ -110,7 +110,7 @@ export const sportsService = {
         for (const game of games) {
             // Priority: DraftKings -> FanDuel -> BetMGM -> First available
             const preferredBookies = ["draftkings", "fanduel", "betmgm"];
-            const bookie = game.bookmakers.find(b => preferredBookies.includes(b.key)) || game.bookmakers[0];
+            const bookie = game.bookmakers.find((b: { key: string }) => preferredBookies.includes(b.key)) || game.bookmakers[0];
 
             if (!bookie) {
                 skippedCount++;

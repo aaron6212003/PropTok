@@ -12,7 +12,7 @@ export async function GET() {
     // --- PART 1: LIVE INGESTION ---
     try {
         const liveLogs = await sportsService.ingestGames();
-        liveLogs.forEach(log => results.push({ type: "Live Ingestion", log }));
+        liveLogs.forEach((log: string) => results.push({ type: "Live Ingestion", log }));
     } catch (e: any) {
         console.error("Sports Ingestion Failed:", e);
         results.push({ type: "Ingestion Error", message: e.message });
