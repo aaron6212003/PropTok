@@ -158,7 +158,9 @@ export const sportsService = {
             "basketball_nba",
             "icehockey_nhl",
             "soccer_epl",
-            "soccer_uefa_champions_league"
+            "soccer_uefa_champions_league",
+            "basketball_ncaab",
+            "americanfootball_ncaaf"
         ];
 
         const sportCategoryMap: Record<string, string> = {
@@ -166,7 +168,9 @@ export const sportsService = {
             "basketball_nba": "NBA",
             "icehockey_nhl": "NHL",
             "soccer_epl": "Soccer",
-            "soccer_uefa_champions_league": "Soccer"
+            "soccer_uefa_champions_league": "Soccer",
+            "basketball_ncaab": "NCAAB",
+            "americanfootball_ncaaf": "NCAAF"
         };
 
         const allFetchedGames: any[] = [];
