@@ -21,7 +21,9 @@ interface ResolutionRecapProps {
 export default function ResolutionRecap({ results }: ResolutionRecapProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPending, setIsPending] = useState(false);
     const router = useRouter();
+    const { toast } = require('sonner'); // Inline import to avoid potential build issues if not globally available yet
 
     useEffect(() => {
         if (results.length > 0) {
@@ -37,9 +39,22 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
 
     const handleNext = async () => {
         if (isLast) {
-            await acknowledgeResults();
-            setIsOpen(false);
-            router.refresh();
+            setIsPending(true);
+            try {
+                const res = await acknowledgeResults();
+                if (res.success) {
+                    toast.success("Results acknowledged");
+                    setIsOpen(false);
+                    router.refresh();
+                } else {
+                    toast.error(res.error || "Failed to acknowledge results");
+                }
+            } catch (err) {
+                toast.error("An unexpected error occurred");
+                console.error(err);
+            } finally {
+                setIsPending(false);
+            }
         } else {
             setCurrentIndex(prev => prev + 1);
         }
@@ -126,15 +141,18 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
 
                             <button
                                 onClick={handleNext}
+                                disabled={isPending}
                                 className={cn(
                                     "group flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition-all active:scale-95",
                                     currentResult.won
                                         ? "bg-success text-black shadow-lg shadow-success/20"
-                                        : "bg-white text-black shadow-lg"
+                                        : "bg-white text-black shadow-lg",
+                                    isPending && "opacity-50 cursor-not-allowed"
                                 )}
                             >
-                                <span>{isLast ? "Close" : "Next Result"}</span>
-                                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                                <span>{isPending ? "Syncing..." : (isLast ? "Close" : "Next Result")}</span>
+                                {!isPending && <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />}
+                                {isPending && <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />}
                             </button>
 
                             {currentResult.won && (
