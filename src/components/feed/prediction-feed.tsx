@@ -109,35 +109,46 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                 </div>
             </div>
 
-            <div className="fixed top-[124px] left-0 right-0 z-40 flex px-4 overflow-x-auto no-scrollbar gap-2 pointer-events-none">
-                <div className="flex items-center gap-2 pointer-events-auto pb-2">
+            {/* Vertical Filter Sidebar - Left Side */}
+            <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4 pointer-events-none">
+                <div className="flex flex-col items-start gap-3 pointer-events-auto">
                     <button
                         onClick={() => setSelectedCategories([])}
                         className={cn(
-                            "whitespace-nowrap rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border transition-all",
+                            "group flex items-center justify-center rounded-full h-10 w-10 border transition-all duration-300",
                             selectedCategories.length === 0
-                                ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                                : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20"
+                                ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110"
+                                : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20 hover:scale-105"
                         )}
+                        title="All Sports"
                     >
-                        All Sports
+                        <span className="text-[9px] font-black">ALL</span>
                     </button>
+
                     {availableCategories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => toggleCategory(cat)}
                             className={cn(
-                                "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border transition-all",
+                                "group relative flex items-center justify-center rounded-full h-10 w-10 border transition-all duration-300",
                                 selectedCategories.includes(cat)
-                                    ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                                    : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20"
+                                    ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110"
+                                    : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20 hover:scale-105"
                             )}
+                            title={cat}
                         >
                             <div
-                                className="h-1.5 w-1.5 rounded-full"
+                                className={cn(
+                                    "h-2 w-2 rounded-full transition-all duration-300",
+                                    selectedCategories.includes(cat) ? "scale-125" : "opacity-80 group-hover:opacity-100"
+                                )}
                                 style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
                             />
-                            {cat}
+
+                            {/* Hover Label (Desktop/Tablet) */}
+                            <span className="absolute left-full ml-3 hidden group-hover:block whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+                                {cat}
+                            </span>
                         </button>
                     ))}
                 </div>
