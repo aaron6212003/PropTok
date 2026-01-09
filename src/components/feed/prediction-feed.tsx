@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
 import EmptyState from '../ui/empty-state';
 import { toast } from 'sonner';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Filter, Check, ChevronDown, X } from 'lucide-react';
 
 interface PredictionFeedProps {
     initialPredictions: any[];
@@ -23,6 +25,7 @@ type SortOption = 'trending' | 'ending' | 'new';
 export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
     const [sortBy, setSortBy] = useState<SortOption>('trending');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const router = useRouter();
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +77,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     return (
         <PullToRefresh onRefresh={handleRefresh} className="h-full w-full" scrollContainerRef={scrollRef}>
             {/* Sorting Tabs - Floating Header */}
-            <div className="fixed top-[72px] left-0 right-0 z-40 flex justify-center pointer-events-none">
+            <div className="fixed top-[72px] left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-3">
                 <div className="flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-md border border-white/10 shadow-xl pointer-events-auto">
                     <button
                         onClick={() => setSortBy('trending')}
@@ -107,52 +110,74 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                         <span>New</span>
                     </button>
                 </div>
-            </div>
 
-            {/* Vertical Filter Sidebar - Left Side */}
-            <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4 pointer-events-none">
-                <div className="flex flex-col items-start gap-3 pointer-events-auto">
+                {/* Filter Trigger Badge */}
+                <div className="pointer-events-auto">
                     <button
-                        onClick={() => setSelectedCategories([])}
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
                         className={cn(
-                            "group flex items-center justify-center rounded-full h-10 w-10 border transition-all duration-300",
-                            selectedCategories.length === 0
-                                ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110"
-                                : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20 hover:scale-105"
+                            "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md border shadow-lg transition-all",
+                            isFilterOpen || selectedCategories.length > 0
+                                ? "bg-white text-black border-white shadow-brand/20"
+                                : "bg-black/60 text-zinc-400 border-white/10 hover:border-white/30 hover:text-white"
                         )}
-                        title="All Sports"
                     >
-                        <span className="text-[9px] font-black">ALL</span>
+                        <Filter size={10} />
+                        <span>{selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "Filter Sports"}</span>
+                        <ChevronDown size={10} className={cn("transition-transform duration-300", isFilterOpen ? "rotate-180" : "")} />
                     </button>
-
-                    {availableCategories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => toggleCategory(cat)}
-                            className={cn(
-                                "group relative flex items-center justify-center rounded-full h-10 w-10 border transition-all duration-300",
-                                selectedCategories.includes(cat)
-                                    ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110"
-                                    : "bg-black/40 text-zinc-400 border-white/10 backdrop-blur-md hover:border-white/20 hover:scale-105"
-                            )}
-                            title={cat}
-                        >
-                            <div
-                                className={cn(
-                                    "h-2 w-2 rounded-full transition-all duration-300",
-                                    selectedCategories.includes(cat) ? "scale-125" : "opacity-80 group-hover:opacity-100"
-                                )}
-                                style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
-                            />
-
-                            {/* Hover Label (Desktop/Tablet) */}
-                            <span className="absolute left-full ml-3 hidden group-hover:block whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-                                {cat}
-                            </span>
-                        </button>
-                    ))}
                 </div>
             </div>
+
+            {/* Dropdown Menu Overlay */}
+            <AnimatePresence>
+                {isFilterOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+                        className="fixed top-[130px] left-0 right-0 z-50 flex justify-center pointer-events-none px-4"
+                    >
+                        <div className="w-full max-w-[320px] rounded-2xl bg-black/90 border border-white/10 backdrop-blur-xl shadow-2xl p-3 pointer-events-auto">
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => setSelectedCategories([])}
+                                    className={cn(
+                                        "col-span-2 flex items-center justify-between px-4 py-3 rounded-xl transition-all border",
+                                        selectedCategories.length === 0
+                                            ? "bg-white text-black border-white font-bold"
+                                            : "bg-white/5 border-transparent hover:bg-white/10 text-zinc-400"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold uppercase tracking-wider">All Sports</span>
+                                    {selectedCategories.length === 0 && <Check size={16} className="text-black" />}
+                                </button>
+
+                                {availableCategories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => toggleCategory(cat)}
+                                        className={cn(
+                                            "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border",
+                                            selectedCategories.includes(cat)
+                                                ? "bg-white/10 border-white/20 text-white"
+                                                : "bg-transparent border-transparent hover:bg-white/5 text-zinc-400"
+                                        )}
+                                    >
+                                        <div
+                                            className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]"
+                                            style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'], color: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
+                                        />
+                                        <span className="text-xs font-bold uppercase tracking-wider">{cat}</span>
+                                        {selectedCategories.includes(cat) && <Check size={12} className="ml-auto text-success" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div ref={scrollRef} className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar pt-12">
                 {filteredAndSortedPredictions.map((prediction: any) => {
