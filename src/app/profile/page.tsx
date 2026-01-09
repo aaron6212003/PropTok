@@ -199,11 +199,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 </div>
             </div>
 
-            {/* Stat Grid */}
-            <div className="mt-6 grid grid-cols-2 gap-4 px-6 md:grid-cols-4">
-                <StatCard label="Win Rate" value={`${stats.win_rate.toFixed(1)}%`} icon={TrendingUp} colorClass="text-brand" />
-                <StatCard label="Streak" value={stats.streak} icon={Flame} colorClass="text-destructive" />
-            </div>
+
 
             <div className="px-6">
                 <AdminAccessButton />

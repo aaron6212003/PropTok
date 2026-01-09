@@ -17,9 +17,10 @@ interface CommentItemProps {
         user_has_liked: boolean;
         created_at: string;
     };
+    onReply: (username: string) => void;
 }
 
-export default function CommentItem({ comment }: CommentItemProps) {
+export default function CommentItem({ comment, onReply }: CommentItemProps) {
     const [likes, setLikes] = useState(Number(comment.like_count));
     const [hasLiked, setHasLiked] = useState(comment.user_has_liked);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -102,7 +103,12 @@ export default function CommentItem({ comment }: CommentItemProps) {
                         </div>
                         <span className="tabular-nums">{likes}</span>
                     </button>
-                    <button className="text-xs font-bold text-zinc-500 hover:text-white transition-colors">Reply</button>
+                    <button
+                        onClick={() => onReply(comment.username)}
+                        className="text-xs font-bold text-zinc-500 hover:text-white transition-colors"
+                    >
+                        Reply
+                    </button>
                 </div>
             </div>
         </motion.div>

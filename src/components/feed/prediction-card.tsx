@@ -74,7 +74,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
                             >
                                 <MessageCircle size={18} className="text-zinc-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Discuss</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Discuss {prediction.commentCount ? `(${prediction.commentCount})` : ''}</span>
                             </button>
 
                             <button

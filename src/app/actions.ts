@@ -8,7 +8,10 @@ export async function getPredictions(onlyOpen: boolean = false) {
     const supabase = await createClient();
     let query = supabase
         .from("predictions")
-        .select("*")
+        .select(`
+            *,
+            comments:comments(count)
+        `)
         .order("created_at", { ascending: false });
 
     if (onlyOpen) {
@@ -22,7 +25,10 @@ export async function getPredictions(onlyOpen: boolean = false) {
         return [];
     }
 
-    return data;
+    return data.map((p: any) => ({
+        ...p,
+        commentCount: p.comments?.[0]?.count || 0
+    }));
 }
 
 export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager: number, tournamentId?: string) {

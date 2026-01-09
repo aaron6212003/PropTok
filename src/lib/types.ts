@@ -30,6 +30,9 @@ export interface Prediction {
     // Live Data Sources
     externalId?: string;
     oddsSource?: string;
+
+    // Social
+    commentCount?: number;
 }
 
 export interface Comment {

@@ -120,7 +120,11 @@ export default function CommentsDrawer({
                             ) : (
                                 <div className="space-y-2">
                                     {comments.map((comment) => (
-                                        <CommentItem key={comment.id} comment={comment} />
+                                        <CommentItem
+                                            key={comment.id}
+                                            comment={comment}
+                                            onReply={(username) => setNewComment(`@${username} `)}
+                                        />
                                     ))}
                                 </div>
                             )}
