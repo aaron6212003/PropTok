@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Home, Trophy, PlusCircle, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, vibrate } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 export default function BottomNavBar() {
@@ -40,9 +40,7 @@ export default function BottomNavBar() {
                                 whileHover={{ y: -2 }}
                                 animate={isActive ? { scale: 1.15 } : { scale: 1 }}
                                 onClick={() => {
-                                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                                        navigator.vibrate(5); // Light tap on switch
-                                    }
+                                    vibrate(5); // Light tap on switch
                                 }}
                             >
                                 <Icon

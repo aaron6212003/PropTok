@@ -48,6 +48,38 @@
     color: var(--foreground);
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+
+    /* Native App Feel */
+    user-select: none;
+    /* Disable text selection */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    /* Disable long-press context menu */
+    -webkit-tap-highlight-color: transparent;
+    /* Remove gray tap highlight */
+    touch-action: manipulation;
+    /* Improve touch response */
+
+    /* Full height fix */
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+    /* Prevent pull-to-refresh on body (handled by component) */
+  }
+
+  /* Allow text selection on specific content if needed */
+  .selectable {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  /* Safe Area Utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
   }
 }
 

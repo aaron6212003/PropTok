@@ -5,7 +5,7 @@ import { placeBundleWager, submitVote, getUserTournamentEntries } from "@/app/ac
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, vibrate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -60,6 +60,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
     const payout = (wager * totalMultiplier).toFixed(0);
 
     const handlePlaceBet = async () => {
+        vibrate(20); // Initial press feedback
         setIsSubmitting(true);
         try {
             const targetTournamentId = activeWalletId === "cash" ? undefined : activeWalletId;
@@ -70,6 +71,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 const res = await submitVote(item.predictionId, item.side, wager, targetTournamentId);
                 if (res.error) toast.error(res.error);
                 else {
+                    vibrate([10, 50, 10]); // Success pattern
                     toast.success("Bet Placed!");
                     clearSlip();
                     router.refresh();
@@ -80,6 +82,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 const res = await placeBundleWager(legs, wager, targetTournamentId);
                 if (res.error) toast.error(res.error);
                 else {
+                    vibrate([10, 50, 10]); // Success pattern
                     toast.success("Bundle Placed!");
                     clearSlip();
                     router.refresh();

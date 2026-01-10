@@ -3,16 +3,17 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import MobileContainer from "@/components/layout/mobile-container";
 
-export const metadata: Metadata = {
-  title: "PropTok",
-  description: "Social Sports Predictions",
-};
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false, // Prevent zooming for app-like feel
+};
+
+export const metadata: Metadata = {
+  title: "PropTok",
+  description: "Social Sports Predictions",
+  manifest: "/manifest.json",
 };
 
 import { BetSlipProvider } from "@/lib/context/bet-slip-context";

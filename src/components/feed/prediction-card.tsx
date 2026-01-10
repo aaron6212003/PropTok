@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prediction } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, vibrate } from '@/lib/utils';
 import { Share2, Clock, Volume2, TrendingUp, HelpCircle, MessageCircle, MoreHorizontal, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import CommentsDrawer from '@/components/social/comments-drawer';
@@ -26,6 +26,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
     const selectedSide = slipItem?.side || null;
 
     const handleOptionClick = (side: 'YES' | 'NO') => {
+        vibrate(10); // Haptic feedback
         toggleInSlip({
             predictionId: prediction.id,
             question: prediction.question,
@@ -70,7 +71,10 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                         <div className="mt-6 flex items-center justify-center gap-4">
                             <button
-                                onClick={() => setShowComments(true)}
+                                onClick={() => {
+                                    vibrate(5);
+                                    setShowComments(true);
+                                }}
                                 className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
                             >
                                 <MessageCircle size={18} className="text-zinc-400" />
@@ -79,6 +83,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                             <button
                                 onClick={() => {
+                                    vibrate(5);
                                     navigator.clipboard.writeText(window.location.origin);
                                     toast.success("Link copied!");
                                 }}
