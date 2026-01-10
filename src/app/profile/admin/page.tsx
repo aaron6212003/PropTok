@@ -56,21 +56,33 @@ export default function AdminPage() {
 
                 <div className="flex gap-2 relative">
                     {/* CUSTOM MULTI-SELECT DROPDOWN */}
-                    <div className="relative group">
+                    <div className="relative">
                         <button
-                            onClick={(e) => {
-                                const menu = e.currentTarget.nextElementSibling;
-                                menu?.classList.toggle('hidden');
-                            }}
+                            onClick={() => setDropdownOpen(!dropdownOpen)}
                             className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-bold text-white hover:bg-white/10 transition-colors"
                         >
                             <span>Select Tournaments to Delete</span>
-                            <ChevronDown size={14} className="text-zinc-500" />
+                            <ChevronDown size={14} className={`text-zinc-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {/* ABSOLUTE DROPDOWN MENU */}
-                        <div className="hidden absolute top-full left-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-xl border border-white/10 bg-black/90 p-2 shadow-2xl backdrop-blur-xl z-50">
-                        </div>
+                        {dropdownOpen && (
+                            <div className="absolute top-full left-0 mt-2 w-72 max-h-80 overflow-y-auto rounded-xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl z-[9999]">
+                                <div className="mb-2 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                                    {tournaments.length} Tournaments Found
+                                </div>
+                                {tournaments.length === 0 && <div className="p-2 text-xs text-zinc-500">No tournaments found.</div>}
+                                {tournaments.map(t => (
+                                    <label key={t.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors border-b border-white/5 last:border-0">
+                                        <input type="checkbox" name="t_select" value={t.id} className="accent-brand h-4 w-4" />
+                                        <div className="overflow-hidden">
+                                            <div className="truncate text-xs font-bold text-white">{t.name}</div>
+                                            <div className="truncate text-[10px] text-zinc-500">{t.status} | {new Date(t.created_at).toLocaleDateString()}</div>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* DELETE ACTION BUTTON */}
