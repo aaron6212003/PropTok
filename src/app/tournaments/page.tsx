@@ -16,10 +16,10 @@ export default function TournamentsPage() {
 
     useEffect(() => {
         const fetchTournaments = async () => {
-            // Get Active Tournaments with Owner Details
+            // Get ALL Tournaments (Debug Mode: Removed Status Filter)
             const { data: t, error } = await supabase.from('tournaments')
-                .select('*, owner:users(username, avatar_url)')
-                .eq('status', 'ACTIVE');
+                .select('*, owner:users(username, avatar_url)');
+            // .eq('status', 'ACTIVE'); // Temporarily removed to debug visibility
 
             if (error) console.error("Error fetching tournaments:", error);
 
