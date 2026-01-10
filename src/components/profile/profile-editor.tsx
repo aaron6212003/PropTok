@@ -77,6 +77,12 @@ export default function ProfileEditor({
 
     return (
         <div className="mt-4 flex flex-col items-center gap-4">
+            {/* DECOY FIELDS: Traps for Password Managers */}
+            <div className="opacity-0 absolute h-0 w-0 overflow-hidden pointer-events-none">
+                <input type="text" name="fake_username" tabIndex={-1} aria-hidden="true" />
+                <input type="password" name="fake_password" tabIndex={-1} aria-hidden="true" />
+            </div>
+
             {/* Avatar Section */}
             <div className="relative group">
                 <div
