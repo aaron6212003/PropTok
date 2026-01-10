@@ -16,7 +16,7 @@ export default async function LeaderboardPage() {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
     return (
-        <main className="relative flex flex-1 w-full flex-col overflow-y-auto bg-black pb-24 text-white">
+        <main className="relative flex flex-1 w-full flex-col overflow-y-auto bg-black pb-32 text-white scrollbar-none">
             {/* Header */}
             <div className="sticky top-0 z-20 border-b border-white/10 bg-black/80 p-4 backdrop-blur-md">
                 <h1 className="text-center text-xl font-bold tracking-tight">Leaderboard</h1>
@@ -95,6 +95,9 @@ export default async function LeaderboardPage() {
                     </div>
                 )}
             </div>
+
+            {/* Bottom Gradient Fade for Smooth Scroll Exit */}
+            <div className="fixed bottom-[64px] left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent pointer-events-none z-10" />
 
             <nav className="fixed bottom-0 left-0 right-0 z-50">
                 <BottomNavBar />
