@@ -138,7 +138,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     <div className="mb-4">
                         <WalletToggle
                             bankroll={profile?.bankroll || 0}
-                            entries={tournamentEntries}
+                            entries={tournamentEntries || []}
                             activeTournamentId={tournamentId || null}
                         />
                     </div>
