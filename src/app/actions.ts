@@ -752,16 +752,24 @@ export async function getAllTournaments() {
 export async function deleteTournaments(tournamentIds: string[]) {
     const supabase = await createClient();
 
-    // Attempt to delete. Dependencies should cascade if DB is set up, 
-    // otherwise we might need to delete entries manually here.
-    // SAFE MODE: Delete entries explicitly just in case CASCADE isn't run.
-    await supabase.from('tournament_entries').delete().in('tournament_id', tournamentIds);
+    // 1. Try "God Mode" RPC First (Bypasses RLS)
+    const { error: rpcError } = await supabase.rpc('force_delete_tournaments', { tournament_ids: tournamentIds });
 
+    if (!rpcError) {
+        revalidatePath('/tournaments');
+        revalidatePath('/profile/admin');
+        return { success: true };
+    }
+
+    console.warn("RPC Failed, trying standard delete...", rpcError);
+
+    // 2. Fallback: Standard Delete (Will work if own + cascade is fixed)
+    await supabase.from('tournament_entries').delete().in('tournament_id', tournamentIds);
     const { error } = await supabase.from('tournaments').delete().in('id', tournamentIds);
 
     if (error) {
         console.error("Delete Tournament Error:", error);
-        return { error: error.message };
+        return { error: "Failed to delete: " + error.message };
     }
 
     revalidatePath('/tournaments');
