@@ -4,6 +4,44 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export async function emergencyResetEconomy() {
+    const supabase = createAdminClient();
+    if (!supabase) return { error: "Admin client unavailable" };
+
+    const { error } = await supabase.from('users').update({ cash_balance: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
+    if (error) return { error: "Reset Failed: " + error.message };
+    return { success: true };
+}
+
+export async function emergencyRestoreNFL() {
+    const supabase = createAdminClient();
+    if (!supabase) return { error: "Admin client unavailable" };
+
+    const { data: existing } = await supabase.from('tournaments').select('*').ilike('name', '%NFL%').maybeSingle();
+
+    if (existing) {
+        const { error } = await supabase.from('tournaments')
+            .update({ owner_id: null, status: 'ACTIVE', entry_fee: 10, starting_stack: 1000, is_public: true })
+            .eq('id', existing.id);
+        if (error) return { error: "Update Failed: " + error.message };
+    } else {
+        const { error } = await supabase.from('tournaments').insert({
+            name: 'NFL Weekend Showdown',
+            description: 'The ultimate NFL battle. $10 Buy-in. 1000 Chips.',
+            entry_fee: 10,
+            starting_stack: 1000,
+            status: 'ACTIVE',
+            is_public: true,
+            owner_id: null,
+            rake_percent: 10
+        });
+        if (error) return { error: "Insert Failed: " + error.message };
+    }
+
+    revalidatePath('/tournaments');
+    return { success: true };
+}
+
 export async function getPredictions(onlyOpen: boolean = false) {
     noStore(); // Ensure fresh data for admin panel updates
     const supabase = await createClient();
