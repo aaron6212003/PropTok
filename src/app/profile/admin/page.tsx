@@ -86,29 +86,6 @@ export default function AdminPage() {
                         </button>
                     </form>
 
-                    {/* Emergency Fixes */}
-                    <form action={async () => {
-                        const { emergencyResetEconomy } = await import('@/app/actions');
-                        if (confirm("RESET ALL CASH TO $0?")) {
-                            await emergencyResetEconomy();
-                            toast.success("Economy Reset!");
-                        }
-                    }}>
-                        <button className="flex w-fit items-center gap-2 rounded-full bg-red-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-500 transition-colors hover:bg-red-500/20">
-                            <Trash2 size={14} />
-                            <span>Reset Cash ($0)</span>
-                        </button>
-                    </form>
-
-                    <form action={async () => {
-                        const { emergencyRestoreNFL } = await import('@/app/actions');
-                        await emergencyRestoreNFL();
-                        toast.success("NFL Restored!");
-                    }}>
-                        <button className="flex w-fit items-center gap-2 rounded-full bg-blue-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-500 transition-colors hover:bg-blue-500/20">
-                            <Wand2 size={14} />
-                            <span>Fix NFL</span>
-                        </button>
                     </form>
 
                     <button
