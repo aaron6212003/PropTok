@@ -19,6 +19,8 @@ export const metadata: Metadata = {
 import { BetSlipProvider } from "@/lib/context/bet-slip-context";
 import { Suspense } from "react";
 import ToastProvider from "@/components/layout/toast-provider";
+import { Toaster } from "sonner";
+import TosModal from "@/components/auth/tos-modal";
 
 export default function RootLayout({
   children,
@@ -35,6 +37,8 @@ export default function RootLayout({
             </MobileContainer>
             <ToastProvider />
           </BetSlipProvider>
+          <Toaster />
+          <TosModal />
         </Suspense>
       </body>
     </html>

@@ -253,7 +253,7 @@ export default function AdminPage() {
                                         defaultValue={1000}
                                         required
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-zinc-600 tracking-wider">Chips</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-zinc-600 tracking-wider">Tournament $</span>
                                 </div>
                             </div>
                             <input

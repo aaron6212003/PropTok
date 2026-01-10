@@ -142,7 +142,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
                                                 <span className="block text-xs font-bold text-white leading-none truncate max-w-[120px]">
                                                     {entry.tournament?.name}
                                                 </span>
-                                                <span className="text-[10px] text-zinc-500">{entry.current_stack.toLocaleString()} Chips</span>
+                                                <span className="text-[10px] text-zinc-500">T${entry.current_stack.toLocaleString()}</span>
                                             </div>
                                         </div>
                                         {activeTournamentId === entry.tournament_id && <Check size={14} className="text-brand" />}
