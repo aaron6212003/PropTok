@@ -788,3 +788,21 @@ export async function updateProfile(formData: FormData) {
         return { error: "Server error: " + (e.message || "Unknown") };
     }
 }
+
+export async function getWalletData() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const [userRes, transactionsRes] = await Promise.all([
+        supabase.from("users").select("cash_balance, bankroll").eq("id", user.id).single(),
+        supabase.from("transactions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20)
+    ]);
+
+    return {
+        cash_balance: userRes.data?.cash_balance || 0,
+        play_balance: userRes.data?.bankroll || 0,
+        transactions: transactionsRes.data || []
+    };
+}
