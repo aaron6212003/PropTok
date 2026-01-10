@@ -612,6 +612,26 @@ export async function createFeaturedTournament(formData: FormData) {
     return { success: true, id: data.id };
 }
 
+export async function acceptTos(ip: string, region: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Login required" };
+
+    const { error } = await supabase.rpc('accept_tos', {
+        p_ip: ip,
+        p_region: region
+    });
+
+    if (error) {
+        console.error("TOS Accept Error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath("/", "layout");
+    return { success: true };
+}
+
 export async function getUserTournamentEntries() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
