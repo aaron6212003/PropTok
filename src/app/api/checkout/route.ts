@@ -39,6 +39,13 @@ export async function POST(req: Request) {
         }
         // --- DIAGNOSTIC END ---
 
+        const body = await req.json();
+        const { amount } = body;
+
+        if (!amount || amount < 5) {
+            return NextResponse.json({ error: "Minimum deposit is $5" }, { status: 400 });
+        }
+
         // Create Checkout Session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
