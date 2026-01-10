@@ -13,6 +13,6 @@ const B64_KEY = "c2tfdGVzdF81MVNueHV6QW92Z2RuWFJzY3RiR044OTlmRldJM2NuYUtQeFlXNFZ
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || Buffer.from(B64_KEY, 'base64').toString('utf-8');
 
 export const stripe = new Stripe(STRIPE_SECRET_KEY, {
-    apiVersion: "2024-12-18.acacia",
+    apiVersion: "2024-12-18.acacia" as any,
     typescript: true,
 });
