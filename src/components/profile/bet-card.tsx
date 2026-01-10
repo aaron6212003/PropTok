@@ -129,14 +129,17 @@ export default function BetCard({ bet }: BetCardProps) {
                                         <Clock size={12} /> PENDING
                                     </div>
                                 )}
-                                <button
-                                    onClick={handleDelete}
-                                    disabled={isDeleting}
-                                    className="p-1.5 rounded-full bg-white/5 text-zinc-500 hover:bg-destructive/10 hover:text-destructive transition-colors"
-                                    title="Delete Bet"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+
+                                {isResolved && (
+                                    <button
+                                        onClick={handleDelete}
+                                        disabled={isDeleting}
+                                        className="p-1.5 rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-all hover:scale-110 active:scale-90"
+                                        title="Delete Bet"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 

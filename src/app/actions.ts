@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getPredictions(onlyOpen: boolean = false) {
+    noStore(); // Ensure fresh data for admin panel updates
     const supabase = await createClient();
     let query = supabase
         .from("predictions")
