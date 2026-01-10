@@ -81,8 +81,31 @@ export default function AdminPage() {
                             ))}
                         </select>
                         <div className="h-4 w-[1px] bg-white/10" />
-                        <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20 transition-colors">
+                        <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20 transition-colors" title="Reset Tournament">
                             <RotateCcw size={14} />
+                        </button>
+                        {/* DELETE BUTTON */}
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const select = document.querySelector('select[name="tournament_id"]') as HTMLSelectElement;
+                                const id = select?.value;
+                                if (!id) return toast.error("Select a tournament first");
+
+                                if (confirm("DELETE TOURNAMENT? This cannot be undone.")) {
+                                    const { deleteTournament } = await import('@/app/actions');
+                                    const res = await deleteTournament(id);
+                                    if (res?.error) toast.error(res.error);
+                                    else {
+                                        toast.success("Tournament Deleted");
+                                        getAllTournaments().then(res => setTournaments(res.data || []));
+                                    }
+                                }
+                            }}
+                            className="rounded-full bg-destructive/10 p-2 text-destructive hover:bg-destructive/20 transition-colors"
+                            title="Delete Tournament"
+                        >
+                            <Trash2 size={14} />
                         </button>
                     </form>
 
