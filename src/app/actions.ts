@@ -566,7 +566,42 @@ export async function createTournament(formData: FormData) {
             max_players: maxPlayers,
             status: 'ACTIVE',
             is_public: true,
-            creator_id: user.id
+            owner_id: user.id // Explicitly set owner for User-Hosted
+        })
+        .select("id")
+        .single();
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/tournaments");
+    return { success: true, id: data.id };
+}
+
+export async function createFeaturedTournament(formData: FormData) {
+    const supabase = await createClient(); // We trust the admin page protection for now, or could check specific admin ID
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Login required" };
+
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const entryFee = Number(formData.get("entry_fee"));
+    const startingStack = Number(formData.get("starting_stack")) || 1000;
+    const maxPlayersRaw = Number(formData.get("max_players"));
+    const maxPlayers = maxPlayersRaw > 0 ? maxPlayersRaw : null; // 0 or empty means unlimited
+
+    const { data, error } = await supabase
+        .from("tournaments")
+        .insert({
+            name,
+            description,
+            entry_fee: entryFee,
+            starting_stack: startingStack,
+            rake_percent: 10,
+            max_players: maxPlayers,
+            status: 'ACTIVE',
+            is_public: true,
+            owner_id: null // System Owned (Featured)
         })
         .select("id")
         .single();

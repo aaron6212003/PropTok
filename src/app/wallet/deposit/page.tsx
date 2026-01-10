@@ -57,14 +57,16 @@ export default function DepositPage() {
                 {/* Amount Selection */}
                 <section>
                     <label className="mb-4 block text-xs font-black uppercase tracking-widest text-zinc-500">Select Amount</label>
-                    <div className="grid grid-cols-2 gap-4">
+
+                    {/* Presets */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
                         {DEPOSIT_OPTIONS.map((option) => (
                             <button
                                 key={option.value}
                                 onClick={() => setSelectedAmount(option.value)}
                                 className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl border-2 p-6 transition-all active:scale-95 ${selectedAmount === option.value
-                                        ? "border-brand bg-brand/10 text-brand"
-                                        : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800"
+                                    ? "border-brand bg-brand/10 text-brand"
+                                    : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800"
                                     }`}
                             >
                                 {option.bonus && (
@@ -75,6 +77,27 @@ export default function DepositPage() {
                                 <span className="text-2xl font-black tracking-tight">{option.label}</span>
                             </button>
                         ))}
+                    </div>
+
+                    {/* Custom Slider */}
+                    <div className="bg-zinc-900 rounded-3xl p-6 border border-white/5">
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Custom Amount</span>
+                            <span className="text-xl font-black text-white">${selectedAmount}</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="10"
+                            max="500"
+                            step="5"
+                            value={selectedAmount}
+                            onChange={(e) => setSelectedAmount(parseInt(e.target.value))}
+                            className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-brand"
+                        />
+                        <div className="flex justify-between mt-2 text-[10px] text-zinc-600 font-mono">
+                            <span>$10</span>
+                            <span>$500</span>
+                        </div>
                     </div>
                 </section>
 

@@ -12,7 +12,7 @@ import {
     getAllTournaments,
     deletePrediction
 } from "@/app/actions";
-import { Trash2, Plus, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
+import { Trash2, Plus, CheckCircle, XCircle, Wand2, RotateCcw, Trophy } from 'lucide-react';
 import { toast } from "sonner";
 
 export default function AdminPage() {
@@ -208,134 +208,201 @@ export default function AdminPage() {
                             </button>
                         </form>
                     </div>
-                </section>
+                </form>
+            </div>
 
-                {/* MANAGE SECTION */}
-                <section className="space-y-6">
-                    <div className="mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold">Live Markets</h2>
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-xs font-bold text-black border-2 border-white">{predictions.length}</span>
+            {/* FEATURED TOURNAMENT CREATOR */}
+            <div className="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 backdrop-blur-xl">
+                <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                        <Trophy size={20} />
+                    </div>
+                    <h2 className="text-xl font-bold">Create Featured Event</h2>
+                </div>
+
+                <form
+                    action={async (formData) => {
+                        const { createFeaturedTournament } = await import('@/app/actions'); // Dynamic import
+                        const res = await createFeaturedTournament(formData);
+                        if (res?.error) toast.error(res.error);
+                        else {
+                            toast.success("Featured Tournament Live!");
+                            getAllTournaments().then(setTournaments);
+                        }
+                    }}
+                    className="space-y-4"
+                >
+                    <input
+                        name="name"
+                        className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
+                        placeholder="Tournament Name"
+                        required
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <input
+                            name="entry_fee"
+                            type="number"
+                            className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
+                            placeholder="Entry Fee ($)"
+                            required
+                        />
+                        <input
+                            name="starting_stack"
+                            type="number"
+                            className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
+                            placeholder="Start Stack (1000)"
+                            defaultValue={1000}
+                            required
+                        />
+                    </div>
+                    <input
+                        name="max_players"
+                        type="number"
+                        className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
+                        placeholder="Max Players (Leave empty for Unlimited)"
+                    />
+                    <textarea
+                        name="description"
+                        rows={2}
+                        className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm text-zinc-400 placeholder:text-zinc-800 focus:border-emerald-500 focus:outline-none"
+                        placeholder="Description..."
+                    />
+                    <button
+                        type="submit"
+                        className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-black uppercase tracking-widest text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 active:scale-95 transition-all"
+                    >
+                        Launch Event
+                    </button>
+                </form>
+            </div>
+        </section>
+
+                {/* MANAGE SECTION */ }
+    <section className="space-y-6">
+        <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold">Live Markets</h2>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-xs font-bold text-black border-2 border-white">{predictions.length}</span>
+            </div>
+        </div>
+
+        {/* Last Sync: 2026-01-09T00:50:00 - Animation Removed for Stability */}
+        <div className="space-y-4">
+            {predictions.length === 0 && (
+                <div className="text-center py-10 text-zinc-600">
+                    <p>No active markets found.</p>
+                    <p className="text-sm">Create one to get started.</p>
+                </div>
+            )}
+            {predictions.map((p) => (
+                <div
+                    key={p.id}
+                    className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 p-5 transition-all hover:border-white/20"
+                >
+                    <div className="mb-4 flex items-start justify-between">
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-brand">{p.category}</span>
+                            <h3 className="font-bold leading-tight">{p.question}</h3>
+                            <p className="text-xs text-zinc-500">Created: {new Date(p.created_at).toLocaleDateString()}</p>
+                            <p className="text-xs text-zinc-500">Expires: {new Date(p.expires_at).toLocaleString()}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${p.resolved ? 'bg-white/10 text-zinc-400' : 'bg-green-500/10 text-green-500'}`}>
+                                {p.resolved ? p.outcome : 'LIVE'}
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    if (confirm(`DELETE "${p.question}"? This will delete all associated votes and cannot be undone.`)) {
+                                        // Optimistic Update
+                                        setPredictions(prev => prev.filter(pred => pred.id !== p.id));
+                                        toast.success("Prop Deleted", { icon: "💨" });
+
+                                        const res = await deletePrediction(p.id);
+                                        if (res?.error) {
+                                            toast.error(res.error);
+                                            // Revert if failed
+                                            getPredictions().then(setPredictions);
+                                        }
+                                    }
+                                }}
+                                className="rounded-full bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20 transition-colors"
+                                title="Delete Prop"
+                            >
+                                <Trash2 size={12} />
+                            </button>
                         </div>
                     </div>
 
-                    {/* Last Sync: 2026-01-09T00:50:00 - Animation Removed for Stability */}
-                    <div className="space-y-4">
-                        {predictions.length === 0 && (
-                            <div className="text-center py-10 text-zinc-600">
-                                <p>No active markets found.</p>
-                                <p className="text-sm">Create one to get started.</p>
-                            </div>
-                        )}
-                        {predictions.map((p) => (
-                            <div
-                                key={p.id}
-                                className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 p-5 transition-all hover:border-white/20"
+                    {!p.resolved && (
+                        <div className="grid grid-cols-3 gap-3">
+                            <button
+                                onClick={() => startTransition(async () => {
+                                    if (confirm(`Resolve "${p.question}" as YES?`)) {
+                                        await resolvePrediction(p.id, 'YES');
+                                        getPredictions().then(setPredictions);
+                                    }
+                                })}
+                                className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-success/20 py-4 text-[10px] font-black uppercase tracking-widest text-success hover:bg-success/30"
                             >
-                                <div className="mb-4 flex items-start justify-between">
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand">{p.category}</span>
-                                        <h3 className="font-bold leading-tight">{p.question}</h3>
-                                        <p className="text-xs text-zinc-500">Created: {new Date(p.created_at).toLocaleDateString()}</p>
-                                        <p className="text-xs text-zinc-500">Expires: {new Date(p.expires_at).toLocaleString()}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${p.resolved ? 'bg-white/10 text-zinc-400' : 'bg-green-500/10 text-green-500'}`}>
-                                            {p.resolved ? p.outcome : 'LIVE'}
-                                        </div>
-                                        <button
-                                            onClick={async () => {
-                                                if (confirm(`DELETE "${p.question}"? This will delete all associated votes and cannot be undone.`)) {
-                                                    // Optimistic Update
-                                                    setPredictions(prev => prev.filter(pred => pred.id !== p.id));
-                                                    toast.success("Prop Deleted", { icon: "💨" });
+                                <CheckCircle size={16} />
+                                <span>YES</span>
+                            </button>
 
-                                                    const res = await deletePrediction(p.id);
-                                                    if (res?.error) {
-                                                        toast.error(res.error);
-                                                        // Revert if failed
-                                                        getPredictions().then(setPredictions);
-                                                    }
-                                                }
-                                            }}
-                                            className="rounded-full bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20 transition-colors"
-                                            title="Delete Prop"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                </div>
+                            <button
+                                onClick={() => startTransition(async () => {
+                                    if (confirm(`Attempt to auto-resolve "${p.question}" using oracle data?`)) {
+                                        const res = await autoResolvePrediction(p.id);
+                                        if (res?.error) toast.error(res.error);
+                                        else {
+                                            toast.success("Market Auto-Resolved!");
+                                            getPredictions().then(setPredictions);
+                                        }
+                                    }
+                                })}
+                                className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-brand/20 py-4 text-[10px] font-black uppercase tracking-widest text-brand hover:bg-brand/30 border border-brand/20"
+                            >
+                                <Wand2 size={16} className="animate-pulse" />
+                                <span>Auto</span>
+                            </button>
 
-                                {!p.resolved && (
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <button
-                                            onClick={() => startTransition(async () => {
-                                                if (confirm(`Resolve "${p.question}" as YES?`)) {
-                                                    await resolvePrediction(p.id, 'YES');
-                                                    getPredictions().then(setPredictions);
-                                                }
-                                            })}
-                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-success/20 py-4 text-[10px] font-black uppercase tracking-widest text-success hover:bg-success/30"
-                                        >
-                                            <CheckCircle size={16} />
-                                            <span>YES</span>
-                                        </button>
+                            <button
+                                onClick={() => startTransition(async () => {
+                                    if (confirm(`Resolve "${p.question}" as NO?`)) {
+                                        await resolvePrediction(p.id, 'NO');
+                                        getPredictions().then(setPredictions);
+                                    }
+                                })}
+                                className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-destructive/20 py-4 text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/30"
+                            >
+                                <XCircle size={16} />
+                                <span>NO</span>
+                            </button>
+                        </div>
+                    )}
 
-                                        <button
-                                            onClick={() => startTransition(async () => {
-                                                if (confirm(`Attempt to auto-resolve "${p.question}" using oracle data?`)) {
-                                                    const res = await autoResolvePrediction(p.id);
-                                                    if (res?.error) toast.error(res.error);
-                                                    else {
-                                                        toast.success("Market Auto-Resolved!");
-                                                        getPredictions().then(setPredictions);
-                                                    }
-                                                }
-                                            })}
-                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-brand/20 py-4 text-[10px] font-black uppercase tracking-widest text-brand hover:bg-brand/30 border border-brand/20"
-                                        >
-                                            <Wand2 size={16} className="animate-pulse" />
-                                            <span>Auto</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => startTransition(async () => {
-                                                if (confirm(`Resolve "${p.question}" as NO?`)) {
-                                                    await resolvePrediction(p.id, 'NO');
-                                                    getPredictions().then(setPredictions);
-                                                }
-                                            })}
-                                            className="group flex flex-col items-center justify-center gap-1 rounded-xl bg-destructive/20 py-4 text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/30"
-                                        >
-                                            <XCircle size={16} />
-                                            <span>NO</span>
-                                        </button>
-                                    </div>
-                                )}
-
-                                {p.resolved && (
-                                    <button
-                                        onClick={() => startTransition(async () => {
-                                            if (confirm(`UNDO resolution for "${p.question}"? This will revert ALL payouts and bankrolls.`)) {
-                                                const res = await undoResolvePrediction(p.id);
-                                                if (res?.error) toast.error(res.error);
-                                                else {
-                                                    toast.success("Resolution Reverted");
-                                                    getPredictions().then(setPredictions);
-                                                }
-                                            }
-                                        })}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:bg-white/10 hover:text-white"
-                                    >
-                                        <RotateCcw size={14} />
-                                        <span>Undo Resolution</span>
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            </div>
-        </main>
+                    {p.resolved && (
+                        <button
+                            onClick={() => startTransition(async () => {
+                                if (confirm(`UNDO resolution for "${p.question}"? This will revert ALL payouts and bankrolls.`)) {
+                                    const res = await undoResolvePrediction(p.id);
+                                    if (res?.error) toast.error(res.error);
+                                    else {
+                                        toast.success("Resolution Reverted");
+                                        getPredictions().then(setPredictions);
+                                    }
+                                }
+                            })}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:bg-white/10 hover:text-white"
+                        >
+                            <RotateCcw size={14} />
+                            <span>Undo Resolution</span>
+                        </button>
+                    )}
+                </div>
+            ))}
+        </div>
+    </section>
+            </div >
+        </main >
     );
 }
