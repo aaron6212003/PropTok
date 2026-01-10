@@ -16,7 +16,10 @@ export async function getPredictions(onlyOpen: boolean = false) {
         .order("created_at", { ascending: false });
 
     if (onlyOpen) {
-        query = query.eq("resolved", false);
+        const now = new Date().toISOString();
+        query = query
+            .eq("resolved", false)
+            .gt("expires_at", now); // Filter out expired games
     }
 
     const { data, error } = await query;
