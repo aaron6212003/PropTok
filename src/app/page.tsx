@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
   const { tournament: tournamentId } = await searchParams;
-  const predictions = await getPredictions(true);
+  const predictions = await getPredictions(true, tournamentId);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

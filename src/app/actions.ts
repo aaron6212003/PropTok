@@ -49,7 +49,7 @@ export async function emergencyRestoreNFL() {
     return { success: true };
 }
 
-export async function getPredictions(onlyOpen: boolean = false) {
+export async function getPredictions(onlyOpen: boolean = false, tournamentId?: string | null) {
     noStore(); // Ensure fresh data for admin panel updates
     const supabase = await createClient();
     let query = supabase
@@ -65,6 +65,17 @@ export async function getPredictions(onlyOpen: boolean = false) {
         query = query
             .eq("resolved", false)
             .gt("expires_at", now); // Filter out expired games
+    }
+
+    // Filter by Tournament Category if applicable
+    if (tournamentId) {
+        const { data: t } = await supabase.from("tournaments").select("filter_category").eq("id", tournamentId).single();
+        if (t && t.filter_category && t.filter_category !== 'All') {
+            // Check if category matches (e.g. "NFL" matches "americanfootball_nfl" or "NFL")
+            // To be safe, we use ILIKE lookup or exact match if we standardize.
+            // For now, let's assume specific sport categories map to the 'category' column in predictions
+            query = query.ilike('category', `%${t.filter_category}%`);
+        }
     }
 
     const { data, error } = await query;
@@ -646,7 +657,9 @@ export async function createFeaturedTournament(formData: FormData) {
             max_players: maxPlayers,
             status: 'ACTIVE',
             is_public: true,
-            owner_id: null // System Owned (Featured)
+            owner_id: null, // System Owned (Featured)
+            start_time: new Date().toISOString(),
+            filter_category: formData.get("filter_category") || 'All'
         })
         .select("id")
         .single();

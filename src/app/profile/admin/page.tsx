@@ -12,7 +12,7 @@ import {
     getAllTournaments,
     deletePrediction
 } from "@/app/actions";
-import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap, CheckCircle, XCircle } from "lucide-react";
+import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminPage() {
@@ -273,6 +273,21 @@ export default function AdminPage() {
                                 className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
                                 placeholder="Max Players (Leave empty for Unlimited)"
                             />
+                            <div className="relative">
+                                <select
+                                    name="filter_category"
+                                    className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white focus:border-emerald-500 focus:outline-none appearance-none"
+                                    defaultValue="All"
+                                >
+                                    <option value="All">All Sports (No Filter)</option>
+                                    <option value="NFL">NFL Only</option>
+                                    <option value="NBA">NBA Only</option>
+                                    <option value="NHL">NHL Only</option>
+                                    <option value="Soccer">Soccer Only</option>
+                                    <option value="NCAAB">NCAAB Only</option>
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
+                            </div>
                             <textarea
                                 name="description"
                                 rows={2}
