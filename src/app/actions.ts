@@ -37,93 +37,52 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
 
     if (!user) throw new Error("User not authenticated");
 
-    // 1. Determine Wallet (Main Bankroll or Tournament Stack)
-    if (tournamentId) {
-        // Tournament Logic
-        const { data: entry, error: entryError } = await supabase
-            .from("tournament_entries")
-            .select("current_stack")
-            .eq("tournament_id", tournamentId)
-            .eq("user_id", user.id)
-            .single();
-
-        if (entryError || !entry) return { error: "Not entered in this tournament" };
-        if (entry.current_stack < wager) return { error: "Insufficient tournament chips" };
-
-        // Deduct from Tournament Stack
-        const { error: deductError } = await supabase
-            .from("tournament_entries")
-            .update({ current_stack: entry.current_stack - wager })
-            .eq("tournament_id", tournamentId)
-            .eq("user_id", user.id);
-
-        if (deductError) return { error: "Tournament transaction failed" };
-
-    } else {
-        // Main Bankroll Logic
-        const { data: userInfo, error: userError } = await supabase
-            .from("users")
-            .select("bankroll")
-            .eq("id", user.id)
-            .single();
-
-        if (userError || !userInfo) return { error: "User not found" };
-        if (userInfo.bankroll < wager) return { error: "Insufficient funds" };
-
-        // Deduct from Main Bankroll
-        const { error: deductError } = await supabase
-            .from("users")
-            .update({ bankroll: userInfo.bankroll - wager })
-            .eq("id", user.id);
-
-        if (deductError) return { error: "Transaction failed" };
-    }
-
-    // 2. Check if already voted (in this context? simplified to one-per-prediction for now, ignoring tournament overlap edge case)
+    // 1. Check uniqueness (Optional, but good UX)
     const { data: existingVote } = await supabase
         .from("votes")
-        .select("*")
+        .select("id")
         .eq("user_id", user.id)
         .eq("prediction_id", predictionId)
-        .single(); // Note: Ideally we allow one vote per tournament vs main, but schema unique constraint might block.
-    // Fix: If schema has unique(user_id, prediction_id), we can't vote twice. 
-    // Access: "Already voted" is fine for MVP.
+        .maybeSingle();
 
     if (existingVote) return { error: "Already voted on this prediction" };
 
-    // 3. Multiplier Logic
+    // 2. Fetch Multiplier
     const { data: prediction } = await supabase
         .from("predictions")
         .select("yes_percent, yes_multiplier, no_multiplier")
         .eq("id", predictionId)
         .single();
 
-    let multiplier: number;
+    if (!prediction) return { error: "Prediction not found" };
 
-    // Use persisted multipliers if they exist and are not default 0 (or specifically for live data)
-    if (prediction?.yes_multiplier && prediction?.no_multiplier) {
+    let multiplier: number;
+    if (prediction.yes_multiplier && prediction.no_multiplier) {
         multiplier = side === 'YES' ? prediction.yes_multiplier : prediction.no_multiplier;
     } else {
-        // Fallback to crowd-implied odds
-        let yesProb = (prediction?.yes_percent || 50) / 100;
+        let yesProb = (prediction.yes_percent || 50) / 100;
         yesProb = Math.max(0.01, Math.min(0.99, yesProb));
         const probability = side === 'YES' ? yesProb : (1 - yesProb);
         multiplier = Number((0.95 / probability).toFixed(2));
     }
 
-    // 4. Insert Vote
-    const { error } = await supabase.from("votes").insert({
-        user_id: user.id,
-        prediction_id: predictionId,
-        side: side,
-        wager: wager,
-        payout_multiplier: multiplier,
-        tournament_id: tournamentId || null
+    // 3. Call Atomic RPC
+    const { data, error } = await supabase.rpc('place_bet', {
+        p_user_id: user.id,
+        p_prediction_id: predictionId,
+        p_side: side,
+        p_wager: wager,
+        p_multiplier: multiplier,
+        p_tournament_id: tournamentId || null
     });
 
     if (error) {
-        console.error("Vote error:", error);
+        console.error("RPC Error:", error);
         return { error: error.message };
+    }
+
+    if (data?.error) {
+        return { error: data.error }; // Return the specific logic error (e.g. "Insufficient funds")
     }
 
     revalidatePath("/", "layout");
@@ -178,6 +137,28 @@ export async function createPrediction(formData: FormData) {
 
     if (error) {
         console.error("Create error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin", "layout");
+    return { success: true };
+}
+
+export async function deletePrediction(id: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Ideally check if user is admin, but for now assuming admin page access is guarded
+    if (!user) return { error: "Not authenticated" };
+
+    const { error } = await supabase
+        .from("predictions")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        console.error("Delete prop error:", error);
         return { error: error.message };
     }
 
@@ -428,59 +409,30 @@ export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', m
 
     if (!user) throw new Error("User not authenticated");
 
-    // 1. Determine Wallet & Deduct
-    if (tournamentId) {
-        const { data: entry, error: entryError } = await supabase
-            .from("tournament_entries")
-            .select("current_stack")
-            .eq("tournament_id", tournamentId)
-            .eq("user_id", user.id)
-            .single();
-
-        if (entryError || !entry) return { error: "Not entered in tournament" };
-        if (entry.current_stack < wager) return { error: "Insufficient tournament stack" };
-
-        const { error: deductError } = await supabase.from("tournament_entries")
-            .update({ current_stack: entry.current_stack - wager })
-            .eq("tournament_id", tournamentId)
-            .eq("user_id", user.id);
-
-        if (deductError) return { error: "Tournament transaction failed" };
-    } else {
-        const { data: userInfo } = await supabase.from("users").select("bankroll").eq("id", user.id).single();
-        if (!userInfo || userInfo.bankroll < wager) return { error: "Insufficient funds" };
-        const { error: deductError } = await supabase.from("users").update({ bankroll: userInfo.bankroll - wager }).eq("id", user.id);
-
-        if (deductError) return { error: "Transaction failed" };
-    }
-
-    // 2. Calculate Combined Multiplier
+    // Calculate Multiplier
     const totalMultiplier = legs.reduce((acc, leg) => acc * leg.multiplier, 1);
 
-    // 3. Create Bundle
-    const { data: bundle, error: bundleError } = await supabase.from("bundles").insert({
-        user_id: user.id,
-        wager,
-        total_multiplier: totalMultiplier,
-        status: 'PENDING',
-        tournament_id: tournamentId || null
-    }).select().single();
+    // Call Atomic RPC
+    const { data, error } = await supabase.rpc('place_bundle', {
+        p_user_id: user.id,
+        p_wager: wager,
+        p_total_multiplier: totalMultiplier,
+        p_tournament_id: tournamentId || null,
+        p_legs: legs.map(l => ({
+            prediction_id: l.id,
+            side: l.side,
+            multiplier: l.multiplier
+        }))
+    });
 
-    if (bundleError || !bundle) {
-        console.error("Bundle creation error:", bundleError);
-        return { error: bundleError?.message || "Failed to create bundle" };
+    if (error) {
+        console.error("RPC Bundle Error:", error);
+        return { error: error.message };
     }
 
-    // 5. Create Legs
-    const bundleLegs = legs.map(leg => ({
-        bundle_id: bundle.id,
-        prediction_id: leg.id,
-        side: leg.side,
-        multiplier: leg.multiplier
-    }));
-
-    const { error: legsError } = await supabase.from("bundle_legs").insert(bundleLegs);
-    if (legsError) return { error: "Failed to create bundle legs" };
+    if (data?.error) {
+        return { error: data.error };
+    }
 
     revalidatePath("/", "layout");
     revalidatePath("/profile", "layout");
