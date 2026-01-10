@@ -227,7 +227,7 @@ export default function AdminPage() {
                                 <p className="text-sm">Create one to get started.</p>
                             </div>
                         )}
-                        <AnimatePresence mode="popLayout">
+                        <AnimatePresence>
                             {predictions.map((p) => (
                                 <motion.div
                                     layout
