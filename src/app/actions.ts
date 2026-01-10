@@ -150,13 +150,21 @@ export async function createPrediction(formData: FormData) {
 }
 
 export async function deletePrediction(id: string) {
-    const supabase = await createClient();
+    const supabase = await createClient(); // Keep standard client for auth check
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Ideally check if user is admin, but for now assuming admin page access is guarded
+    // 1. Verify Authentication
     if (!user) return { error: "Not authenticated" };
 
-    const { error } = await supabase
+    // 2. Use ADMIN client to bypass RLS (Row Level Security)
+    // This allows deleting the prediction AND all associated votes/comments from other users
+    const adminSupabase = await createAdminClient();
+
+    if (!adminSupabase) {
+        return { error: "Server Configuration Error: Admin Client missing." };
+    }
+
+    const { error } = await adminSupabase
         .from("predictions")
         .delete()
         .eq("id", id);

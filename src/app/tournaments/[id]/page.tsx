@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Trophy, Clock, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import LiveLeaderboard from "@/components/tournament/live-leaderboard";
 
 export default async function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -79,50 +80,11 @@ export default async function TournamentDetailPage({ params }: { params: Promise
             <div className="px-4 py-6">
                 <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-zinc-500 px-2">Live Standings</h2>
 
-                <div className="space-y-2">
-                    {leaderboard.map((entry, index) => {
-                        const rank = index + 1;
-                        const isMe = entry.user_id === currentUser?.id;
-
-                        return (
-                            <div
-                                key={entry.id}
-                                className={cn(
-                                    "flex items-center justify-between rounded-xl border p-4 transition-all",
-                                    isMe ? "bg-brand/10 border-brand/50" : "bg-zinc-900 border-white/5"
-                                )}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <span className={cn(
-                                        "text-lg font-black w-8 text-center",
-                                        rank === 1 ? "text-yellow-400" :
-                                            rank === 2 ? "text-zinc-300" :
-                                                rank === 3 ? "text-amber-600" : "text-zinc-600"
-                                    )}>
-                                        #{rank}
-                                    </span>
-
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-zinc-800 overflow-hidden">
-                                            {entry.users?.avatar_url && (
-                                                <img src={entry.users.avatar_url} className="h-full w-full object-cover" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className={cn("font-bold text-sm", isMe ? "text-brand" : "text-white")}>
-                                                {entry.users?.username || "Anonymous"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="text-right">
-                                    <span className="block font-mono font-bold text-white">${entry.current_stack.toLocaleString()}</span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                <LiveLeaderboard
+                    tournamentId={id}
+                    initialData={leaderboard}
+                    currentUserId={currentUser?.id}
+                />
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 z-50">
