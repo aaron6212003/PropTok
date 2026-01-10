@@ -711,14 +711,42 @@ export async function getUserTournamentEntries() {
 
 export async function getAllTournaments() {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('tournaments')
-        .select('*, owner:users(username, avatar_url)');
 
-    if (error) {
-        console.error("Server Action Fetch Error:", error);
-        return { error: error.message };
+    // 1. Fetch Tournaments (Raw)
+    const { data: tournaments, error: tError } = await supabase
+        .from('tournaments')
+        .select('*');
+
+    if (tError) {
+        console.error("Server Action Fetch Error:", tError);
+        return { error: tError.message };
     }
-    return { data };
+
+    if (!tournaments || tournaments.length === 0) return { data: [] };
+
+    // 2. Fetch Owners manually (Bypass Missing FK Relationship error)
+    const ownerIds = Array.from(new Set(tournaments.map(t => t.owner_id).filter(Boolean)));
+
+    let profilesMap: Record<string, any> = {};
+
+    if (ownerIds.length > 0) {
+        const { data: owners } = await supabase
+            .from('users')
+            .select('id, username, avatar_url')
+            .in('id', ownerIds);
+
+        if (owners) {
+            owners.forEach(o => profilesMap[o.id] = o);
+        }
+    }
+
+    // 3. Merge Data
+    const joinedData = tournaments.map(t => ({
+        ...t,
+        owner: t.owner_id ? profilesMap[t.owner_id] : null
+    }));
+
+    return { data: joinedData };
 }
 
 export async function joinTournament(tournamentId: string) {
