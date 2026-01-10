@@ -12,6 +12,7 @@ export default function CreateTournamentPage() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [entryFee, setEntryFee] = useState(20);
+    const [maxPlayers, setMaxPlayers] = useState(10); // Default to 10
     const [rakePercent, setRakePercent] = useState(10); // Standard House Take
 
     // Prize Pool Calculation
@@ -75,7 +76,8 @@ export default function CreateTournamentPage() {
                         <span className="text-xs font-black uppercase tracking-widest">Stakes & Payouts</span>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                        {/* Entry Fee */}
                         <div className="space-y-2">
                             <div className="flex justify-between">
                                 <label className="text-xs font-bold text-white">Entry Fee</label>
@@ -91,20 +93,46 @@ export default function CreateTournamentPage() {
                                 onChange={(e) => setEntryFee(Number(e.target.value))}
                                 className="w-full h-2 bg-zinc-800 rounded-full appearance-none accent-brand cursor-pointer"
                             />
+                        </div>
+
+                        {/* Player Limit */}
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <label className="text-xs font-bold text-white">Max Players</label>
+                                <span className="font-mono font-bold text-white">
+                                    {maxPlayers === 101 ? "Unlimited" : maxPlayers}
+                                </span>
+                            </div>
+                            <input
+                                name="max_players"
+                                type="range"
+                                min="2"
+                                max="101"
+                                step="1"
+                                value={maxPlayers}
+                                onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                                className="w-full h-2 bg-zinc-800 rounded-full appearance-none accent-brand cursor-pointer"
+                            />
                             <div className="flex justify-between text-[10px] text-zinc-500 uppercase font-black tracking-widest">
-                                <span>Free</span>
-                                <span>$500</span>
+                                <span>Heads Up (2)</span>
+                                <span>No Limit</span>
                             </div>
                         </div>
 
+                        {/* Summary Box */}
                         <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2">
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-400">Est. Prize Pool (10 Players)</span>
-                                <span className="font-mono font-bold text-white">${estPrizePool.toFixed(0)}</span>
+                                <span className="text-zinc-400">Est. Total Pool</span>
+                                <span className="font-mono font-bold text-white">
+                                    ${(entryFee * (maxPlayers > 100 ? 10 : maxPlayers)).toLocaleString()}
+                                    {maxPlayers > 100 && <span className="text-xs text-zinc-500 ml-1">(based on 10 players)</span>}
+                                </span>
                             </div>
-                            <div className="flex justify-between text-[10px] text-zinc-500">
-                                <span>House Fee</span>
-                                <span>{rakePercent}%</span>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-zinc-400">Est. Prize Pool (After Rake)</span>
+                                <span className="font-mono font-bold text-brand">
+                                    ${((entryFee * (maxPlayers > 100 ? 10 : maxPlayers)) * ((100 - rakePercent) / 100)).toLocaleString()}
+                                </span>
                             </div>
                         </div>
                     </div>

@@ -546,6 +546,10 @@ export async function createTournament(formData: FormData) {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const entryFee = Number(formData.get("entry_fee"));
+    const maxPlayersRaw = Number(formData.get("max_players"));
+
+    // 101 represents "Unlimited" in our UI, mapped to NULL in DB
+    const maxPlayers = maxPlayersRaw > 100 ? null : maxPlayersRaw;
 
     // Standard Game Config
     const startingStack = 1000;
@@ -559,6 +563,7 @@ export async function createTournament(formData: FormData) {
             entry_fee: entryFee,
             starting_stack: startingStack,
             rake_percent: rakePercent,
+            max_players: maxPlayers,
             status: 'ACTIVE',
             is_public: true,
             creator_id: user.id
