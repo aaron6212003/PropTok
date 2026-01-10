@@ -9,7 +9,8 @@ import {
     getPredictions,
     clearDatabase,
     adminResetTournament,
-    getAllTournaments
+    getAllTournaments,
+    deletePrediction
 } from "@/app/actions";
 import { Trash2, Plus, CheckCircle, XCircle, Wand2, RotateCcw } from 'lucide-react';
 import { toast } from "sonner";
@@ -234,8 +235,26 @@ export default function AdminPage() {
                                         <p className="text-xs text-zinc-500">Created: {new Date(p.created_at).toLocaleDateString()}</p>
                                         <p className="text-xs text-zinc-500">Expires: {new Date(p.expires_at).toLocaleString()}</p>
                                     </div>
-                                    <div className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${p.resolved ? 'bg-white/10 text-zinc-400' : 'bg-green-500/10 text-green-500'}`}>
-                                        {p.resolved ? p.outcome : 'LIVE'}
+                                    <div className="flex items-center gap-2">
+                                        <div className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${p.resolved ? 'bg-white/10 text-zinc-400' : 'bg-green-500/10 text-green-500'}`}>
+                                            {p.resolved ? p.outcome : 'LIVE'}
+                                        </div>
+                                        <button
+                                            onClick={() => startTransition(async () => {
+                                                if (confirm(`DELETE "${p.question}"? This will delete all associated votes and cannot be undone.`)) {
+                                                    const res = await deletePrediction(p.id);
+                                                    if (res?.error) toast.error(res.error);
+                                                    else {
+                                                        toast.success("Prop Deleted");
+                                                        getPredictions().then(setPredictions);
+                                                    }
+                                                }
+                                            })}
+                                            className="rounded-full bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20 transition-colors"
+                                            title="Delete Prop"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
                                     </div>
                                 </div>
 
