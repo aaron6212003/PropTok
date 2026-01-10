@@ -13,7 +13,13 @@ export async function ingestOdds() {
 
 export async function emergencyResetEconomy() {
     const supabase = createAdminClient();
-    if (!supabase) return { error: "Admin client unavailable" };
+    if (!supabase) {
+        console.error("Admin Client Error: Missing Key. Env Check:", {
+            hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+            hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+        });
+        return { error: "Admin client unavailable. Check server logs." };
+    }
 
     const { error } = await supabase.from('users').update({ cash_balance: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
     if (error) return { error: "Reset Failed: " + error.message };
