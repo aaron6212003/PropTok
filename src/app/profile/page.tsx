@@ -2,37 +2,16 @@ import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 
 export const dynamic = 'force-dynamic';
-import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle, Camera, Edit2, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getUserVotes, getUserBundles, getUserTournamentEntries } from '@/app/actions';
+import { getUserVotes, getUserBundles, getUserTournamentEntries, updateProfile } from '@/app/actions';
 import AdminAccessButton from '@/components/profile/admin-access-button';
 import HistoryList from '@/components/profile/history-list';
 import ResolutionRecap from '@/components/social/resolution-recap';
 import WalletToggle from '@/components/layout/wallet-toggle';
-
-function StatCard({
-    label,
-    value,
-    icon: Icon,
-    colorClass
-}: {
-    label: string,
-    value: string | number,
-    icon: any,
-    colorClass: string
-}) {
-    return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
-            <div className={cn("mb-2 rounded-full p-2 bg-opacity-20", colorClass.replace('text-', 'bg-'))}>
-                <Icon className={cn("h-6 w-6", colorClass)} />
-            </div>
-            <span className="text-2xl font-bold tracking-tight">{value}</span>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</span>
-        </div>
-    );
-}
+import ProfileEditor from '@/components/profile/profile-editor';
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
     const { tournament: tournamentId } = await searchParams;
@@ -145,26 +124,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 </div>
             </div>
 
-            {/* Avatar & Info */}
-            <div className="mt-4 flex flex-col items-center">
-                <div className="relative h-24 w-24 rounded-full border-2 border-brand bg-zinc-900 p-1">
-                    {profile?.avatar_url ? (
-                        <img
-                            src={profile.avatar_url}
-                            alt="Avatar"
-                            className="h-full w-full rounded-full object-cover"
-                        />
-                    ) : (
-                        <div className="h-full w-full rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950" />
-                    )}
-
-                    <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-brand text-xs font-bold text-white shadow-lg">
-                        #?
-                    </div>
-                </div>
-                <h2 className="mt-4 text-2xl font-bold tracking-tight lowercase">@{profile?.username || user.email?.split('@')[0]}</h2>
-                <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Member since {new Date(user.created_at).getFullYear()}</p>
-            </div>
+            {/* Editable Profile Header */}
+            <ProfileEditor
+                userId={user.id}
+                initialUsername={profile?.username || user.email?.split('@')[0]}
+                initialAvatarUrl={profile?.avatar_url}
+                memberSince={new Date(user.created_at).getFullYear()}
+            />
 
             {/* Bankroll Highlights */}
             <div className="mt-6 px-6">
