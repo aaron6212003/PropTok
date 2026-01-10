@@ -19,6 +19,8 @@ export default function AdminPage() {
     const [isPending, startTransition] = useTransition();
     const [predictions, setPredictions] = useState<any[]>([]);
     const [tournaments, setTournaments] = useState<any[]>([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false); // [FIX] Added missing state
+
 
     useEffect(() => {
         if (!sessionStorage.getItem('admin_unlocked')) {
