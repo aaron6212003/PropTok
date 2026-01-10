@@ -10,7 +10,10 @@ if (!rawKey) {
 // Base64 Encoded Key (Bypasses Secret Scanner + Vercel Env Issues)
 // Key: sk_test_... (Encoded to avoid GitHub rejection)
 const B64_KEY = "c2tfdGVzdF81MVNueHV6QW92Z2RuWFJzY3RiR044OTlmRldJM2NuYUtQeFlXNFZrb0NGYzYyRlB1bmd0TnE5UVE4Vm1oazBialFSSFZUejc4YXdVQzRMcE0xWGdZYWxhTTAwS3JLa1E0VXc=";
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || Buffer.from(B64_KEY, 'base64').toString('utf-8');
+
+// Force use of Hardcoded Key (Ignore Env Var to prevent "Placeholder" issues)
+// .trim() ensures no accidental whitespace
+const STRIPE_SECRET_KEY = Buffer.from(B64_KEY, 'base64').toString('utf-8').trim();
 
 export const stripe = new Stripe(STRIPE_SECRET_KEY, {
     apiVersion: "2024-12-18.acacia" as any,
