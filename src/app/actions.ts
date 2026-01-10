@@ -1060,3 +1060,63 @@ export async function getWalletData() {
         transactions: transactionsRes.data || []
     };
 }
+
+export async function redeemPromoCode(code: string) {
+    const supabase = await createClient(); // Use standard client, we rely on RLS or we upgrade to Admin if needed
+    // Actually, for updating user cash, we should use Admin Client to be safe from RLS issues.
+
+    const admin = createAdminClient();
+    if (!admin) return { error: "System Error: Admin unavailable" };
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Unauthorized" };
+
+    // 1. Fetch Code
+    // We use ADMIN to read codes because they might be hidden/RLS protected
+    const { data: promo, error: promoError } = await admin
+        .from('promo_codes')
+        .select('*')
+        .eq('code', code)
+        .single();
+
+    if (promoError || !promo) return { error: "Invalid Code" };
+    if (!promo.is_active) return { error: "Code Inactive" };
+    if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) return { error: "Code Depleted" };
+
+    // 2. Check Redemption
+    const { data: existing } = await admin
+        .from('promo_redemptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('code_id', promo.id)
+        .single();
+
+    if (existing) return { error: "Already Redeemed" };
+
+    // 3. Execute Transaction 
+    // A. Add Balance (Try RPC first, else direct update)
+    const { error: balanceError } = await admin.rpc('increment_user_balance', {
+        user_uuid: user.id,
+        amount: promo.value
+    });
+
+    if (balanceError) {
+        // Fallback: Get current -> Update
+        const { data: u } = await admin.from('users').select('cash_balance').eq('id', user.id).single();
+        const newBal = (u?.cash_balance || 0) + promo.value;
+        const { error: updateError } = await admin.from('users').update({ cash_balance: newBal }).eq('id', user.id);
+        if (updateError) return { error: "Failed to credit funds" };
+    }
+
+    // B. Record Redemption
+    await admin.from('promo_redemptions').insert({
+        user_id: user.id,
+        code_id: promo.id
+    });
+
+    // C. Increment Count
+    await admin.from('promo_codes').update({ used_count: promo.used_count + 1 }).eq('id', promo.id);
+
+    revalidatePath('/', 'layout');
+    return { success: true, value: promo.value };
+}

@@ -1,142 +1,78 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Lock, Loader2, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
-import BottomNavBar from "@/components/layout/bottom-nav";
-
-const DEPOSIT_OPTIONS = [
-    { value: 10, label: "$10.00", bonus: null },
-    { value: 25, label: "$25.00", bonus: null },
-    { value: 50, label: "$50.00", bonus: "Most Popular" },
-    { value: 100, label: "$100.00", bonus: "Best Value" },
-];
+import { ArrowLeft, Loader2, Gift } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { redeemPromoCode } from "@/app/actions";
 
 export default function DepositPage() {
+    const [code, setCode] = useState("");
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const [selectedAmount, setSelectedAmount] = useState<number>(50);
-    const [isLoading, setIsLoading] = useState(false);
 
-    const handleCheckout = async () => {
-        setIsLoading(true);
+    const handleRedeem = async () => {
+        if (!code) return;
+        setLoading(true);
         try {
-            const res = await fetch("/api/checkout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ amount: selectedAmount }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) throw new Error(data.error || "Checkout failed");
-            if (!data.url) throw new Error("No checkout URL returned");
-
-            // Redirect to Stripe
-            window.location.href = data.url;
-        } catch (error: any) {
-            console.error(error);
-            toast.error("Payment Error", { description: error.message });
-            setIsLoading(false);
+            const result = await redeemPromoCode(code);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success(`Success! $${result.value} added to your wallet.`);
+                setCode("");
+                router.refresh();
+                // Optional: Redirect back to wallet or profile
+            }
+        } catch (e) {
+            toast.error("Something went wrong");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <main className="min-h-screen bg-black text-white pb-32">
-            <header className="p-6 border-b border-white/10">
-                <Link href="/wallet" className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white">
-                    <ArrowLeft size={16} />
-                    Back to Wallet
+        <div className="flex h-full flex-col bg-black text-white p-6">
+            <div className="mb-8 flex items-center gap-4">
+                <Link href="/profile" className="rounded-full bg-zinc-900 p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white">
+                    <ArrowLeft size={20} />
                 </Link>
-                <h1 className="text-3xl font-black italic tracking-tighter uppercase">Add Funds</h1>
-                <p className="text-sm text-zinc-400 mt-1">Securely deposit cash to your wallet.</p>
-            </header>
-
-            <div className="p-6 space-y-8 max-w-md mx-auto">
-                {/* Amount Selection */}
-                <section>
-                    <label className="mb-4 block text-xs font-black uppercase tracking-widest text-zinc-500">Select Amount</label>
-
-                    {/* Presets */}
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        {DEPOSIT_OPTIONS.map((option) => (
-                            <button
-                                key={option.value}
-                                onClick={() => setSelectedAmount(option.value)}
-                                className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl border-2 p-6 transition-all active:scale-95 ${selectedAmount === option.value
-                                    ? "border-brand bg-brand/10 text-brand"
-                                    : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800"
-                                    }`}
-                            >
-                                {option.bonus && (
-                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-black shadow-lg">
-                                        {option.bonus}
-                                    </span>
-                                )}
-                                <span className="text-2xl font-black tracking-tight">{option.label}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Custom Slider */}
-                    <div className="bg-zinc-900 rounded-3xl p-6 border border-white/5">
-                        <div className="flex justify-between items-center mb-4">
-                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Custom Amount</span>
-                            <span className="text-xl font-black text-white">${selectedAmount}</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="10"
-                            max="500"
-                            step="5"
-                            value={selectedAmount}
-                            onChange={(e) => setSelectedAmount(parseInt(e.target.value))}
-                            className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-brand"
-                        />
-                        <div className="flex justify-between mt-2 text-[10px] text-zinc-600 font-mono">
-                            <span>$10</span>
-                            <span>$500</span>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Summary & Action */}
-                <section className="rounded-3xl border border-white/10 bg-zinc-900 p-6 space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                        <span className="text-sm text-zinc-400">Processing Fee</span>
-                        <span className="font-bold text-white">Free</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-white">Total Charge</span>
-                        <span className="text-3xl font-black text-brand">${selectedAmount.toFixed(2)}</span>
-                    </div>
-
-                    <button
-                        onClick={handleCheckout}
-                        disabled={isLoading}
-                        className="w-full py-4 bg-brand text-black font-black uppercase tracking-widest rounded-xl shadow-lg shadow-brand/20 transition-transform active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-                    >
-                        {isLoading ? (
-                            <Loader2 size={20} className="animate-spin" />
-                        ) : (
-                            <>
-                                <Lock size={18} />
-                                <span>Pay with Stripe</span>
-                            </>
-                        )}
-                    </button>
-
-                    <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
-                        <ShieldCheck size={14} />
-                        <span>256-bit SSL Secure Payment</span>
-                    </div>
-                </section>
+                <h1 className="text-xl font-black uppercase tracking-widest">Deposit Funds</h1>
             </div>
 
-            <nav className="fixed bottom-0 left-0 right-0 z-50">
-                <BottomNavBar />
-            </nav>
-        </main>
+            <div className="flex flex-col items-center justify-center flex-1 max-w-md mx-auto w-full">
+                <div className="mb-8 rounded-full bg-emerald-500/10 p-6 text-emerald-500 ring-1 ring-emerald-500/20">
+                    <Gift size={40} />
+                </div>
+
+                <h2 className="mb-2 text-2xl font-bold text-center">Have a Promo Code?</h2>
+                <p className="mb-8 text-center text-zinc-500 text-sm">
+                    Enter your code below to instantly add funds to your account.
+                </p>
+
+                <div className="w-full space-y-4">
+                    <input
+                        type="text"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.toUpperCase())}
+                        placeholder="ENTER CODE (e.g. WELCOME50)"
+                        className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-4 text-center text-lg font-bold tracking-widest text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 uppercase"
+                    />
+
+                    <button
+                        onClick={handleRedeem}
+                        disabled={loading || !code}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-4 font-black uppercase tracking-widest text-black transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none hover:bg-emerald-400"
+                    >
+                        {loading ? <Loader2 className="animate-spin" /> : "Redeem Code"}
+                    </button>
+                </div>
+
+                <p className="mt-8 text-xs text-zinc-600 text-center uppercase tracking-wider">
+                    Don't have a code?<br />Contact Support to purchase credits.
+                </p>
+            </div>
+        </div>
     );
 }

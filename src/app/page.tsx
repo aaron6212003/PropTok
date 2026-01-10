@@ -29,12 +29,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
       tournamentStack = data?.current_stack;
     }
 
-    const { data } = await supabase.from("users").select("bankroll").eq("id", user.id).single();
+    const { data } = await supabase.from("users").select("bankroll, cash_balance").eq("id", user.id).single();
     profile = data;
   }
 
   const tournamentEntries = user ? await getUserTournamentEntries() : [];
-  const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.bankroll || 0);
+  // Use tournamentStack if tournament is active, otherwise use cash_balance (Real) or fallback to bankroll (Play)
+  // Actually, Main Feed "Bankroll" usually implies the betting power. 
+  // If NO tournament, it should be Real Cash.
+  const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.cash_balance || 0);
 
   return (
     <main className="flex min-h-full flex-col bg-black text-white">
@@ -46,7 +49,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
 
         {user && (
           <WalletToggle
-            bankroll={profile?.bankroll || 0}
+            cashBalance={profile?.cash_balance || 0}
             entries={tournamentEntries || []}
             activeTournamentId={tournamentId || null}
           />

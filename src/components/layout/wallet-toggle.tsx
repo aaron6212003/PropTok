@@ -16,18 +16,18 @@ interface TournamentEntry {
 }
 
 interface WalletToggleProps {
-    bankroll: number;
+    cashBalance: number;
     entries: TournamentEntry[];
     activeTournamentId: string | null;
 }
 
-export default function WalletToggle({ bankroll, entries, activeTournamentId }: WalletToggleProps) {
+export default function WalletToggle({ cashBalance, entries, activeTournamentId }: WalletToggleProps) {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const activeEntry = entries.find(e => e.tournament_id === activeTournamentId);
-    const balance = activeTournamentId ? activeEntry?.current_stack : bankroll;
+    const balance = activeTournamentId ? activeEntry?.current_stack : cashBalance;
     const [isPulsing, setIsPulsing] = useState(false);
 
     useEffect(() => {
@@ -68,7 +68,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
                     transition={{ duration: 0.3 }}
                     className="text-xs font-black tracking-tight"
                 >
-                    ${(activeTournamentId ? activeEntry?.current_stack : bankroll)?.toLocaleString()}
+                    ${(activeTournamentId ? activeEntry?.current_stack : cashBalance)?.toLocaleString()}
                 </motion.span>
                 {activeTournamentId && <span className="text-[8px] font-black opacity-60 ml-0.5">TRN</span>}
                 <ChevronDown size={14} className={cn("transition-transform", isOpen && "rotate-180")} />
@@ -113,7 +113,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
                                             <span className={cn("block text-xs font-black uppercase tracking-wider leading-none", !activeTournamentId ? "text-emerald-400" : "text-zinc-400")}>
                                                 Real Cash
                                             </span>
-                                            <span className="text-[10px] text-white font-mono opacity-80">${bankroll.toLocaleString()}</span>
+                                            <span className="text-[10px] text-white font-mono opacity-80">${cashBalance.toLocaleString()}</span>
                                         </div>
                                     </div>
                                     {!activeTournamentId && <Check size={14} className="text-emerald-500" />}
