@@ -37,23 +37,23 @@ export default function TournamentsPage() {
     }, []);
 
     const joinTournament = async (tId: string) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            toast.error("Login required");
-            return;
-        }
+        // Optimistic check? No, let's wait for server for money ops
+        setLoading(true); // Re-use loading state or add specific one
 
-        const { error } = await supabase.from('tournament_entries').insert({
-            tournament_id: tId,
-            user_id: user.id,
-            current_stack: 500 // Hardcoded for MVP, should come from tournament.starting_stack
-        });
+        // Dynamically import to avoid client-side clutter
+        const { joinTournament } = await import('../actions');
 
-        if (error) toast.error(error.message);
-        else {
-            toast.success("Joined Successfully!");
+        const res = await joinTournament(tId);
+
+        if (res?.error) {
+            toast.error(res.error);
+        } else {
+            toast.success("Joined Successfully!", {
+                description: "Entry fee deducted from cash balance."
+            });
             window.location.reload();
         }
+        setLoading(false);
     };
 
     return (

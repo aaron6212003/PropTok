@@ -42,9 +42,9 @@ export default async function WalletPage() {
                     </div>
 
                     <div className="mt-6 flex gap-3">
-                        <button className="flex-1 rounded-xl bg-white py-3 text-sm font-black uppercase tracking-widest text-black shadow-lg shadow-white/10 transition-transform active:scale-95">
+                        <Link href="/wallet/deposit" className="flex-1 flex items-center justify-center rounded-xl bg-white py-3 text-sm font-black uppercase tracking-widest text-black shadow-lg shadow-white/10 transition-transform active:scale-95">
                             Deposit
-                        </button>
+                        </Link>
                         <button className="flex-1 rounded-xl bg-white/10 py-3 text-sm font-black uppercase tracking-widest text-white transition-colors hover:bg-white/20 active:scale-95">
                             Withdraw
                         </button>

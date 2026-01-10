@@ -595,12 +595,32 @@ export async function getUserTournamentEntries() {
         `)
         .eq("user_id", user.id);
 
-    if (error) {
-        console.error("User Tournament Entries Error:", error);
-        return [];
-    }
-
     return data;
+}
+
+export async function joinTournament(tournamentId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Login required" };
+
+    try {
+        const { error } = await supabase.rpc("join_tournament_secure", {
+            p_tournament_id: tournamentId,
+            p_user_id: user.id
+        });
+
+        if (error) {
+            console.error("Join Tournament Error:", error);
+            // Return clean error messages from the RPC raise exception
+            return { error: error.message };
+        }
+
+        revalidatePath("/tournaments");
+        return { success: true };
+    } catch (e: any) {
+        return { error: "Failed to join: " + e.message };
+    }
 }
 
 // --- Social Actions ---
