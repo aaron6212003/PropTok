@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Camera, Edit2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateProfile } from "@/app/actions";
+import { compressImage } from "@/lib/image-utils";
 
 export default function ProfileEditor({
     userId,
@@ -41,18 +42,26 @@ export default function ProfileEditor({
         if (isSaving) return;
 
         setIsSaving(true);
-        const toastId = toast.loading("Saving profile...");
+        const toastId = toast.loading("Compressing & Saving...");
 
         try {
             const formData = new FormData();
             formData.append("username", username);
+
             if (newAvatarFile) {
-                formData.append("avatar", newAvatarFile);
+                try {
+                    // Compress image before upload to avoid payload limits
+                    const compressedFile = await compressImage(newAvatarFile);
+                    formData.append("avatar", compressedFile);
+                } catch (compressionError) {
+                    console.error("Compression failed, trying raw file:", compressionError);
+                    formData.append("avatar", newAvatarFile);
+                }
             }
 
-            // 1. Create a promise that rejects after 15 seconds
+            // 1. Create a promise that rejects after 30 seconds
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Request timed out. Please check your connection.")), 15000)
+                setTimeout(() => reject(new Error("Request timed out. Connection too slow.")), 30000)
             );
 
             // 2. Race the server action against the timeout
