@@ -19,16 +19,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Payment System Not Configured (Missing Key)" }, { status: 500 });
         }
 
-        const body = await req.json();
-        const { amount } = body;
-
-        if (!amount || amount < 5) {
-            return NextResponse.json({ error: "Minimum deposit is $5" }, { status: 400 });
-        }
-
         // --- DIAGNOSTIC START ---
         // Log key status safely
-        const key = process.env.STRIPE_SECRET_KEY;
         console.log(`[Checkout] Key Status: ${key ? 'Present' : 'MISSING'}, Length: ${key?.length}`);
         if (key && key.startsWith('sk_test_')) {
             console.log(`[Checkout] Valid Test Key Prefix Detected: ${key.substring(0, 8)}...`);
