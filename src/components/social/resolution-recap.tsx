@@ -124,7 +124,7 @@ export default function ResolutionRecap({ results }: ResolutionRecapProps) {
                                 {currentResult.won ? "You Won!" : "Hard Luck"}
                             </h2>
                             <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
-                                {currentResult.isBundle ? "Parlay Settled" : "Single Bet Settled"}
+                                {currentResult.isBundle ? "Bundle Settled" : "Single Bet Settled"}
                             </p>
                         </motion.div>
 

@@ -72,7 +72,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 if (res.error) toast.error(res.error);
                 else {
                     vibrate([10, 50, 10]); // Success pattern
-                    toast.success("Bet Placed!");
+                    toast.success("Bundle Placed!");
                     clearSlip();
                     router.refresh();
                 }
@@ -109,7 +109,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                         onClick={() => setIsOpen(true)}
                     >
                         <div className="flex flex-col items-center justify-center gap-0.5">
-                            <span className="text-[10px] font-black uppercase tracking-widest">Slip</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Bundle</span>
                             {items.length > 0 && (
                                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
                                     {items.length}
@@ -141,7 +141,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-white/5 p-6">
                                 <div>
-                                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Bet Slip</h2>
+                                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Your Bundle</h2>
                                     <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">{items.length} selections</span>
                                 </div>
                                 <div className="flex items-center gap-2">

@@ -103,7 +103,7 @@ export default function BetCard({ bet }: BetCardProps) {
                                 </span>
                                 {isBundle && (
                                     <div className="flex items-center gap-1 rounded bg-brand/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                        <Layers size={10} /> PARLAY
+                                        <Layers size={10} /> BUNDLE
                                     </div>
                                 )}
                                 {bet.tournament?.name && (
