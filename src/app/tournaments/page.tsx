@@ -209,25 +209,7 @@ export default function TournamentsPage() {
                 })}
             </div>
 
-            {/* DEBUG PANEL - REMOVE AFTER FIX */}
-            <div className="p-4 m-4 bg-zinc-900 border border-red-500 rounded-xl text-xs font-mono text-zinc-400 overflow-hidden mb-24">
-                <details>
-                    <summary className="cursor-pointer text-red-500 font-bold mb-2">⚠ DEBUG DATA (Click to Open)</summary>
-                    <p>Total Tournaments Fetched: {tournaments.length}</p>
-                    <p>My User ID: {myEntries[0]?.user_id || "Not Found in Entries"}</p>
-                    <div className="mt-2 space-y-1">
-                        {tournaments.map(t => (
-                            <div key={t.id} className="border-b border-white/5 pb-1 mb-1">
-                                <span className="text-white font-bold">{t.name}</span>
-                                <br />
-                                Status: {t.status} | Owner: {t.owner_id ? "USER" : "SYSTEM (NULL)"}
-                                <br />
-                                Cat: {t.filter_category} | Official? {(!t.owner_id || (t.filter_category && t.filter_category !== 'All')) ? "YES" : "NO"}
-                            </div>
-                        ))}
-                    </div>
-                </details>
-            </div>
+
 
             <nav className="fixed bottom-0 left-0 right-0 z-50">
                 <BottomNavBar />

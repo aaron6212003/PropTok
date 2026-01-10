@@ -16,7 +16,7 @@ export default async function LeaderboardPage() {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
     return (
-        <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-24 text-white">
+        <main className="relative flex flex-1 w-full flex-col overflow-y-auto bg-black pb-24 text-white">
             {/* Header */}
             <div className="sticky top-0 z-20 border-b border-white/10 bg-black/80 p-4 backdrop-blur-md">
                 <h1 className="text-center text-xl font-bold tracking-tight">Leaderboard</h1>
