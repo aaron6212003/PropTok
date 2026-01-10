@@ -749,15 +749,15 @@ export async function getAllTournaments() {
     return { data: joinedData };
 }
 
-export async function deleteTournament(tournamentId: string) {
+export async function deleteTournaments(tournamentIds: string[]) {
     const supabase = await createClient();
 
-    // Check permissions (Optional: Is this user admin? For now relying on RLS or simple logic)
-    // In a real app, verify admin role here. Admin Page is guarded by UI usually.
+    // Attempt to delete. Dependencies should cascade if DB is set up, 
+    // otherwise we might need to delete entries manually here.
+    // SAFE MODE: Delete entries explicitly just in case CASCADE isn't run.
+    await supabase.from('tournament_entries').delete().in('tournament_id', tournamentIds);
 
-    // Delete entries first? Postgres CASCADE should handle this if set up.
-    // We'll try deleting the tournament directly.
-    const { error } = await supabase.from('tournaments').delete().eq('id', tournamentId);
+    const { error } = await supabase.from('tournaments').delete().in('id', tournamentIds);
 
     if (error) {
         console.error("Delete Tournament Error:", error);

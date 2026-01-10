@@ -55,59 +55,29 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex gap-2">
-                    <form
-                        action={async (formData) => {
-                            const id = formData.get('tournament_id') as string;
-                            if (!id) return;
-                            if (confirm(`RESET Tournament ${id}? This will wipe active stacks and bets.`)) {
-                                const res = await adminResetTournament(id);
+                    {/* BULK DELETE TOURNAMENTS */}
+                    <button
+                        onClick={async () => {
+                            const selected = Array.from(document.querySelectorAll('input[name="t_select"]:checked'))
+                                .map((cb: any) => cb.value);
+
+                            if (selected.length === 0) return toast.error("Select tournaments to delete");
+
+                            if (confirm(`DELETE ${selected.length} TOURNAMENTS? This cannot be undone.`)) {
+                                const { deleteTournaments, getAllTournaments } = await import('@/app/actions');
+                                const res = await deleteTournaments(selected);
                                 if (res?.error) toast.error(res.error);
-                                else toast.success("Tournament Reset!");
+                                else {
+                                    toast.success(`Deleted ${selected.length} Tournaments`);
+                                    getAllTournaments().then(res => setTournaments(res.data || []));
+                                }
                             }
                         }}
-                        className="flex items-center gap-2 rounded-full bg-white/5 p-1 pr-2"
+                        className="flex items-center gap-2 rounded-full bg-destructive/10 p-2 px-4 text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/20 transition-colors"
                     >
-                        <select
-                            name="tournament_id"
-                            className="bg-transparent px-3 py-1 text-xs font-bold text-white outline-none w-48 appearance-none"
-                            required
-                            defaultValue=""
-                        >
-                            <option value="" disabled className="text-zinc-500">Select Tournament</option>
-                            {tournaments.map(t => (
-                                <option key={t.id} value={t.id} className="text-black">
-                                    {t.name} ({t.status})
-                                </option>
-                            ))}
-                        </select>
-                        <div className="h-4 w-[1px] bg-white/10" />
-                        <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20 transition-colors" title="Reset Tournament">
-                            <RotateCcw size={14} />
-                        </button>
-                        {/* DELETE BUTTON */}
-                        <button
-                            type="button"
-                            onClick={async () => {
-                                const select = document.querySelector('select[name="tournament_id"]') as HTMLSelectElement;
-                                const id = select?.value;
-                                if (!id) return toast.error("Select a tournament first");
-
-                                if (confirm("DELETE TOURNAMENT? This cannot be undone.")) {
-                                    const { deleteTournament } = await import('@/app/actions');
-                                    const res = await deleteTournament(id);
-                                    if (res?.error) toast.error(res.error);
-                                    else {
-                                        toast.success("Tournament Deleted");
-                                        getAllTournaments().then(res => setTournaments(res.data || []));
-                                    }
-                                }
-                            }}
-                            className="rounded-full bg-destructive/10 p-2 text-destructive hover:bg-destructive/20 transition-colors"
-                            title="Delete Tournament"
-                        >
-                            <Trash2 size={14} />
-                        </button>
-                    </form>
+                        <Trash2 size={14} />
+                        <span>Delete Selected</span>
+                    </button>
 
                     <form action={async () => {
                         const { ingestOdds } = await import('@/app/actions');
