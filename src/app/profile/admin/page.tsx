@@ -12,7 +12,7 @@ import {
     getAllTournaments,
     deletePrediction
 } from "@/app/actions";
-import { Trash2, Plus, CheckCircle, XCircle, Wand2, RotateCcw, Trophy } from 'lucide-react';
+import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminPage() {
@@ -83,6 +83,17 @@ export default function AdminPage() {
                         <div className="h-4 w-[1px] bg-white/10" />
                         <button type="submit" className="rounded-full bg-orange-500/10 p-2 text-orange-500 hover:bg-orange-500/20 transition-colors">
                             <RotateCcw size={14} />
+                        </button>
+                    </form>
+
+                    <form action={async () => {
+                        const { ingestOdds } = await import('@/app/actions');
+                        await ingestOdds();
+                        toast.success("Odds Ingested!");
+                    }}>
+                        <button className="flex w-fit items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-emerald-500 transition-colors hover:bg-emerald-500/20">
+                            <Zap size={14} />
+                            <span>Ingest Odds</span>
                         </button>
                     </form>
 

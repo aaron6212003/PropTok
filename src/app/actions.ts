@@ -3,6 +3,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sportsService } from "@/lib/sports-service";
+
+export async function ingestOdds() {
+    const logs = await sportsService.ingestGames();
+    revalidatePath("/", "layout");
+    return { success: true, logs };
+}
 
 export async function emergencyResetEconomy() {
     const supabase = createAdminClient();
