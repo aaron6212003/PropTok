@@ -668,7 +668,10 @@ export async function createFeaturedTournament(formData: FormData) {
         .select("id")
         .single();
 
-    if (error) return { error: error.message };
+    if (error) {
+        console.error("Create Featured Tournament Error:", error);
+        return { error: `DB Error: ${error.message} (${error.code})` };
+    }
 
     revalidatePath("/tournaments");
     return { success: true, id: data.id };

@@ -12,6 +12,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Check if using placeholder key
+        const key = process.env.STRIPE_SECRET_KEY;
+        if (!key || key === 'sk_test_placeholder' || key.includes('placeholder')) {
+            console.error("Stripe Checkout Failed: STRIPE_SECRET_KEY is missing or invalid.");
+            return NextResponse.json({ error: "Payment System Not Configured (Missing Key)" }, { status: 500 });
+        }
+
         const body = await req.json();
         const { amount } = body;
 
