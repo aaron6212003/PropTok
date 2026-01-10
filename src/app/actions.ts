@@ -752,79 +752,84 @@ export async function adminResetTournament(tournamentId: string) {
 }
 
 export async function updateProfile(formData: FormData) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: "Not authenticated" };
+        if (!user) return { error: "Not authenticated" };
 
-    const username = formData.get("username") as string;
-    const avatarFile = formData.get("avatar") as File | null;
+        const username = formData.get("username") as string;
+        const avatarFile = formData.get("avatar") as File | null;
 
-    const updates: any = {};
+        const updates: any = {};
 
-    // 1. Handle Username
-    if (username) {
-        // Check uniqueness
-        const { data: existing } = await supabase
-            .from("users")
-            .select("id")
-            .eq("username", username)
-            .neq("id", user.id)
-            .single();
+        // 1. Handle Username
+        if (username) {
+            // Check uniqueness
+            const { data: existing } = await supabase
+                .from("users")
+                .select("id")
+                .eq("username", username)
+                .neq("id", user.id)
+                .single();
 
-        if (existing) return { error: "Username already taken" };
+            if (existing) return { error: "Username already taken" };
 
-        updates.username = username;
-    }
-
-    // 2. Handle Avatar
-    if (avatarFile && avatarFile.size > 0) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        // Upload to Storage
-        const { error: uploadError } = await supabase
-            .storage
-            .from('avatars')
-            .upload(filePath, avatarFile);
-
-        if (uploadError) {
-            console.error("Upload error:", uploadError);
-            return { error: "Failed to upload image" };
+            updates.username = username;
         }
 
-        // Get Public URL
-        const { data: { publicUrl } } = supabase
-            .storage
-            .from('avatars')
-            .getPublicUrl(filePath);
+        // 2. Handle Avatar
+        if (avatarFile && avatarFile.size > 0) {
+            const fileExt = avatarFile.name.split('.').pop();
+            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
 
-        updates.avatar_url = publicUrl;
+            // Upload to Storage
+            const { error: uploadError } = await supabase
+                .storage
+                .from('avatars')
+                .upload(filePath, avatarFile);
+
+            if (uploadError) {
+                console.error("Upload error:", uploadError);
+                return { error: "Failed to upload image" };
+            }
+
+            // Get Public URL
+            const { data: { publicUrl } } = supabase
+                .storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            updates.avatar_url = publicUrl;
+        }
+
+        if (Object.keys(updates).length === 0) return { success: true };
+
+        // 3. Update User Table
+        console.log("Updating profile for user:", user.id, updates);
+
+        // Removed updated_at to ensure compatibility with all schema versions
+        const { error, data } = await supabase
+            .from("users")
+            .upsert({
+                id: user.id,
+                ...updates
+            }, { onConflict: 'id' }).select();
+
+        if (error) {
+            console.error("Profile Update Error:", error);
+            return { error: error.message };
+        }
+
+        console.log("Profile Update Success:", data);
+
+        revalidatePath("/", "layout");
+        revalidatePath("/profile", "layout");
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("Server Action Panic:", e);
+        return { error: "Server error: " + (e.message || "Unknown") };
     }
-
-    if (Object.keys(updates).length === 0) return { success: true };
-
-    // 3. Update User Table (Upsert to handle missing rows)
-    console.log("Updating profile for user:", user.id, updates);
-
-    const { error, data } = await supabase
-        .from("users")
-        .upsert({
-            id: user.id,
-            ...updates,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'id' }).select();
-
-    if (error) {
-        console.error("Profile Update Error:", error);
-        return { error: error.message };
-    }
-
-    console.log("Profile Update Success:", data);
-
-    revalidatePath("/", "layout");
-    revalidatePath("/profile", "layout");
-
-    return { success: true };
 }
