@@ -46,6 +46,13 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
         );
     };
 
+    // Listen for custom filter toggle events from children
+    useEffect(() => {
+        const handleToggle = () => setIsFilterOpen(prev => !prev);
+        document.addEventListener('toggle-filter', handleToggle);
+        return () => document.removeEventListener('toggle-filter', handleToggle);
+    }, []);
+
     // Filter and then Sort Predictions
     const filteredAndSortedPredictions = useMemo(() => {
         let filtered = [...initialPredictions];
@@ -76,8 +83,8 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
 
     return (
         <PullToRefresh onRefresh={handleRefresh} className="h-full w-full" scrollContainerRef={scrollRef}>
-            {/* Sorting Tabs - Floating Header */}
-            <div className="fixed top-[72px] left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-3">
+            {/* Sorting Tabs - Floating Header (Simplified) */}
+            <div className="fixed top-[72px] left-0 right-0 z-40 flex justify-center pointer-events-none">
                 <div className="flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-md border border-white/10 shadow-xl pointer-events-auto">
                     <button
                         onClick={() => setSortBy('trending')}
@@ -108,26 +115,6 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                     >
                         <Sparkles size={12} className={sortBy === 'new' ? "text-yellow-400 fill-yellow-400" : ""} />
                         <span>New</span>
-                    </button>
-                </div>
-
-                {/* Filter Trigger Badge */}
-                <div className="pointer-events-auto">
-                    <button
-                        onClick={() => {
-                            setIsFilterOpen(!isFilterOpen);
-                            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
-                        }}
-                        className={cn(
-                            "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md border shadow-lg transition-all",
-                            isFilterOpen || selectedCategories.length > 0
-                                ? "bg-white text-black border-white shadow-brand/20"
-                                : "bg-black/60 text-zinc-400 border-white/10 hover:border-white/30 hover:text-white"
-                        )}
-                    >
-                        <Filter size={10} />
-                        <span>{selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "Filter Sports"}</span>
-                        <ChevronDown size={10} className={cn("transition-transform duration-300", isFilterOpen ? "rotate-180" : "")} />
                     </button>
                 </div>
             </div>

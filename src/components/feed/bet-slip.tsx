@@ -98,26 +98,23 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
 
     return (
         <>
-            {/* Floating Bar (Collapsed) */}
+            {/* Floating AB (FAB) - Bottom Right */}
             {!isOpen && (
-                <div className="fixed bottom-[76px] left-1/2 -translate-x-1/2 z-40">
+                <div className="fixed bottom-[96px] right-4 z-40">
                     <motion.button
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        className="flex items-center gap-2 rounded-full border border-white/10 bg-brand py-1.5 pl-2 pr-3 shadow-2xl backdrop-blur-xl transition-transform active:scale-95"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-brand text-black shadow-2xl shadow-brand/40 transition-transform"
                         onClick={() => setIsOpen(true)}
                     >
-                        <div className="flex items-center gap-1.5">
-                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black text-[8px] font-bold text-white">
-                                {items.length}
-                            </span>
-                            <span className="text-[9px] font-black text-black uppercase tracking-widest">
-                                {items.length > 1 ? "Parlay" : "Slip"}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-1 border-l border-black/10 pl-1.5">
-                            <span className="text-[10px] font-black text-black">{totalMultiplier.toFixed(2)}x</span>
-                            <ChevronUp className="text-black h-3 w-3" />
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                            <span className="text-[10px] font-black uppercase tracking-widest">Slip</span>
+                            {items.length > 0 && (
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+                                    {items.length}
+                                </span>
+                            )}
                         </div>
                     </motion.button>
                 </div>

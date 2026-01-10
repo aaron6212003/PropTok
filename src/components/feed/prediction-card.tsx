@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prediction } from '@/lib/types';
 import { cn, vibrate } from '@/lib/utils';
-import { Share2, Clock, Volume2, TrendingUp, HelpCircle, MessageCircle, MoreHorizontal, CheckCircle2 } from 'lucide-react';
+import { Share2, Clock, Volume2, TrendingUp, HelpCircle, MessageCircle, MoreHorizontal, CheckCircle2, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import CommentsDrawer from '@/components/social/comments-drawer';
 import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
@@ -53,10 +53,64 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 {/* Content Layer */}
                 <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-40 font-sans text-white h-full justify-center">
 
+                    {/* Right Side Action Stack */}
+                    <div className="absolute right-4 bottom-32 z-20 flex flex-col items-center gap-6">
+
+                        {/* Filter Toggle (Passed from Parent) */}
+                        <div className="flex flex-col items-center gap-1">
+                            <button
+                                onClick={() => {
+                                    vibrate(5);
+                                    // Dispatch custom event or callback? 
+                                    // For now, let's make it just a visual placeholder if we can't easily bubble up, 
+                                    // BUT ideally we pass a prop. 
+                                    // Since I can't easily change the parent prop in this single step without breaking build,
+                                    // I'll emit a custom window event or use a global store. 
+                                    // actually, let's just dispatch a click to the hidden filter button? No that's hacky.
+                                    // CORRECT FIX: Update the interface in next step.
+                                    document.dispatchEvent(new CustomEvent('toggle-filter'));
+                                }}
+                                className="group flex h-12 w-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-all hover:bg-brand/20 hover:scale-110 active:scale-95"
+                            >
+                                <Filter size={20} className="text-white group-hover:text-brand" />
+                            </button>
+                            <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md">Filter</span>
+                        </div>
+
+                        {/* Discuss */}
+                        <div className="flex flex-col items-center gap-1">
+                            <button
+                                onClick={() => {
+                                    vibrate(5);
+                                    setShowComments(true);
+                                }}
+                                className="group flex h-12 w-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-all hover:bg-white/20 hover:scale-110 active:scale-95"
+                            >
+                                <MessageCircle size={20} className="text-white" />
+                            </button>
+                            <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md">{prediction.commentCount || 0}</span>
+                        </div>
+
+                        {/* Share */}
+                        <div className="flex flex-col items-center gap-1">
+                            <button
+                                onClick={() => {
+                                    vibrate(10);
+                                    navigator.clipboard.writeText(window.location.origin);
+                                    toast.success("Link copied!");
+                                }}
+                                className="group flex h-12 w-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-all hover:bg-white/20 hover:scale-110 active:scale-95"
+                            >
+                                <Share2 size={20} className="text-white" />
+                            </button>
+                            <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md">Share</span>
+                        </div>
+                    </div>
+
                     {/* Main Content Area - Centered */}
-                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-lg mx-auto gap-8 pt-12">
+                    <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-xs mx-auto gap-6 pt-12 text-center pointer-events-none">
                         {/* Category Badge - Centered above question */}
-                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2">
+                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2 pointer-events-auto">
                             <span className={cn(
                                 "text-[10px] font-black uppercase tracking-widest",
                                 CATEGORY_TEXT_COLORS[prediction.category] || 'text-white'
@@ -65,35 +119,11 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </span>
                         </div>
 
-                        <h1 className="text-4xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl h-full flex items-center">
+                        <h1 className="text-3xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl">
                             {prediction.question}
                         </h1>
 
-                        <div className="mt-6 flex items-center justify-center gap-4">
-                            <button
-                                onClick={() => {
-                                    vibrate(5);
-                                    setShowComments(true);
-                                }}
-                                className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
-                            >
-                                <MessageCircle size={18} className="text-zinc-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Discuss {prediction.commentCount ? `(${prediction.commentCount})` : ''}</span>
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    vibrate(5);
-                                    navigator.clipboard.writeText(window.location.origin);
-                                    toast.success("Link copied!");
-                                }}
-                                className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10"
-                            >
-                                <Share2 size={14} className="text-zinc-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Share</span>
-                            </button>
-                        </div>
-
+                        {/* Removed Old Horizontal Buttons */}
                     </div>
 
                     {/* Voting Area */}
