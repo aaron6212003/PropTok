@@ -537,6 +537,41 @@ export async function getAllTournaments() {
     return data;
 }
 
+export async function createTournament(formData: FormData) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Login required" };
+
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const entryFee = Number(formData.get("entry_fee"));
+
+    // Standard Game Config
+    const startingStack = 1000;
+    const rakePercent = 10;
+
+    const { data, error } = await supabase
+        .from("tournaments")
+        .insert({
+            name,
+            description,
+            entry_fee: entryFee,
+            starting_stack: startingStack,
+            rake_percent: rakePercent,
+            status: 'ACTIVE',
+            is_public: true,
+            creator_id: user.id
+        })
+        .select("id")
+        .single();
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/tournaments");
+    return { success: true, id: data.id };
+}
+
 export async function getUserTournamentEntries() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

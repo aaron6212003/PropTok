@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import BottomNavBar from '@/components/layout/bottom-nav';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { Trophy, Calendar, Users, ArrowRight } from 'lucide-react';
+import { Trophy, Calendar, Users, ArrowRight, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TournamentsPage() {
@@ -58,9 +58,14 @@ export default function TournamentsPage() {
 
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-32 text-white">
-            <div className="p-6">
-                <h1 className="text-3xl font-bold tracking-tight">Tournaments</h1>
-                <p className="mt-2 text-zinc-400">Compete for the highest bankroll.</p>
+            <div className="p-6 flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Tournaments</h1>
+                    <p className="mt-2 text-zinc-400">Compete for the highest bankroll.</p>
+                </div>
+                <a href="/tournaments/create" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg transition-transform active:scale-90">
+                    <Plus size={20} />
+                </a>
             </div>
 
             <div className="px-4 space-y-4">
