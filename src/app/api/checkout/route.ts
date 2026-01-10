@@ -13,10 +13,14 @@ export async function POST(req: Request) {
         }
 
         // Check if using placeholder key
+        // Check if using placeholder key
         const key = process.env.STRIPE_SECRET_KEY;
         if (!key || key === 'sk_test_placeholder' || key.includes('placeholder')) {
-            console.error("Stripe Checkout Failed: STRIPE_SECRET_KEY is missing or invalid.");
-            return NextResponse.json({ error: "Payment System Not Configured (Missing Key)" }, { status: 500 });
+            const status = key ? `Invalid (Value: ${key.substring(0, 5)}...)` : "Missing";
+            console.error(`Stripe Config Error: ${status}`);
+            return NextResponse.json({
+                error: `Payment System Error: Key is ${status}. Check Vercel Env Vars.`
+            }, { status: 500 });
         }
 
         // --- DIAGNOSTIC START ---

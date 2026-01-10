@@ -13,12 +13,17 @@ export async function ingestOdds() {
 
 export async function emergencyResetEconomy() {
     const supabase = createAdminClient();
+
+    // DEBUG: Check Environment explicitly
+    const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const hasAdminKey = !!process.env.SUPABASE_ADMIN_KEY;
+    const serviceKeyLen = process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0;
+
     if (!supabase) {
-        console.error("Admin Client Error: Missing Key. Env Check:", {
-            hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-            hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
-        });
-        return { error: "Admin client unavailable. Check server logs." };
+        console.error("Admin Client Creation Failed in Action");
+        return {
+            error: `Admin Access Failed. Keys Detected? ServiceRole: ${hasServiceKey} (Len: ${serviceKeyLen}), Admin: ${hasAdminKey}. URL: ${!!process.env.NEXT_PUBLIC_SUPABASE_URL}`
+        };
     }
 
     const { error } = await supabase.from('users').update({ cash_balance: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
