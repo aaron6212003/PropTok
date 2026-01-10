@@ -73,9 +73,11 @@ export default function TournamentsPage() {
                         {activeTab === 'featured' ? 'Official Events' : 'Community Hosted'}
                     </p>
                 </div>
-                <a href="/tournaments/create" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg transition-transform active:scale-90">
-                    <Plus size={20} />
-                </a>
+                {activeTab === 'community' && (
+                    <a href="/tournaments/create" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg transition-transform active:scale-90">
+                        <Plus size={20} />
+                    </a>
+                )}
             </div>
 
             {/* Tabs */}
@@ -202,6 +204,6 @@ export default function TournamentsPage() {
             <nav className="fixed bottom-0 left-0 right-0 z-50">
                 <BottomNavBar />
             </nav>
-        </main>
+        </main >
     );
 }
