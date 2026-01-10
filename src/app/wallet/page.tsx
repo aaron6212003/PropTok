@@ -56,7 +56,7 @@ export default async function WalletPage() {
                     <div className="flex items-center justify-between mb-2">
                         <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-400">
                             <Coins size={14} className="text-yellow-500" />
-                            Prop Tokens
+                            Tournament Chips
                         </span>
                         <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-500 uppercase tracking-widest">
                             Game Currency
@@ -66,7 +66,7 @@ export default async function WalletPage() {
                         ${data.play_balance.toLocaleString()}
                     </div>
                     <p className="mt-2 text-[10px] text-zinc-500 uppercase tracking-wide">
-                        Used for practice betting and tournaments.
+                        chips. NOT redeemable for cash. Used only for tournament leaderboards.
                     </p>
                 </div>
 

@@ -98,19 +98,33 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
                                 <button
                                     onClick={() => handleSwitch(null)}
                                     className={cn(
-                                        "flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition-all text-left",
-                                        !activeTournamentId ? "bg-white/10" : "hover:bg-white/5"
+                                        "flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition-all text-left group",
+                                        !activeTournamentId ? "bg-emerald-500/10 border border-emerald-500/20" : "hover:bg-white/5 border border-transparent"
                                     )}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Coins size={14} className={!activeTournamentId ? "text-brand" : "text-zinc-400"} />
+                                        <div className={cn(
+                                            "flex h-6 w-6 items-center justify-center rounded-full transition-colors",
+                                            !activeTournamentId ? "bg-emerald-500 text-black" : "bg-zinc-800 text-zinc-400 group-hover:bg-zinc-700"
+                                        )}>
+                                            <span className="font-serif font-black">$</span>
+                                        </div>
                                         <div>
-                                            <span className="block text-xs font-bold text-white leading-none">Prop Cash</span>
-                                            <span className="text-[10px] text-zinc-500">${bankroll.toLocaleString()}</span>
+                                            <span className={cn("block text-xs font-black uppercase tracking-wider leading-none", !activeTournamentId ? "text-emerald-400" : "text-zinc-400")}>
+                                                Real Cash
+                                            </span>
+                                            <span className="text-[10px] text-white font-mono opacity-80">${bankroll.toLocaleString()}</span>
                                         </div>
                                     </div>
-                                    {!activeTournamentId && <Check size={14} className="text-brand" />}
+                                    {!activeTournamentId && <Check size={14} className="text-emerald-500" />}
                                 </button>
+
+                                {/* Divider */}
+                                <div className="my-2 h-px bg-white/5" />
+
+                                <span className="mb-1 block px-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                                    Active Tournaments
+                                </span>
 
                                 {/* Tournament Entries */}
                                 {entries.map((entry) => (
@@ -119,7 +133,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
                                         onClick={() => handleSwitch(entry.tournament_id)}
                                         className={cn(
                                             "flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition-all text-left",
-                                            activeTournamentId === entry.tournament_id ? "bg-brand/10" : "hover:bg-white/5"
+                                            activeTournamentId === entry.tournament_id ? "bg-brand/10 border border-brand/20" : "hover:bg-white/5 border border-transparent"
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
@@ -128,7 +142,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
                                                 <span className="block text-xs font-bold text-white leading-none truncate max-w-[120px]">
                                                     {entry.tournament?.name}
                                                 </span>
-                                                <span className="text-[10px] text-zinc-500">${entry.current_stack.toLocaleString()}</span>
+                                                <span className="text-[10px] text-zinc-500">{entry.current_stack.toLocaleString()} Chips</span>
                                             </div>
                                         </div>
                                         {activeTournamentId === entry.tournament_id && <Check size={14} className="text-brand" />}
@@ -137,7 +151,7 @@ export default function WalletToggle({ bankroll, entries, activeTournamentId }: 
 
                                 {entries.length === 0 && (
                                     <div className="px-3 py-2 text-[10px] text-zinc-500 italic">
-                                        No active tournaments
+                                        No active tournaments. Deposit cash to join one.
                                     </div>
                                 )}
                             </div>
