@@ -156,18 +156,9 @@ export async function deletePrediction(id: string) {
     // 1. Verify Authentication
     if (!user) return { error: "Not authenticated" };
 
-    // 2. Use ADMIN client to bypass RLS (Row Level Security)
-    // This allows deleting the prediction AND all associated votes/comments from other users
-    const adminSupabase = await createAdminClient();
-
-    if (!adminSupabase) {
-        return { error: "Server Configuration Error: Admin Client missing." };
-    }
-
-    const { error } = await adminSupabase
-        .from("predictions")
-        .delete()
-        .eq("id", id);
+    // 2. Use RPC Function (Security Definer) to bypass RLS
+    // This runs as superuser on the database side, so we don't need the Service Key here
+    const { error } = await supabase.rpc('delete_prediction_force', { target_id: id });
 
     if (error) {
         console.error("Delete prop error FULL:", error);
