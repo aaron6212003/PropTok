@@ -244,14 +244,17 @@ export default function AdminPage() {
                                     placeholder="Entry Fee ($)"
                                     required
                                 />
-                                <input
-                                    name="starting_stack"
-                                    type="number"
-                                    className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
-                                    placeholder="Start Stack (1000)"
-                                    defaultValue={1000}
-                                    required
-                                />
+                                <div className="relative">
+                                    <input
+                                        name="starting_stack"
+                                        type="number"
+                                        className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
+                                        placeholder="Start Stack"
+                                        defaultValue={1000}
+                                        required
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-zinc-600 tracking-wider">Chips</span>
+                                </div>
                             </div>
                             <input
                                 name="max_players"
