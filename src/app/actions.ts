@@ -722,6 +722,18 @@ export async function getUserTournamentEntries() {
     return data;
 }
 
+export async function getAllTournaments() {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('tournaments')
+        .select('*, owner:users(username, avatar_url)');
+
+    if (error) {
+        console.error("Server Action Fetch Error:", error);
+        return { error: error.message };
+    }
+    return { data };
+}
+
 export async function joinTournament(tournamentId: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

@@ -16,12 +16,18 @@ export default function TournamentsPage() {
 
     useEffect(() => {
         const fetchTournaments = async () => {
-            // Get ALL Tournaments (Debug Mode: Removed Status Filter)
-            const { data: t, error } = await supabase.from('tournaments')
-                .select('*, owner:users(username, avatar_url)');
-            // .eq('status', 'ACTIVE'); // Temporarily removed to debug visibility
+            setLoading(true);
 
-            if (error) console.error("Error fetching tournaments:", error);
+            // SERVER ACTION FETCH (Bypasses Client-Side Network/CORS usually, provides better logs)
+            const { getAllTournaments } = await import('../actions');
+            const res = await getAllTournaments();
+
+            if (res.error) {
+                toast.error("Fetch Error: " + res.error);
+                console.error(res.error);
+            }
+
+            const t = res.data || [];
 
             // Get My Entries
             const { data: { user } } = await supabase.auth.getUser();
@@ -29,7 +35,7 @@ export default function TournamentsPage() {
                 const { data: e } = await supabase.from('tournament_entries')
                     .select('*')
                     .eq('user_id', user.id)
-                    .in('tournament_id', t.map(x => x.id));
+                    .in('tournament_id', t.map((x: any) => x.id));
                 setMyEntries(e || []);
             }
 
