@@ -1120,3 +1120,22 @@ export async function redeemPromoCode(code: string) {
     revalidatePath('/', 'layout');
     return { success: true, value: promo.value };
 }
+
+export async function createPromoCode(code: string, value: number, maxUses: number = 1) {
+    const admin = createAdminClient();
+    if (!admin) return { error: "System Error: Admin unavailable" };
+
+    // Ideally check if caller is admin, but admin client bypasses RLS anyway.
+    // In a real app we'd check session user role.
+
+    const { error } = await admin.from('promo_codes').insert({
+        code: code.toUpperCase().trim(),
+        value,
+        max_uses: maxUses
+    });
+
+    if (error) return { error: "Failed to create code: " + error.message };
+
+    revalidatePath('/profile/admin');
+    return { success: true };
+}

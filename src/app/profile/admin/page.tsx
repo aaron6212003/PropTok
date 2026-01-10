@@ -14,12 +14,13 @@ import {
 } from "@/app/actions";
 import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import CreatePromoCodeForm from "./create-promo-code";
 
 export default function AdminPage() {
     const [isPending, startTransition] = useTransition();
     const [predictions, setPredictions] = useState<any[]>([]);
     const [tournaments, setTournaments] = useState<any[]>([]);
-    const [dropdownOpen, setDropdownOpen] = useState(false); // [FIX] Added missing state
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
 
     useEffect(() => {
@@ -153,6 +154,11 @@ export default function AdminPage() {
                     </button>
                 </div>
             </header>
+
+            {/* --- PROMO CODE GENERATOR --- */}
+            <section className="mb-8">
+                <CreatePromoCodeForm />
+            </section>
 
             <div className="grid gap-8 lg:grid-cols-2">
                 {/* CREATE SECTION */}
