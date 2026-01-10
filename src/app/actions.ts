@@ -806,15 +806,22 @@ export async function updateProfile(formData: FormData) {
     if (Object.keys(updates).length === 0) return { success: true };
 
     // 3. Update User Table (Upsert to handle missing rows)
-    const { error } = await supabase
+    console.log("Updating profile for user:", user.id, updates);
+
+    const { error, data } = await supabase
         .from("users")
         .upsert({
             id: user.id,
             ...updates,
             updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+        }, { onConflict: 'id' }).select();
 
-    if (error) return { error: error.message };
+    if (error) {
+        console.error("Profile Update Error:", error);
+        return { error: error.message };
+    }
+
+    console.log("Profile Update Success:", data);
 
     revalidatePath("/", "layout");
     revalidatePath("/profile", "layout");

@@ -99,11 +99,14 @@ export default function ProfileEditor({
             {isEditing ? (
                 <div className="flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-2">
                     <input
-                        type="text"
-                        name="username_edit_field_generic"
-                        id="username_edit_field"
-                        autoComplete="new-password"
-                        data-lpignore="true"
+                        type="search"
+                        name={`user_field_${Math.random()}`}
+                        id="user_unique_id_field"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2 text-center font-bold text-white focus:outline-none focus:border-brand w-48"
