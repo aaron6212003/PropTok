@@ -26,7 +26,7 @@ export default function AdminPage() {
             return;
         }
         getPredictions().then(setPredictions);
-        getAllTournaments().then(setTournaments);
+        getAllTournaments().then(res => setTournaments(res.data || []));
     }, []);
 
     const handleClear = () => {
@@ -236,7 +236,7 @@ export default function AdminPage() {
                                 if (res?.error) toast.error(res.error);
                                 else {
                                     toast.success("Featured Tournament Live!");
-                                    getAllTournaments().then(setTournaments);
+                                    getAllTournaments().then(res => setTournaments(res.data || []));
                                 }
                             }}
                             className="space-y-4"
