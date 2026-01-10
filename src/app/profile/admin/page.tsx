@@ -86,8 +86,6 @@ export default function AdminPage() {
                         </button>
                     </form>
 
-                    </form>
-
                     <button
                         onClick={handleClear}
                         disabled={isPending}
