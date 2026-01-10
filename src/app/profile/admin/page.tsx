@@ -54,30 +54,54 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-black italic tracking-tighter text-brand">ADMIN<span className="text-white">ORACLE</span></h1>
                 </div>
 
-                <div className="flex gap-2">
-                    {/* BULK DELETE TOURNAMENTS */}
+                <div className="flex gap-2 relative">
+                    {/* CUSTOM MULTI-SELECT DROPDOWN */}
+                    <div className="relative group">
+                        <button
+                            onClick={(e) => {
+                                const menu = e.currentTarget.nextElementSibling;
+                                menu?.classList.toggle('hidden');
+                            }}
+                            className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-bold text-white hover:bg-white/10 transition-colors"
+                        >
+                            <span>Select Tournaments to Delete</span>
+                            <ChevronDown size={14} className="text-zinc-500" />
+                        </button>
+
+                        {/* ABSOLUTE DROPDOWN MENU */}
+                        <div className="hidden absolute top-full left-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-xl border border-white/10 bg-black/90 p-2 shadow-2xl backdrop-blur-xl z-50">
+                        </div>
+                    </div>
+
+                    {/* DELETE ACTION BUTTON */}
                     <button
                         onClick={async () => {
                             const selected = Array.from(document.querySelectorAll('input[name="t_select"]:checked'))
                                 .map((cb: any) => cb.value);
 
-                            if (selected.length === 0) return toast.error("Select tournaments to delete");
+                            if (selected.length === 0) return toast.error("Select tournaments from the list first");
 
-                            if (confirm(`DELETE ${selected.length} TOURNAMENTS? This cannot be undone.`)) {
+                            if (confirm(`DELETE ${selected.length} TOURNAMENTS? This cannot be undone and will remove them from all users.`)) {
                                 const { deleteTournaments, getAllTournaments } = await import('@/app/actions');
                                 const res = await deleteTournaments(selected);
                                 if (res?.error) toast.error(res.error);
                                 else {
                                     toast.success(`Deleted ${selected.length} Tournaments`);
                                     getAllTournaments().then(res => setTournaments(res.data || []));
+                                    // Reset checkboxes
+                                    document.querySelectorAll('input[name="t_select"]:checked').forEach((cb: any) => cb.checked = false);
+                                    // Hide menu (optional, simplistic DOM manipulation)
+                                    document.querySelector('.group > div.absolute')?.classList.add('hidden');
                                 }
                             }
                         }}
-                        className="flex items-center gap-2 rounded-full bg-destructive/10 p-2 px-4 text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/20 transition-colors"
+                        className="flex items-center gap-2 rounded-full bg-destructive/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/20 transition-colors"
                     >
                         <Trash2 size={14} />
                         <span>Delete Selected</span>
                     </button>
+
+                    <div className="h-8 w-[1px] bg-white/10 mx-2" />
 
                     <form action={async () => {
                         const { ingestOdds } = await import('@/app/actions');
