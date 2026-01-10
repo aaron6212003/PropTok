@@ -142,12 +142,19 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                             activeTournamentId={tournamentId || null}
                         />
                     </div>
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-brand/80">
-                        {tournamentId ? "Tournament Stack" : "Available PropCash"}
-                    </span>
-                    <h2 className="mt-1 text-5xl font-black tracking-tighter text-white">
-                        ${activeBankroll.toLocaleString()}
-                    </h2>
+                    <Link href="/wallet" className="group relative">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-brand/80 transition-colors group-hover:text-brand">
+                            {tournamentId ? "Tournament Stack" : "Available PropCash"}
+                        </span>
+                        <h2 className="mt-1 text-5xl font-black tracking-tighter text-white transition-transform group-active:scale-95">
+                            ${activeBankroll.toLocaleString()}
+                        </h2>
+                        {!tournamentId && (
+                            <div className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 transition-all group-hover:block group-hover:translate-x-2 group-hover:opacity-100">
+                                <ChevronRight className="text-brand" />
+                            </div>
+                        )}
+                    </Link>
                     <div className="mt-4 flex gap-4">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wins</span>
