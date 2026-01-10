@@ -19,6 +19,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Minimum deposit is $5" }, { status: 400 });
         }
 
+        // --- DIAGNOSTIC START ---
+        // Log key status safely
+        const key = process.env.STRIPE_SECRET_KEY;
+        console.log(`[Checkout] Key Status: ${key ? 'Present' : 'MISSING'}, Length: ${key?.length}`);
+        if (key && key.startsWith('sk_test_')) {
+            console.log(`[Checkout] Valid Test Key Prefix Detected: ${key.substring(0, 8)}...`);
+        } else if (key && key.startsWith('sk_live_')) {
+            console.log(`[Checkout] Valid Live Key Prefix Detected: ${key.substring(0, 8)}...`);
+        } else {
+            console.warn(`[Checkout] WARNING: Key does not start with sk_test_ or sk_live_. Value: ${key?.substring(0, 5)}...`);
+        }
+        // --- DIAGNOSTIC END ---
+
         // Create Checkout Session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],

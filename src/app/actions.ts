@@ -634,10 +634,14 @@ export async function createTournament(formData: FormData) {
 }
 
 export async function createFeaturedTournament(formData: FormData) {
-    const supabase = await createClient(); // We trust the admin page protection for now, or could check specific admin ID
+    const supabase = await createClient(); // Check Auth first
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return { error: "Login required" };
+
+    // Use Admin Client to bypass RLS allowing "owner_id: null"
+    const adminSupabase = createAdminClient();
+    if (!adminSupabase) return { error: "Server Configuration Error (Admin Key)" };
 
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -646,7 +650,7 @@ export async function createFeaturedTournament(formData: FormData) {
     const maxPlayersRaw = Number(formData.get("max_players"));
     const maxPlayers = maxPlayersRaw > 0 ? maxPlayersRaw : null; // 0 or empty means unlimited
 
-    const { data, error } = await supabase
+    const { data, error } = await adminSupabase
         .from("tournaments")
         .insert({
             name,
