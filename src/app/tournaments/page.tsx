@@ -60,8 +60,10 @@ export default function TournamentsPage() {
     };
 
     const filteredTournaments = tournaments.filter(t => {
-        if (activeTab === 'featured') return !t.owner_id; // System owned (NULL)
-        return t.owner_id; // User owned
+        const isOfficial = !t.owner_id || (t.filter_category && t.filter_category !== 'All');
+
+        if (activeTab === 'featured') return isOfficial;
+        return !isOfficial; // Community = Has owner AND (Category is All or missing)
     });
 
     return (
