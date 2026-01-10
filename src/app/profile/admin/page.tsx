@@ -12,7 +12,7 @@ import {
     getAllTournaments,
     deletePrediction
 } from "@/app/actions";
-import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap } from "lucide-react";
+import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminPage() {
