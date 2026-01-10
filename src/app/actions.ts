@@ -1029,6 +1029,7 @@ export async function updateProfile(formData: FormData) {
 }
 
 export async function getWalletData() {
+    noStore();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
