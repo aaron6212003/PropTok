@@ -27,7 +27,10 @@ export async function emergencyResetEconomy() {
     }
 
     const { error } = await supabase.from('users').update({ cash_balance: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
+
     if (error) return { error: "Reset Failed: " + error.message };
+
+    revalidatePath('/', 'layout'); // Refresh EVERYTHING (Header, Profile, etc)
     return { success: true };
 }
 
