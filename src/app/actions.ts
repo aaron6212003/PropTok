@@ -805,11 +805,14 @@ export async function updateProfile(formData: FormData) {
 
     if (Object.keys(updates).length === 0) return { success: true };
 
-    // 3. Update User Table
+    // 3. Update User Table (Upsert to handle missing rows)
     const { error } = await supabase
         .from("users")
-        .update(updates)
-        .eq("id", user.id);
+        .upsert({
+            id: user.id,
+            ...updates,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
 
     if (error) return { error: error.message };
 
