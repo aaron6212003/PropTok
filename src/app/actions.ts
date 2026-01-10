@@ -162,8 +162,8 @@ export async function deletePrediction(id: string) {
         .eq("id", id);
 
     if (error) {
-        console.error("Delete prop error:", error);
-        return { error: error.message };
+        console.error("Delete prop error FULL:", error);
+        return { error: `DB Error: ${error.message} (Code: ${error.code})` };
     }
 
     revalidatePath("/", "layout");
