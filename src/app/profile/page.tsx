@@ -69,7 +69,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         }
     }
 
-    const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.bankroll || 0);
+    const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.cash_balance || 0);
 
     // Fetch UNSEEN results for the recap
     const unseenVotes = await getUserVotes(50, true);
