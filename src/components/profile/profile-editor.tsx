@@ -22,6 +22,9 @@ export default function ProfileEditor({
     const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Hack to prevent autofocus/autofill on mobile
+    const [isReadOnly, setIsReadOnly] = useState(true);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,23 +38,41 @@ export default function ProfileEditor({
     };
 
     const handleSave = async () => {
+        if (isSaving) return;
+
         setIsSaving(true);
-        const formData = new FormData();
-        formData.append("username", username);
-        if (newAvatarFile) {
-            formData.append("avatar", newAvatarFile);
-        }
+        const toastId = toast.loading("Saving profile...");
 
-        const res = await updateProfile(formData);
+        try {
+            const formData = new FormData();
+            formData.append("username", username);
+            if (newAvatarFile) {
+                formData.append("avatar", newAvatarFile);
+            }
 
-        if (res.error) {
-            toast.error(res.error);
-        } else {
-            toast.success("Profile Updated!");
-            setIsEditing(false);
-            setNewAvatarFile(null);
+            // 1. Create a promise that rejects after 15 seconds
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Request timed out. Please check your connection.")), 15000)
+            );
+
+            // 2. Race the server action against the timeout
+            const responsePromise = updateProfile(formData);
+            const res = await Promise.race([responsePromise, timeoutPromise]) as any;
+
+            if (res?.error) {
+                console.error("Profile update error:", res.error);
+                toast.error(res.error, { id: toastId });
+            } else {
+                toast.success("Profile Updated!", { id: toastId });
+                setIsEditing(false);
+                setNewAvatarFile(null);
+            }
+        } catch (err: any) {
+            console.error("Save exception:", err);
+            toast.error(err.message || "Failed to save. Try again.", { id: toastId });
+        } finally {
+            setIsSaving(false);
         }
-        setIsSaving(false);
     };
 
     return (
@@ -99,18 +120,21 @@ export default function ProfileEditor({
             {isEditing ? (
                 <div className="flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-2">
                     <input
-                        type="search"
-                        name={`user_field_${Math.random()}`}
-                        id="user_unique_id_field"
+                        type="search" // 'search' prevents many password managers from triggering
+                        name="prop_tok_search_query_random_123" // Completely unrelated name
+                        id="prop_tok_user_display_name_123"
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck="false"
-                        data-form-type="other"
+                        // The ReadOnly hack: Input is readOnly until user touches it.
+                        // This prevents the browser from thinking it's a login field on page load.
+                        readOnly={isReadOnly}
+                        onFocus={() => setIsReadOnly(false)}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2 text-center font-bold text-white focus:outline-none focus:border-brand w-48"
-                        placeholder="Username"
+                        placeholder="Display Name"
                     />
                     <div className="flex gap-2">
                         <button
