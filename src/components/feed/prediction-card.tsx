@@ -53,8 +53,8 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 {/* Content Layer */}
                 <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-40 font-sans text-white h-full justify-center">
 
-                    {/* Right Side Action Stack */}
-                    <div className="absolute right-4 bottom-32 z-20 flex flex-col items-center gap-6">
+                    {/* Right Side Action Stack - Centered Vertically */}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-6">
 
                         {/* Filter Toggle (Passed from Parent) */}
                         <div className="flex flex-col items-center gap-1">
