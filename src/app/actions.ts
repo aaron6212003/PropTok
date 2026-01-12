@@ -169,12 +169,17 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         let shouldInclude = true;
 
         if (p.category === 'NCAA' || p.category === 'NBA' || p.category === 'NFL') { // Target US Sports mainly
-            const parts = p.external_id.split('-');
+            // Safely handle varying ID formats
+            const parts = p.external_id ? p.external_id.split('-') : [];
+
             if (parts.length >= 2) {
                 const marketKey = parts[1]; // 'h2h', 'spreads', 'totals'
+
+                // Only deduplicate the MAIN game lines which are prone to mirroring.
+                // Player props are usually distinct enough or "Over/Under" which we want to keep one of.
                 if (['h2h', 'spreads', 'totals'].includes(marketKey)) {
                     const gameId = parts[0];
-                    const compositeKey = `${gameId}-${marketKey}`;
+                    const compositeKey = `${gameId}-${marketKey}`; // Group by Game + Market Type
 
                     if (seenMarkets.has(compositeKey)) {
                         shouldInclude = false;
