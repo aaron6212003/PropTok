@@ -10,16 +10,38 @@ export default async function GamePage({ params }: { params: { id: string } }) {
     const supabase = await createClient();
     const { id } = params;
 
-    // Fetch all predictions for this Game ID
-    // external_id starts with "gameId-"
-    const { data: predictions } = await supabase
+    // 1. Try fetching by Game ID (prefix of external_id)
+    let { data: predictions } = await supabase
         .from('predictions')
         .select('*')
         .ilike('external_id', `${id}-%`)
         .eq('resolved', false);
 
+    // 2. Fallback: If no results, maybe 'id' is a specific Prediction UUID?
     if (!predictions || predictions.length === 0) {
-        // Fallback: try direct ID match? No, URL uses gameId
+        const { data: specificPrediction } = await supabase
+            .from('predictions')
+            .select('external_id')
+            .eq('id', id)
+            .single();
+
+        if (specificPrediction && specificPrediction.external_id) {
+            // Extract Game ID from this prediction's external_id
+            // Format: gameId-market-outcome
+            const gameId = specificPrediction.external_id.split('-')[0];
+
+            // Re-fetch all siblings
+            const { data: siblings } = await supabase
+                .from('predictions')
+                .select('*')
+                .ilike('external_id', `${gameId}-%`)
+                .eq('resolved', false);
+
+            if (siblings) predictions = siblings;
+        }
+    }
+
+    if (!predictions || predictions.length === 0) {
         return notFound();
     }
 
