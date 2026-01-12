@@ -1,6 +1,5 @@
 
 import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
 import BetCard from '@/components/profile/bet-card';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -12,56 +11,81 @@ export default async function GamePage({ params }: { params: { id: string } }) {
     const supabase = await createClient();
     const { id } = params;
 
-    console.log(`[GamePage] Loading for ID: ${id}`);
-
     let predictions: any[] = [];
     let gameId: string | null = null;
+    let errorDebug = "";
 
-    // STRATEGY 1: Treat 'id' as a specific UUID (Prediction ID)
-    // This is the new default since we changed the card link.
-    const { data: specificPrediction, error: uuidError } = await supabase
-        .from('predictions')
-        .select('external_id, question')
-        .eq('id', id)
-        .single();
-
-    if (specificPrediction && specificPrediction.external_id) {
-        console.log(`[GamePage] Found specific prediction: ${specificPrediction.question}`);
-        // Extract generic Game ID. Format usually: "gameId-market-..."
-        const tokens = specificPrediction.external_id.split('-');
-        gameId = tokens[0];
-        console.log(`[GamePage] Derived Game ID: ${gameId}`);
-    }
-
-    // STRATEGY 2: If finding by UUID failed, maybe 'id' *is* the Game ID?
-    if (!gameId) {
-        console.log(`[GamePage] UUID lookup failed or no external_id. Trying '${id}' as GameID directly.`);
-        gameId = id;
-    }
-
-    // FETCH SIBLINGS: Get all predictions for this Game ID
-    if (gameId) {
-        const { data: allProps, error: siblingsError } = await supabase
+    try {
+        // 1. Try generic search first (matches GameID or legacy)
+        let { data, error } = await supabase
             .from('predictions')
             .select('*')
-            .ilike('external_id', `${gameId}-%`)
-            .eq('resolved', false)
-            .order('yes_multiplier', { ascending: true }); // sort interesting ones first?
+            .ilike('external_id', `${id}-%`)
+            .eq('resolved', false);
 
-        if (allProps && allProps.length > 0) {
-            predictions = allProps;
+        if (data && data.length > 0) {
+            predictions = data;
         } else {
-            console.error(`[GamePage] No siblings found for GameID: ${gameId}`, siblingsError);
+            // 2. Try UUID lookup
+            const { data: specific, error: uuidError } = await supabase
+                .from('predictions')
+                .select('external_id')
+                .eq('id', id)
+                .single();
+
+            if (specific?.external_id) {
+                const parts = specific.external_id.split('-');
+                gameId = parts[0];
+                const { data: cousins } = await supabase
+                    .from('predictions')
+                    .select('*')
+                    .ilike('external_id', `${gameId}-%`)
+                    .eq('resolved', false);
+                predictions = cousins || [];
+            } else {
+                errorDebug = `UUID Lookup failed. ID not found in DB.`;
+            }
         }
+    } catch (e) {
+        errorDebug = JSON.stringify(e);
     }
 
+    // IF NOTHING FOUND: Show DEBUG Dashboard (Instead of 404)
     if (!predictions || predictions.length === 0) {
-        console.error(`[GamePage] 404 - No predictions found for ID: ${id}`);
-        return notFound();
+        // Fetch ANY 5 valid games to show the user
+        const { data: recentGames } = await supabase
+            .from('predictions')
+            .select('external_id, question')
+            .limit(20);
+
+        // Extract unique game IDs from recent bets
+        const uniqueGameIds = Array.from(new Set(recentGames?.map(p => p.external_id?.split('-')[0]) || [])).slice(0, 5);
+
+        return (
+            <main className="min-h-screen bg-black text-white p-6 pt-24 font-mono">
+                <BottomNavBar />
+                <Link href="/" className="mb-4 inline-block text-brand">← Back to Feed</Link>
+                <h1 className="text-2xl font-bold text-red-500 mb-4">⚠️ Game Not Found</h1>
+
+                <div className="bg-zinc-900 p-4 rounded-xl border border-red-500/20 mb-8">
+                    <p className="text-zinc-400 mb-2">We couldn't find bets for ID:</p>
+                    <p className="bg-black p-2 rounded text-white mb-4 break-all">{id}</p>
+                    <p className="text-zinc-500 text-xs">{errorDebug}</p>
+                </div>
+
+                <h2 className="text-lg font-bold text-white mb-4">Try These Active Games:</h2>
+                <div className="space-y-2">
+                    {uniqueGameIds.map(gid => (
+                        <Link key={gid} href={`/game/${gid}`} className="block p-4 bg-zinc-800 rounded-lg hover:bg-zinc-700">
+                            Game ID: <span className="text-brand">{gid}</span>
+                        </Link>
+                    ))}
+                </div>
+            </main>
+        );
     }
 
-    // Group by Market for UI
-    // "Game Lines" are usually generic win/loss or spreads without player names
+    // NORMAL RENDER
     const gameLines = predictions.filter((p: any) =>
         !p.question.includes('Score') &&
         !p.question.includes('Rebounds') &&
