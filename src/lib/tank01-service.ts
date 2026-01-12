@@ -133,6 +133,43 @@ export const tank01Service = {
         }
     },
 
+    async getNFLTeamRoster(teamAbv: string) {
+        // Endpoint: /getNFLTeamRoster?teamAbv=HOU
+        const url = `${TANK01_BASE_URL}/getNFLTeamRoster?teamAbv=${teamAbv}&getStats=true`;
+        return this._fetchRoster(url);
+    },
+
+    async getNBATeamRoster(teamAbv: string) {
+        // Endpoint: /getNBATeamRoster?teamAbv=LAL
+        const url = `${TANK01_BASE_URL}/getNBATeamRoster?teamAbv=${teamAbv}&statsToGet=averages`;
+        return this._fetchRoster(url);
+    },
+
+    async _fetchRoster(url: string) {
+        try {
+            // Dynamic Host Switch
+            let host = 'tank01-nba-live-in-game-real-time-statistics.p.rapidapi.com';
+            if (url.includes('nfl')) {
+                host = 'tank01-nfl-live-in-game-real-time-statistics.p.rapidapi.com';
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': RAPID_API_KEY,
+                    'X-RapidAPI-Host': host
+                }
+            });
+
+            if (!response.ok) return null;
+            const json = await response.json();
+            return json.body?.roster || [];
+        } catch (e) {
+            console.warn("Tank01 Roster Fetch Failed:", e);
+            return null;
+        }
+    },
+
     normalizeName(name: string) {
         return name.toLowerCase().replace(/[^a-z]/g, '');
     }

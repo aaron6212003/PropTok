@@ -39,17 +39,89 @@ export async function GET() {
 
     let insertedCount = 0;
 
-    for (const prop of realProps) {
+    // --- AUTOMATED ROSTER FETCH & SEED ---
+    // If user requests a specific game (like Texans/Steelers), we fetch ACTIVE roster.
+
+    // Default fallback if API fails
+    let automatedProps: any[] = [];
+
+    try {
+        const { tank01Service } = await import("@/lib/tank01-service");
+
+        // Helper to generate props for a team
+        const generateTeamProps = async (teamName: string, sport: 'NFL' | 'NBA') => {
+            const abv = teamName.substring(0, 3).toUpperCase(); // "Texans" -> TEX (Not perfect, but acceptable for demo fallback)
+            // Better map:
+            const ABV_MAP: Record<string, string> = {
+                "Texans": "HOU", "Steelers": "PIT", "Chiefs": "KC", "Ravens": "BAL",
+                "Bucks": "MIL", "Warriors": "GS", "Lakers": "LAL", "Celtics": "BOS"
+            };
+
+            const realAbv = ABV_MAP[teamName] || abv;
+            let roster = [];
+
+            if (sport === 'NFL') roster = await tank01Service.getNFLTeamRoster(realAbv);
+            else roster = await tank01Service.getNBATeamRoster(realAbv);
+
+            if (roster && roster.length > 0) {
+                // Pick top players (usually sorted by somewhat relevance or just pick random)
+                // Filter for offensive positions if NFL
+                const offensive = roster.filter((p: any) =>
+                    sport === 'NBA' || ['QB', 'RB', 'WR', 'TE'].includes(p.pos || p.position)
+                );
+
+                // Shuffle and pick 5
+                const selected = offensive.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+                selected.forEach((p: any) => {
+                    const name = p.longName || `${p.firstName} ${p.lastName}`;
+                    const pos = p.pos || p.position;
+
+                    // Logic for stat
+                    let stat = "Points";
+                    let line = 15.5;
+
+                    if (sport === 'NFL') {
+                        if (pos === 'QB') { stat = "Passing Yards"; line = 245.5; }
+                        else if (pos === 'RB') { stat = "Rushing Yards"; line = 65.5; }
+                        else { stat = "Receiving Yards"; line = 45.5; }
+                    } else {
+                        // NBA random
+                        const r = Math.random();
+                        if (r > 0.7) { stat = "Rebounds"; line = 6.5; }
+                        else if (r > 0.4) { stat = "Assists"; line = 4.5; }
+                    }
+
+                    automatedProps.push({
+                        team: teamName,
+                        player: name,
+                        stat,
+                        line,
+                        type: Math.random() > 0.5 ? "Over" : "Under"
+                    });
+                });
+                logs.push(`Fetched ${selected.length} real players for ${teamName}`);
+            } else {
+                logs.push(`Failed to fetch roster for ${teamName} (${realAbv})`);
+            }
+        };
+
+        // Run for Demo Teams
+        await generateTeamProps("Texans", "NFL");
+        await generateTeamProps("Steelers", "NFL");
+
+        // Add to the main list
+        // Filter out the hardcoded ones for these teams to avoid dupes/conflicts if we want pure live
+        // or just append.
+    } catch (e: any) {
+        logs.push(`Auto-Roster Error: ${e.message}`);
+    }
+
+    const finalProps = [...realProps.filter(p => p.team !== "Texans" && p.team !== "Steelers"), ...automatedProps];
+
+    for (const prop of finalProps) {
+        // ... (Existing insertion logic)
         // 1. Find the Game ID for this team
-        // Use ILIKE to find any game where the team is mentioned in external_id (usually "home-away")
-        // or we could query by `category` if we had team columns. 
-        // Best bet: Query `external_id` for the team name.
-        const { data: games } = await supabase
-            .from('predictions')
-            .select('*')
-            .ilike('external_id', `%${prop.team.toLowerCase()}%`)
-            .eq('resolved', false)
-            .limit(1);
 
         let gameExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // Default 24h
         let gameIdBase = "";
