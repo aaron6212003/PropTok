@@ -58,7 +58,7 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
                     return prev.map(i => i.predictionId === item.predictionId ? item : i);
                 }
             }
-            setIsOpen(true);
+            // setIsOpen(true); // Don't auto-open
             return [...prev, item];
         });
     };
