@@ -1,7 +1,7 @@
 "use client";
 
 import { useBetSlip } from "@/lib/context/bet-slip-context";
-import { Coins, Wallet, ChevronDown, Check, Trophy } from "lucide-react";
+import { Coins, Wallet, ChevronDown, Check, Trophy, Banknote } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
@@ -58,9 +58,9 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                     </>
                 ) : (
                     <>
-                        {tournamentId ? <Trophy className="h-4 w-4 text-yellow-500" /> : <Coins className="h-4 w-4 text-yellow-400" />}
-                        <span className="font-bold text-yellow-400">
-                            {chips.toLocaleString()}
+                        {tournamentId ? <Trophy className="h-4 w-4 text-emerald-500" /> : <Banknote className="h-4 w-4 text-emerald-500" />}
+                        <span className="font-bold text-emerald-500">
+                            ${chips.toLocaleString()}
                         </span>
                     </>
                 )}
