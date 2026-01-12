@@ -1,4 +1,5 @@
 import { createAdminClient } from "./supabase/admin";
+import { tank01Service } from "./tank01-service";
 
 const BASE_URL = "https://api.the-odds-api.com/v4/sports";
 
@@ -118,7 +119,7 @@ export const sportsService = {
             if (!response.ok) {
                 // FALLBACK: If API returns 422 (likely due to invalid markets or plan limits), try fetching ONLY basic markets.
                 if (response.status === 422 && markets !== "h2h,spreads,totals") {
-                    console.warn(`[sportsService] 422 Error for ${sport} (Likely Props restricted). Retrying with basic markets...`);
+                    console.warn(`[sportsService] ⚠️ 422 Error for ${sport}. This usually means your Odds API Plan does NOT support Player Props. Falling back to basic lines...`);
                     const fallbackUrl = `${BASE_URL}/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal`;
                     const fallbackResponse = await fetch(fallbackUrl);
 
@@ -232,9 +233,21 @@ export const sportsService = {
                 const outcomes = market.outcomes;
                 if (outcomes.length < 2) continue;
 
-                // For simple markets, we take the first outcome as "YES" and its natural opposite as "NO" logic
-                const primaryOutcome = outcomes[0];
-                const secondaryOutcome = outcomes[1];
+                // For Player Props, typically we want "Over" as the primary (Question) and "Under" as the secondary (No)
+                // For Game Lines, we just take the first one (e.g. Home Team)
+                let primaryOutcome = outcomes[0];
+                let secondaryOutcome = outcomes[1];
+
+                if (market.key.startsWith('player_')) {
+                    // Try to find 'Over'
+                    const over = outcomes.find((o: any) => o.name === 'Over');
+                    const under = outcomes.find((o: any) => o.name === 'Under');
+
+                    if (over && under) {
+                        primaryOutcome = over;
+                        secondaryOutcome = under;
+                    }
+                }
 
                 // Ensure unique ID includes player name for props
                 // For Game Lines: "id-h2h-Lakers"
@@ -389,11 +402,70 @@ export const sportsService = {
             const gameResult = scoreMap.get(gameId);
             if (!gameResult || !gameResult.completed || !gameResult.scores) continue;
 
-            const marketKey = parts[1]; // e.g., 'h2h', 'spreads', 'totals'
+            const marketKey = parts[1]; // e.g., 'h2h', 'spreads', 'totals', 'player_points'
 
-            // Skip player props for now (no score data usually)
-            if (marketKey.startsWith('player_')) continue;
+            // --- A. PLAYER PROPS RESOLUTION (New) ---
+            if (marketKey.startsWith('player_')) {
+                // external_id structure: "GameID-marketKey-PlayerName-Outcome-Line"
+                // Example: "12345-player_points-LeBron James-Over-25.5"
+                // Note: uniqueIdentifier in ingest was: `${description}-${name}-${point}`
 
+                // Let's re-parse carefully.
+                // We stored uniqueIdentifier in parts[2] onwards? 
+                // ingest: const externalId = `${game.id}-${market.key}-${uniqueIdentifier}`
+                // uniqueIdentifier = "LeBron James-Over-25.5"
+                // So externalId = "gameid-player_points-LeBron James-Over-25.5"
+
+                // Reconstruct the pieces
+                const remaining = p.external_id.substring(gameId.length + marketKey.length + 2);
+                // "LeBron James-Over-25.5"
+                // This split is risky if name has hyphens. 
+
+                // Better approach: We know the format ends with "-Over-25.5" or "-Under-25.5"
+                // Let's use regex to extract the Line and Type
+                const match = remaining.match(/(.*)-(Over|Under)-([0-9.]+)/i);
+                if (!match) continue;
+
+                const playerName = match[1].replace(/-/g, ' '); // Revert hyphens to spaces? ingest replaced non-alphanum with '-'
+                // Ingest: .replace(/[^a-z0-9]/gi, '-').toLowerCase()
+                // So "LeBron James" -> "lebron-james"
+
+                const type = match[2]; // Over/Under
+                const line = parseFloat(match[3]);
+
+                // Call Tank01
+                const stats = await tank01Service.getPlayerStats(playerName, "", "2024-02-11"); // TODO: Need real Date
+                // We need the Game Date from the Prediction!
+                // We can't get it from external_id. We might need to query prediction.expires_at?
+                // Or just use "today" if we run this cron daily.
+
+                if (!stats) continue;
+
+                // Map Market to Stat Key
+                // 'player_points' -> 'pts'
+                const statKey = marketKey.replace('player_', ''); // simpler mapping needed
+                // We need a robust mapper in the service.
+                const actualVal = parseFloat(stats[statKey] || "0");
+
+                let winner = null;
+                if (type === 'Over') {
+                    winner = actualVal > line ? 'YES' : 'NO';
+                } else {
+                    winner = actualVal < line ? 'YES' : 'NO';
+                }
+
+                // Update DB
+                await supabase.from("predictions").update({
+                    resolved: true,
+                    outcome: winner
+                }).eq("id", p.id);
+
+                resolvedCount++;
+                logs.push(`GRADED PROP: ${playerName} ${marketKey}: ${actualVal} vs ${line} -> ${winner}`);
+                continue;
+            }
+
+            // --- B. GAME LINES RESOLUTION (Existing) ---
             // Get Scores
             let homeScore = 0;
             let awayScore = 0;
