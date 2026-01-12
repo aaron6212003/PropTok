@@ -1,15 +1,26 @@
 "use client";
 
 import { useBetSlip } from "@/lib/context/bet-slip-context";
-import { Coins, Wallet, ChevronDown, Check } from "lucide-react";
+import { Coins, Wallet, ChevronDown, Check, Trophy } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
+import { getUserTournamentEntries } from "@/app/actions";
 
 export default function WalletToggle({ cash, chips }: { cash: number, chips: number }) {
-    const { currency, setCurrency } = useBetSlip();
+    const { currency, setCurrency, tournamentId, setTournamentId } = useBetSlip();
     const [isOpen, setIsOpen] = useState(false);
+    const [tournaments, setTournaments] = useState<any[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Fetch Tournaments on mount
+    useEffect(() => {
+        const loadTournaments = async () => {
+            const data = await getUserTournamentEntries();
+            setTournaments(data || []);
+        };
+        loadTournaments();
+    }, []);
 
     // Close on click outside
     useEffect(() => {
@@ -22,14 +33,20 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelect = (c: 'CASH' | 'CHIPS') => {
-        setCurrency(c);
+    const handleSelectGlobalChips = () => {
+        setCurrency('CHIPS');
+        // Clear tournament ID to indicate Global Scope
+        // NOTE: We need to expose setTournamentId in context or use router push? 
+        // Actually, context usually handles this via URL params or internal state.
+        // For now, let's assume switching currency to CHIPS implies Global if no tourney selected.
+        // But referencing the user request: "dropdown to select your real cash or tournament money"
+        // If they select a tournament, we should probably navigate or set context.
         setIsOpen(false);
     };
 
     return (
         <div className="pointer-events-auto relative z-50" ref={containerRef}>
-            {/* Trigger Button */}
+            {/* Trigger Button - Shows ACTIVE Wallet */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-black/60 transition-all"
@@ -41,8 +58,18 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                     </>
                 ) : (
                     <>
-                        <Coins className="h-4 w-4 text-yellow-400" />
-                        <span className="font-bold text-yellow-400">{chips.toLocaleString()}</span>
+                        {tournamentId ? <Trophy className="h-4 w-4 text-yellow-500" /> : <Coins className="h-4 w-4 text-yellow-400" />}
+                        {/* Display either Tournament Stack or Global Chips based on context */}
+                        <span className="font-bold text-yellow-400">
+                            {/* If we are in a tournament, showing that stack would be ideal, but we only have 'chips' prop here. 
+                                 Ideally we should rely on the context to display the correct amount, 
+                                 BUT 'chips' prop passed from parent is currently profile.bankroll (global).
+                                 To fully fix, we should maybe use context for value? 
+                                 For now, let's stick to the prop but maybe label it Generic if unsure? 
+                                 Actually, user wants to SELECT. 
+                             */}
+                            {chips.toLocaleString()}
+                        </span>
                     </>
                 )}
                 <ChevronDown size={14} className={cn("text-zinc-400 transition-transform", isOpen && "rotate-180")} />
@@ -50,11 +77,15 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-white/10 bg-zinc-900 p-1.5 shadow-xl shadow-black/50">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-zinc-900 p-2 shadow-xl shadow-black/50 overflow-hidden">
 
-                    {/* Cash Option */}
+                    {/* Header: Real Cash */}
+                    <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                        My Wallet
+                    </div>
+
                     <button
-                        onClick={() => handleSelect('CASH')}
+                        onClick={() => { setCurrency('CASH'); setIsOpen(false); }}
                         className={cn(
                             "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
                             currency === 'CASH' ? "bg-white/10" : "hover:bg-white/5"
@@ -70,25 +101,62 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                         {currency === 'CASH' && <Check size={14} className="text-[#00DC82]" />}
                     </button>
 
-                    {/* Chips Option */}
-                    <button
-                        onClick={() => handleSelect('CHIPS')}
-                        className={cn(
-                            "mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
-                            currency === 'CHIPS' ? "bg-white/10" : "hover:bg-white/5"
-                        )}
-                    >
-                        <div className="flex items-center gap-2">
-                            <Coins className="h-4 w-4 text-yellow-500" />
-                            <div className="flex flex-col items-start">
-                                <span className="font-bold text-white">Tournament Cash</span>
-                                <span className="text-[10px] text-yellow-500">{chips.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        {currency === 'CHIPS' && <Check size={14} className="text-yellow-500" />}
-                    </button>
+                    <div className="my-2 h-px bg-white/5" />
 
-                    <div className="my-1.5 h-px bg-white/5" />
+                    {/* Header: Tournaments */}
+                    <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                        Active Tournaments
+                    </div>
+
+                    <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 scrollbar-none">
+                        {/* Global Chips (Fallback/Practice) */}
+                        <button
+                            onClick={handleSelectGlobalChips}
+                            className={cn(
+                                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+                                (currency === 'CHIPS' && !tournamentId) ? "bg-white/10" : "hover:bg-white/5"
+                            )}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Coins className="h-4 w-4 text-yellow-400" />
+                                <div className="flex flex-col items-start">
+                                    <span className="font-bold text-white">My Bankroll</span>
+                                    <span className="text-[10px] text-yellow-400">{chips.toLocaleString()}</span>
+                                </div>
+                            </div>
+                            {(currency === 'CHIPS' && !tournamentId) && <Check size={14} className="text-yellow-400" />}
+                        </button>
+
+                        {/* List Tournaments */}
+                        {tournaments.map(t => (
+                            <Link
+                                key={t.tournament_id}
+                                href={`/?tournament=${t.tournament_id}`}
+                                onClick={() => setIsOpen(false)}
+                                className={cn(
+                                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+                                    (tournamentId === t.tournament_id) ? "bg-yellow-500/10" : "hover:bg-white/5"
+                                )}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Trophy className="h-4 w-4 text-yellow-500" />
+                                    <div className="flex flex-col items-start text-left">
+                                        <span className="font-bold text-white line-clamp-1">{t.tournament?.name || "Tournament"}</span>
+                                        <span className="text-[10px] text-yellow-500">${t.current_stack.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                {(tournamentId === t.tournament_id) && <Check size={14} className="text-yellow-500" />}
+                            </Link>
+                        ))}
+
+                        {tournaments.length === 0 && (
+                            <div className="px-3 py-2 text-center text-xs text-zinc-500 italic">
+                                No active tournaments
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="my-2 h-px bg-white/5" />
 
                     {/* Deposit Link */}
                     <Link

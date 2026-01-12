@@ -23,6 +23,7 @@ interface BetSlipContextType {
     currency: 'CASH' | 'CHIPS';
     setCurrency: (c: 'CASH' | 'CHIPS') => void;
     tournamentId: string | null;
+    setTournamentId: (id: string | null) => void;
 }
 
 const BetSlipContext = createContext<BetSlipContextType | undefined>(undefined);
@@ -32,7 +33,23 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
     const [isOpen, setIsOpen] = useState(false);
     const [currency, setCurrency] = useState<'CASH' | 'CHIPS'>('CASH');
     const searchParams = useSearchParams();
-    const tournamentId = searchParams.get('tournament');
+    // Initialize from URL but allow overriding? 
+    // Actually, normally the URL drives the state. If we want to set it via dropdown,
+    // we should probably just use router.push to change the URL.
+    // However, to satisfy the immediate type error and allow local state override if needed:
+    const [tournamentIdState, setTournamentIdState] = useState<string | null>(null);
+
+    // Sync with URL
+    useEffect(() => {
+        const tId = searchParams.get('tournament');
+        if (tId) setTournamentIdState(tId);
+        else setTournamentIdState(null);
+    }, [searchParams]);
+
+    const setTournamentId = (id: string | null) => {
+        setTournamentIdState(id);
+        // We might want to push to router here too, but for context API let's just update state
+    };
 
     const addToSlip = (item: SlipItem) => {
         setItems(prev => {
@@ -79,7 +96,8 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
             setIsOpen,
             currency,
             setCurrency,
-            tournamentId
+            tournamentId: tournamentIdState,
+            setTournamentId
         }}>
             {children}
         </BetSlipContext.Provider>
