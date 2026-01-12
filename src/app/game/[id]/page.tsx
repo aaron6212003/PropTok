@@ -97,7 +97,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     const props = predictions.filter((p: any) => !gameLines.includes(p));
 
     return (
-        <main className="relative min-h-screen bg-black text-white pb-32">
+        <main className="relative min-h-screen bg-black text-white pb-48">
             <div className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 bg-black/80 backdrop-blur-md border-b border-white/5">
                 <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10">
                     <ArrowLeft className="text-white" />

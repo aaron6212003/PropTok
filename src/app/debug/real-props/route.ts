@@ -51,39 +51,86 @@ export async function GET() {
             .eq('resolved', false)
             .limit(1);
 
-        if (!games || games.length === 0) {
-            logs.push(`SKIPPED: Could not find active game for ${prop.team}`);
-            continue;
-        }
+        let gameExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // Default 24h
+        let gameIdBase = "";
+        let foundGame = false;
 
-        const game = games[0];
-        const gameId = game.external_id.split('-')[0]; // Extract base ID
+        // FORCE CREATE GAME IF MISSING (To ensure props always populate for user)
+        if (!games || games.length === 0) {
+            logs.push(`⚠️ No active game found for ${prop.team}. Creating Placeholder...`);
+
+            // Generate a placeholder External ID: "placeholder-home-away-date"
+            const category = (prop.team === "Texans" || prop.team === "Steelers") ? "NFL"
+                : (prop.team === "Maple Leafs" || prop.team === "Canadiens") ? "NHL"
+                    : "NBA";
+
+            // Determine opponent for placeholder
+            const opponent = "Opponent";
+            gameIdBase = `force_${prop.team.toLowerCase()}_${opponent.toLowerCase()}`;
+            const fullGameId = `${gameIdBase}-h2h-${prop.team.toLowerCase()}-${opponent.toLowerCase()}`;
+
+            // Check if we already made this placeholder
+            const { data: existingPlaceholder } = await supabase.from('predictions').select('*').eq('external_id', fullGameId).single();
+
+            if (!existingPlaceholder) {
+                // Create the Header Game
+                const { error: createError } = await supabase.from('predictions').insert({
+                    question: `Will ${prop.team} win against ${opponent}?`,
+                    category: category,
+                    external_id: fullGameId,
+                    yes_multiplier: 1.90,
+                    no_multiplier: 1.90,
+                    resolved: false,
+                    expires_at: gameExpiresAt,
+                    created_at: new Date().toISOString(),
+                    yes_percent: 50,
+                    volume: 0,
+                    odds_source: 'Seeded Placeholder'
+                });
+                if (createError) {
+                    logs.push(`Failed to create placeholder: ${createError.message}`);
+                    continue;
+                }
+                logs.push(`CREATED Placeholder Game: ${prop.team} vs ${opponent}`);
+            } else {
+                gameExpiresAt = existingPlaceholder.expires_at;
+            }
+        } else {
+            foundGame = true;
+            const game = games[0];
+            gameIdBase = game.external_id.split('-')[0];
+            gameExpiresAt = game.expires_at;
+        }
 
         // 2. Construct Prop
         const question = `${prop.player} ${prop.type} ${prop.line} ${prop.stat}`;
-        // Unique ID: gameId-player_stat-Player_Name-Type-Line
-        const statKey = prop.stat.toLowerCase().replace(/\+/g, '_'); // pts+reb+ast -> pts_reb_ast
+        const statKey = prop.stat.toLowerCase().replace(/[\+ ]/g, '_');
         const safePlayerName = prop.player.replace(/ /g, '-');
-        const externalId = `${gameId}-player_${statKey}-${safePlayerName}-${prop.type}-${prop.line}`;
+        const externalId = `${gameIdBase}-player_${statKey}-${safePlayerName}-${prop.type}-${prop.line}`;
+
+        // category: Determine based on team/prop
+        let category = 'NBA';
+        if (["Texans", "Steelers", "Chiefs", "Ravens"].includes(prop.team)) category = 'NFL';
+        if (["Maple Leafs", "Canadiens", "Oilers"].includes(prop.team)) category = 'NHL';
 
         // Check if exists
         const { data: existing } = await supabase.from('predictions').select('id').eq('external_id', externalId).single();
         if (existing) {
-            logs.push(`EXISTS: ${question}`);
+            // OPTIONAL: Update category if it was wrong before
+            await supabase.from('predictions').update({ category }).eq('id', existing.id);
+            logs.push(`EXISTS (Updated Cat): ${question}`);
             continue;
         }
 
-        const isNFL = prop.team === "Texans" || prop.team === "Steelers";
-
-        // Insert
+        // Insert Prop
         const { error } = await supabase.from('predictions').insert({
             question,
-            category: isNFL ? 'NFL' : 'NBA',
+            category: category,
             external_id: externalId,
-            yes_multiplier: 1.87, // Standard -115
+            yes_multiplier: 1.87,
             no_multiplier: 1.87,
             resolved: false,
-            expires_at: game.expires_at, // Sync with game time
+            expires_at: gameExpiresAt,
             created_at: new Date().toISOString(),
             yes_percent: 50,
             volume: 0,
