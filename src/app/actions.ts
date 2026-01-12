@@ -269,14 +269,16 @@ export async function getUpcomingGames() {
             }
 
             // Normalize category to match filter keys (NFL, NBA, NHL, MLB, Soccer)
-            let category = p.category;
-            if (category.toLowerCase().includes('nfl')) category = 'NFL';
-            else if (category.toLowerCase().includes('nba')) category = 'NBA';
-            else if (category.toLowerCase().includes('nhl')) category = 'NHL';
-            else if (category.toLowerCase().includes('mlb')) category = 'MLB';
-            else if (category.toLowerCase().includes('soccer') || category.toLowerCase().includes('football')) {
+            let category = p.category || 'Sports';
+            const catLower = category.toLowerCase();
+
+            if (catLower.includes('nfl') || catLower.includes('american football')) category = 'NFL';
+            else if (catLower.includes('nba') || catLower.includes('basketball')) category = 'NBA';
+            else if (catLower.includes('nhl') || catLower.includes('hockey')) category = 'NHL';
+            else if (catLower.includes('mlb') || catLower.includes('baseball')) category = 'MLB';
+            else if (catLower.includes('soccer') || catLower.includes('football')) {
                 // Keep 'NFL' check first so American Football doesn't match 'Soccer' if we use 'football'
-                if (!category.toLowerCase().includes('nfl')) category = 'Soccer';
+                if (!catLower.includes('nfl')) category = 'Soccer';
             }
 
             gamesMap.set(p.game_id, {

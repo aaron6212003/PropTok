@@ -108,7 +108,7 @@ export default function CreateTournamentPage() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border border-white/5 rounded-xl bg-black/40 scrollbar-none">
                                 {games
-                                    .filter(g => selectedLeague === 'All' || g.category === selectedLeague)
+                                    .filter(g => selectedLeague === 'All' || g.category?.toUpperCase() === selectedLeague?.toUpperCase())
                                     .map(g => {
                                         const isSelected = selectedGameIds.includes(g.id);
                                         return (
@@ -143,8 +143,10 @@ export default function CreateTournamentPage() {
                                         );
                                     })
                                 }
-                                {games.filter(g => selectedLeague === 'All' || g.category === selectedLeague).length === 0 && (
-                                    <p className="col-span-full py-8 text-center text-xs text-zinc-600">No matchups found for this filter.</p>
+                                {games.filter(g => selectedLeague === 'All' || g.category?.toUpperCase() === selectedLeague?.toUpperCase()).length === 0 && (
+                                    <p className="col-span-full py-8 text-center text-xs text-zinc-600">
+                                        No {selectedLeague !== 'All' ? selectedLeague : ''} matchups found in the current pool.
+                                    </p>
                                 )}
                             </div>
                             <input type="hidden" name="allowed_game_ids" value={selectedGameIds.join(',')} disabled={selectedGameIds.length === 0} />
