@@ -156,16 +156,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     </Link>
 
                     {/* Deposit CTA */}
-                    {!tournamentId && (
-                        <div className="mt-6 w-full">
-                            <Link href="/wallet/deposit" className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-black uppercase tracking-widest text-black shadow-lg shadow-emerald-500/20 transition-transform active:scale-95 hover:bg-emerald-400">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/10 p-1">
-                                    <TrendingUp size={14} />
-                                </span>
-                                Deposit Funds
-                            </Link>
-                        </div>
-                    )}
+
                     <div className="mt-4 flex gap-4">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Wins</span>
