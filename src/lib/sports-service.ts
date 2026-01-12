@@ -241,98 +241,104 @@ export const sportsService = {
 
                 if (!supportedMarkets.includes(market.key)) continue;
 
-                const outcomes = market.outcomes;
-                if (outcomes.length < 2) continue;
+                // --- LOOP REFACTOR: Handle Multiple Questions per Market (Player Props) ---
 
-                // --- CANONICALIZATION TO PREVENT DUPLICATES ---
-                // Always pick a stable "Yes" side so we don't ingest "Will Team A win?" AND "Will Team B win?".
+                // Group outcomes by player name (description) for props, or use a single group for game lines
+                const outcomeGroups: Record<string, any[]> = {};
 
-                let primaryOutcome = outcomes[0];
-                let secondaryOutcome = outcomes[1];
-
-                if (market.key === 'h2h' || market.key === 'spreads') {
-                    // Always track HOME TEAM as the primary question
-                    const homeOutcome = outcomes.find((o: any) => o.name === game.home_team);
-                    if (homeOutcome) {
-                        primaryOutcome = homeOutcome;
-                        secondaryOutcome = outcomes.find((o: any) => o.name !== game.home_team) || outcomes[0];
-                    }
-                } else if (market.key === 'totals') {
-                    // Always track OVER
-                    const over = outcomes.find((o: any) => o.name === 'Over');
-                    const under = outcomes.find((o: any) => o.name === 'Under');
-                    if (over && under) {
-                        primaryOutcome = over;
-                        secondaryOutcome = under;
-                    }
-                } else if (market.key.startsWith('player_')) {
-                    // Always track OVER for player props
-                    const over = outcomes.find((o: any) => o.name === 'Over');
-                    const under = outcomes.find((o: any) => o.name === 'Under');
-                    if (over && under) {
-                        primaryOutcome = over;
-                        secondaryOutcome = under;
-                    }
-                }
-
-                // Ensure unique ID includes player name for props
-                // For Game Lines: "id-h2h-Lakers"
-                // For Player Props: "id-player_points-LeBron James-Over-25.5"
-                let uniqueIdentifier = `${primaryOutcome.name}`;
                 if (market.key.startsWith('player_')) {
-                    uniqueIdentifier = `${primaryOutcome.description}-${primaryOutcome.name}-${primaryOutcome.point}`;
-                }
-
-                const externalId = `${game.id}-${market.key}-${uniqueIdentifier}`.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-
-                const category = sportCategoryMap[game.sport_key] || 'Sports';
-
-                // Duplicate check
-                const { data: existing } = await supabase
-                    .from("predictions")
-                    .select("id, category")
-                    .eq("external_id", externalId)
-                    .single();
-
-                if (existing) {
-                    // FIX: If existing game has generic 'Sports' category, update it to specific (e.g. 'NBA')
-                    if (existing.category === 'Sports' && category !== 'Sports') {
-                        await supabase
-                            .from("predictions")
-                            .update({ category, odds_source: bookie.title }) // Keep odds fresh too
-                            .eq("id", existing.id);
-                        logs.push(`UPDATED CATEGORY: ${externalId} -> ${category}`);
-                    }
-                    skippedCount++;
-                    continue;
-                }
-
-                const question = this.generateQuestion(market.key, game, primaryOutcome);
-                const yesMultiplier = this.decimalToMultiplier(primaryOutcome.price);
-                const noMultiplier = this.decimalToMultiplier(secondaryOutcome.price);
-                // category is already defined above
-
-                const { error: insertError } = await supabase.from("predictions").insert({
-                    question,
-                    category,
-                    expires_at: game.commence_time,
-                    yes_multiplier: yesMultiplier,
-                    no_multiplier: noMultiplier,
-                    external_id: externalId,
-                    odds_source: bookie.title,
-                    raw_odds: game,
-                    resolved: false,
-                    yes_percent: 50,
-                    volume: 0
-                });
-
-                if (!insertError) {
-                    addedCount++;
-                    logs.push(`INGESTED: ${question}`);
+                    // Group by player name
+                    market.outcomes.forEach((o: any) => {
+                        const key = o.description || 'Unknown Player';
+                        if (!outcomeGroups[key]) outcomeGroups[key] = [];
+                        outcomeGroups[key].push(o);
+                    });
                 } else {
-                    console.error("[sportsService] Insert Error:", insertError);
-                    logs.push(`FAILED: ${question} (${insertError.message})`);
+                    // Game Lines: Single group
+                    outcomeGroups['main'] = market.outcomes;
                 }
+
+                // Iterate over each "Question" (e.g. Lebron Points, Curry Points, OR Game H2H)
+                for (const [groupKey, outcomes] of Object.entries(outcomeGroups)) {
+                    if (outcomes.length < 2) continue; // Need at least 2 sides
+
+                    // --- CANONICALIZATION ---
+                    let primaryOutcome = outcomes[0];
+                    let secondaryOutcome = outcomes[1];
+
+                    if (market.key === 'h2h' || market.key === 'spreads' || market.key === 'alternate_spreads') {
+                        const homeOutcome = outcomes.find((o: any) => o.name === game.home_team);
+                        if (homeOutcome) {
+                            primaryOutcome = homeOutcome;
+                            secondaryOutcome = outcomes.find((o: any) => o.name !== game.home_team) || outcomes[0];
+                        }
+                    } else if (market.key.includes('totals') || market.key.startsWith('player_')) {
+                        const over = outcomes.find((o: any) => o.name === 'Over');
+                        const under = outcomes.find((o: any) => o.name === 'Under');
+                        if (over && under) {
+                            primaryOutcome = over;
+                            secondaryOutcome = under;
+                        }
+                    }
+
+                    // Generate Unique ID
+                    let uniqueIdentifier = `${primaryOutcome.name}`;
+                    if (market.key.startsWith('player_')) {
+                        uniqueIdentifier = `${primaryOutcome.description}-${primaryOutcome.name}-${primaryOutcome.point}`;
+                    } else if (market.key.includes('spreads')) {
+                        uniqueIdentifier = `Spread-${primaryOutcome.point}`;
+                    } else if (market.key.includes('totals')) {
+                        uniqueIdentifier = `Total-${primaryOutcome.point}`;
+                    }
+
+                    const externalId = `${game.id}-${market.key}-${uniqueIdentifier}`.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+                    const category = sportCategoryMap[game.sport_key] || 'Sports';
+
+                    // Duplicate Check
+                    const { data: existing } = await supabase
+                        .from("predictions")
+                        .select("id, category")
+                        .eq("external_id", externalId)
+                        .single();
+
+                    if (existing) {
+                        if (existing.category === 'Sports' && category !== 'Sports') {
+                            await supabase.from("predictions").update({ category }).eq("id", existing.id);
+                        }
+                        // logs.push(`Duplicate: ${externalId}`);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // Create Prediction
+                    const question = this.generateQuestion(market.key, game, primaryOutcome);
+                    const yesMultiplier = primaryOutcome.price;
+                    const noMultiplier = secondaryOutcome.price;
+
+                    // Normalize percentages (Implied Probability)
+                    const impliedYes = 1 / yesMultiplier;
+                    const impliedNo = 1 / noMultiplier;
+                    const totalImplied = impliedYes + impliedNo;
+                    const yesPercent = Math.round((impliedYes / totalImplied) * 100);
+
+                    const { error } = await supabase.from("predictions").insert({
+                        category,
+                        question,
+                        external_id: externalId,
+                        yes_multiplier: yesMultiplier,
+                        no_multiplier: noMultiplier,
+                        yes_percent: yesPercent,
+                        resolved: false,
+                        expires_at: game.commence_time,
+                        volume: Math.floor(Math.random() * 10000) + 5000 // Seed volume for liveliness
+                    });
+
+                    if (error) {
+                        console.error("Insert Error:", error);
+                    } else {
+                        addedCount++;
+                    }
+                } // End Outcome Group Loop
             }
         }
 
