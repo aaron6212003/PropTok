@@ -233,16 +233,31 @@ export const sportsService = {
                 const outcomes = market.outcomes;
                 if (outcomes.length < 2) continue;
 
-                // For Player Props, typically we want "Over" as the primary (Question) and "Under" as the secondary (No)
-                // For Game Lines, we just take the first one (e.g. Home Team)
+                // --- CANONICALIZATION TO PREVENT DUPLICATES ---
+                // Always pick a stable "Yes" side so we don't ingest "Will Team A win?" AND "Will Team B win?".
+
                 let primaryOutcome = outcomes[0];
                 let secondaryOutcome = outcomes[1];
 
-                if (market.key.startsWith('player_')) {
-                    // Try to find 'Over'
+                if (market.key === 'h2h' || market.key === 'spreads') {
+                    // Always track HOME TEAM as the primary question
+                    const homeOutcome = outcomes.find((o: any) => o.name === game.home_team);
+                    if (homeOutcome) {
+                        primaryOutcome = homeOutcome;
+                        secondaryOutcome = outcomes.find((o: any) => o.name !== game.home_team) || outcomes[0];
+                    }
+                } else if (market.key === 'totals') {
+                    // Always track OVER
                     const over = outcomes.find((o: any) => o.name === 'Over');
                     const under = outcomes.find((o: any) => o.name === 'Under');
-
+                    if (over && under) {
+                        primaryOutcome = over;
+                        secondaryOutcome = under;
+                    }
+                } else if (market.key.startsWith('player_')) {
+                    // Always track OVER for player props
+                    const over = outcomes.find((o: any) => o.name === 'Over');
+                    const under = outcomes.find((o: any) => o.name === 'Under');
                     if (over && under) {
                         primaryOutcome = over;
                         secondaryOutcome = under;

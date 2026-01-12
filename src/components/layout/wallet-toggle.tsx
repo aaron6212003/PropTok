@@ -4,6 +4,7 @@ import { useBetSlip } from "@/lib/context/bet-slip-context";
 import { ChevronDown, Check, Trophy, Banknote, CreditCard, DollarSign } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { getUserTournamentEntries } from "@/app/actions";
 
@@ -12,6 +13,7 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
     const [isOpen, setIsOpen] = useState(false);
     const [tournaments, setTournaments] = useState<any[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
+    const pathname = usePathname();
 
     // Fetch Tournaments on mount
     useEffect(() => {
@@ -131,7 +133,7 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                                     className="w-full"
                                 >
                                     <Link
-                                        href={`/?tournament=${t.tournament_id}`}
+                                        href={pathname === '/profile' ? `/profile?tournament=${t.tournament_id}` : `/?tournament=${t.tournament_id}`}
                                         onClick={() => setIsOpen(false)}
                                         className={cn(
                                             "group flex items-center justify-between rounded-2xl border p-4 transition-all",

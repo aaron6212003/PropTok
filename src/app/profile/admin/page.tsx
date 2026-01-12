@@ -121,31 +121,7 @@ export default function AdminPage() {
 
                     <div className="h-8 w-[1px] bg-white/10 mx-2" />
 
-                    <form action={async () => {
-                        const { ingestOdds } = await import('@/app/actions');
-                        await ingestOdds();
-                        toast.success("Odds Ingested!");
-                    }}>
-                        <button className="flex w-fit items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-emerald-500 transition-colors hover:bg-emerald-500/20">
-                            <Zap size={14} />
-                            <span>Ingest Odds</span>
-                        </button>
-                    </form>
 
-                    {/* NEW: RESET ECONOMY BUTTON */}
-                    <form action={async () => {
-                        if (confirm("RESET ALL CASH BALANCES TO $0? This affects ALL users.")) {
-                            const { emergencyResetEconomy } = await import('@/app/actions');
-                            const res = await emergencyResetEconomy();
-                            if (res?.error) toast.error(res.error);
-                            else toast.success("Economy Reset to $0");
-                        }
-                    }}>
-                        <button className="flex w-fit items-center gap-2 rounded-full bg-blue-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-500 transition-colors hover:bg-blue-500/20">
-                            <BadgeDollarSign size={14} />
-                            <span>Fix Cash ($0)</span>
-                        </button>
-                    </form>
 
                     <button
                         onClick={handleClear}
