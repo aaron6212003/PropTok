@@ -1648,7 +1648,8 @@ export async function joinTournamentWithBalance(tournamentId: string) {
     console.log(`[joinTournamentWithBalance] Attempting join for TID: ${tournamentId} by User: ${user.id}`);
 
     // 1. Fetch Tournament & User Balance
-    const { data: tournament, error: tError } = await adminClient.from("tournaments").select("entry_fee, name, starting_stack").eq("id", tournamentId).single();
+    // FIX: Use entry_fee_cents as 'entry_fee' column does not exist
+    const { data: tournament, error: tError } = await adminClient.from("tournaments").select("entry_fee_cents, name, starting_stack").eq("id", tournamentId).single();
 
     if (tError || !tournament) {
         console.error(`[joinTournamentWithBalance] Tournament Fetch Error:`, tError);
@@ -1659,8 +1660,10 @@ export async function joinTournamentWithBalance(tournamentId: string) {
     const { data: profile } = await adminClient.from("users").select("cash_balance").eq("id", user.id).single();
     const balance = profile?.cash_balance || 0;
 
+    const entryFeeDollars = (tournament.entry_fee_cents || 0) / 100;
+
     // 2. Check Funds
-    if (balance < tournament.entry_fee) {
+    if (balance < entryFeeDollars) {
         return { success: false, error: "Insufficient funds. Please deposit." };
     }
 
@@ -1679,14 +1682,14 @@ export async function joinTournamentWithBalance(tournamentId: string) {
     // Here we act as the payment processor.
 
     // A. Deduct Balance
-    const newBalance = balance - tournament.entry_fee;
+    const newBalance = balance - entryFeeDollars;
     const { error: deductError } = await adminClient.from("users").update({ cash_balance: newBalance }).eq("id", user.id);
     if (deductError) return { success: false, error: "Deduction failed" };
 
     // B. Log Transaction
     await adminClient.from("transactions").insert({
         user_id: user.id,
-        amount: -tournament.entry_fee,
+        amount: -entryFeeDollars,
         type: "ENTRY_FEE",
         description: `Entry for ${tournament.name}`,
         reference_id: tournamentId
