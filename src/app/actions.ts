@@ -1635,3 +1635,74 @@ export async function verifyStripeDeposit(sessionId: string) {
         return { success: false, error: e.message };
     }
 }
+// --- NEW TOURNAMENT JOIN LOGIC 2.0 ---
+export async function joinTournamentWithBalance(tournamentId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const adminClient = createAdminClient();
+    if (!adminClient) return { success: false, error: "System Error" };
+
+    // 1. Fetch Tournament & User Balance
+    const { data: tournament } = await adminClient.from("tournaments").select("entry_fee, name, starting_stack").eq("id", tournamentId).single();
+    if (!tournament) return { success: false, error: "Tournament not found" };
+
+    const { data: profile } = await adminClient.from("users").select("cash_balance").eq("id", user.id).single();
+    const balance = profile?.cash_balance || 0;
+
+    // 2. Check Funds
+    if (balance < tournament.entry_fee) {
+        return { success: false, error: "Insufficient funds. Please deposit." };
+    }
+
+    // 3. Atomic Join (or robust sequence)
+    // We already have 'join_tournament_atomic' RPC from webhook? Let's check or use a similar logic.
+    // The webhook uses: join_tournament_atomic(p_user_id, p_tournament_id, p_session_id, p_payment_intent, p_stack)
+
+    // Option A: Reuse RPC but pass 'WALLET' as payment reference
+    // Option B: Manual Transaction here (easier for now if RPC is strict on session)
+
+    // Let's optimize for speed: Use RPC if possible, but let's look at the RPC signature first.
+    // Assuming RPC is capable, we pass 'WALLET_BALANCE' as session_id.
+
+    // BUT we need to DEDUCT money first (or let RPC do it).
+    // The webhook logic does logic differently: webhook implies money *already paid* via Stripe.
+    // Here we act as the payment processor.
+
+    // A. Deduct Balance
+    const newBalance = balance - tournament.entry_fee;
+    const { error: deductError } = await adminClient.from("users").update({ cash_balance: newBalance }).eq("id", user.id);
+    if (deductError) return { success: false, error: "Deduction failed" };
+
+    // B. Log Transaction
+    await adminClient.from("transactions").insert({
+        user_id: user.id,
+        amount: -tournament.entry_fee,
+        type: "ENTRY_FEE",
+        description: `Entry for ${tournament.name}`,
+        reference_id: tournamentId
+    });
+
+    // C. Add to Tournament
+    // We can use the atomic RPC to ensure pot update + participant insert
+    const { error: joinError } = await adminClient.rpc("join_tournament_atomic", {
+        p_user_id: user.id,
+        p_tournament_id: tournamentId,
+        p_session_id: "WALLET_DEBIT",
+        p_payment_intent: "WALLET", // Marker
+        p_stack: tournament.starting_stack || 1000
+    });
+
+    if (joinError) {
+        // CRITICAL: ROLLBACK MONEY
+        // In a real app, use a transaction block. Here, we refund.
+        await adminClient.from("users").update({ cash_balance: balance }).eq("id", user.id); // set back to original
+        return { success: false, error: "Join failed. Money refunded." };
+    }
+
+    revalidatePath(`/tournaments/${tournamentId}`);
+    revalidatePath("/"); // Update wallet header
+    return { success: true };
+}

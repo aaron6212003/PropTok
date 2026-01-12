@@ -26,14 +26,26 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
 
     if (!tournament) return <div className="p-10 text-center text-white">Tournament not found</div>;
 
-    let cashBalance = 0;
-    if (currentUser) {
-        const { data: profile } = await supabase.from("users").select("cash_balance").eq("id", currentUser.id).single();
-        cashBalance = profile?.cash_balance || 0;
-    }
+    // Check User Entry & Balance
+    let myEntry = null;
+    let myRank = 0;
+    let userBalance = 0;
 
-    const myEntry = leaderboard.find(e => e.user_id === currentUser?.id);
-    const myRank = myEntry ? leaderboard.indexOf(myEntry) + 1 : null;
+    if (currentUser) {
+        const { data: entry } = await supabase
+            .from("tournament_participants")
+            .select("current_stack, rank")
+            .eq("user_id", currentUser.id)
+            .eq("tournament_id", id)
+            .single();
+
+        myEntry = entry;
+        if (entry) myRank = entry.rank;
+
+        // Fetch Balance
+        const { data: profile } = await supabase.from("users").select("cash_balance").eq("id", currentUser.id).single();
+        userBalance = profile?.cash_balance || 0;
+    }
 
     return (
         <main className="flex h-[100dvh] w-full flex-col bg-black text-white overflow-hidden">
@@ -156,9 +168,10 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                                         {/* Only show Pay Button if there is a fee */}
                                         {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 ? (
                                             <JoinButton
-                                                tournamentId={tournament.id}
-                                                entryFeeCents={tournament.entry_fee_cents}
+                                                tournamentId={id}
+                                                entryFeeCents={Math.round(tournament.entry_fee_cents)} // Ensure Cents
                                                 isLoggedIn={!!currentUser}
+                                                userBalance={userBalance}
                                             />
                                         ) : (
                                             <button className="w-full py-4 bg-white/10 text-zinc-500 font-bold uppercase tracking-widest rounded-xl cursor-not-allowed">
@@ -191,7 +204,7 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                 <BottomNavBar />
             </div>
 
-            <BetSlip cashBalance={cashBalance} />
+            <BetSlip cashBalance={userBalance} />
         </main>
     );
 }
