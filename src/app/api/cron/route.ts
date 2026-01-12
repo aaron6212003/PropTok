@@ -61,12 +61,13 @@ export async function GET() {
         }
     ];
 
-    // --- PART 2: FALLBACK SEEDING (If Feed Empty) ---
-    // If TheOddsAPI fails or returns 0 games, we MUST show something.
+    // --- PART 2: FALLBACK SEEDING (If Feed Empty OR API Key Missing) ---
+    // If TheOddsAPI fails or returns 0 games, or if keys are missing, we MUST show something.
     const { count } = await supabase.from('predictions').select('*', { count: 'exact', head: true }).eq('resolved', false);
+    const apiKeyMissing = !process.env.THE_ODDS_API_KEY;
 
-    if (count === 0) {
-        results.push({ type: "Fallback", message: "Feed empty. Injecting mock data." });
+    if (count === 0 || apiKeyMissing) {
+        results.push({ type: "Fallback", message: "Feed empty or Keys Missing. Injecting mock data." });
 
         const MOCKS = [
             {
