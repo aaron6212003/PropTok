@@ -68,6 +68,15 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                                             Entry: ${(tournament.entry_fee_cents / 100).toFixed(2)}
                                         </span>
                                     )}
+                                    <span className="flex items-center gap-1 rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-purple-400">
+                                        Payout: {
+                                            tournament.payout_structure?.["1"] === 100
+                                                ? "Winner Takes All"
+                                                : tournament.payout_structure?.["1"] === 70
+                                                    ? "Top 3 Split"
+                                                    : "Custom"
+                                        }
+                                    </span>
                                 </div>
                                 <h1 className="text-3xl font-black italic tracking-tighter text-white">
                                     {tournament.name}

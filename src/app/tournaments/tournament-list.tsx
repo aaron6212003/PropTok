@@ -113,11 +113,21 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                             <div className="relative p-5">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className={cn(
-                                        "flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold",
+                                        "flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest",
                                         activeTab === 'featured' ? "bg-brand/10 text-brand" : "bg-purple-500/10 text-purple-400"
                                     )}>
                                         <Trophy size={14} />
-                                        <span>${((t.collected_pool || 0) * 0.9).toLocaleString()} Prize Pool</span>
+                                        <span>
+                                            ${((t.collected_pool || 0) * 0.9).toLocaleString()} • {
+                                                t.payout_structure?.["1"] === 100
+                                                    ? "Winner Takes All"
+                                                    : t.payout_structure?.["1"] === 70
+                                                        ? "Top 3 Split"
+                                                        : t.payout_structure?.["1"] === 50
+                                                            ? "Top Heavy"
+                                                            : "Custom Payout"
+                                            }
+                                        </span>
                                     </div>
                                     <span className="text-xs font-bold text-zinc-500">Active</span>
                                 </div>
