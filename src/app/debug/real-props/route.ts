@@ -73,10 +73,12 @@ export async function GET() {
             continue;
         }
 
+        const isNFL = prop.team === "Texans" || prop.team === "Steelers";
+
         // Insert
         const { error } = await supabase.from('predictions').insert({
             question,
-            category: 'NBA', // Force NBA for these
+            category: isNFL ? 'NFL' : 'NBA',
             external_id: externalId,
             yes_multiplier: 1.87, // Standard -115
             no_multiplier: 1.87,

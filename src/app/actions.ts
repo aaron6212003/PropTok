@@ -72,7 +72,8 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
             *,
             comments:comments(count)
         `)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .not('external_id', 'ilike', '%-player_%');
 
     if (onlyOpen) {
         const now = new Date().toISOString();
