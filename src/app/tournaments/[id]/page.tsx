@@ -10,6 +10,8 @@ import JoinButton from "@/components/tournament/join-button";
 import BetSlip from "@/components/feed/bet-slip";
 import SettleButton from "@/components/tournament/settle-button";
 
+export const dynamic = 'force-dynamic';
+
 export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string; session_id?: string }> }) {
     const { id } = await params;
     const searchParamsObj = await searchParams;
