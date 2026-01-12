@@ -107,6 +107,32 @@ export const tank01Service = {
         }
     },
 
+    async getNBABettingOdds(gameDate: string) {
+        // Endpoint: /getNBABettingOdds?gameDate=YYYY-MM-DD
+        const url = `${TANK01_BASE_URL}/getNBABettingOdds?gameDate=${gameDate}&itemFormat=list`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': RAPID_API_KEY,
+                    'X-RapidAPI-Host': 'tank01-nba-live-in-game-real-time-statistics.p.rapidapi.com'
+                }
+            });
+
+            if (!response.ok) {
+                console.error("Tank01 Odds Error:", response.status);
+                return null;
+            }
+
+            const json = await response.json();
+            return json.body || []; // Returns list of games with odds
+        } catch (e) {
+            console.error("Tank01 Odds Exception:", e);
+            return null;
+        }
+    },
+
     normalizeName(name: string) {
         return name.toLowerCase().replace(/[^a-z]/g, '');
     }

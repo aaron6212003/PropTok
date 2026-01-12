@@ -311,6 +311,57 @@ export const sportsService = {
         }
 
         logs.push(`Process Complete. Added: ${addedCount}, Skipped/Duplicates: ${skippedCount}`);
+
+        // --- PHASE 2: HYBRID INGESTION (Tank01 for NBA Props) ---
+        // Since The Odds API Free Plan often fails for props, we use Tank01 as a backup/primary for NBA.
+        try {
+            logs.push("Starting Tank01 NBA Prop Ingestion...");
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const tankGames = await tank01Service.getNBABettingOdds(today);
+
+            if (tankGames && Array.isArray(tankGames)) {
+                logs.push(`fetched ${tankGames.length} NBA games from Tank01.`);
+                let tankAdded = 0;
+
+                for (const tGame of tankGames) {
+                    // Match to existing game in DB to get the correct UUID/ExternalID base
+                    // Tank01 uses names like "Lakers", "Celtics"
+                    // We search DB for matches
+                    const homeTeam = tGame.homeTeam;
+                    const awayTeam = tGame.awayTeam;
+
+                    const { data: dbGame } = await supabase
+                        .from('predictions')
+                        .select('*')
+                        .ilike('external_id', `%${homeTeam.toLowerCase().replace(/ /g, '-')}%`)
+                        .eq('resolved', false)
+                        .limit(1)
+                        .single();
+
+                    if (!dbGame) continue;
+
+                    const gameIdBase = dbGame.external_id.split('-')[0];
+
+                    // Process Props (if available in tGame)
+                    // Tank01 structure varies, assuming tGame.sportsbooks array
+                    // We look for 'playerProps' usually nested or flattened
+
+                    // QUICK FIX: If Tank01 just gives game lines, checking documentation...
+                    // Actually Tank01 odds endpoint usually returns books. 
+                    // Let's assume we want to map what we can find.
+
+                    // If Tank01 returns specialized prop structure, we map it here.
+                    // For now, logging the structure to debug if it's empty.
+                    // logs.push(`Checking props for ${homeTeam}...`);
+                }
+                logs.push(`Tank01 Ingestion: Scanned ${tankGames.length} games (Logic Pending Structure Check).`);
+            } else {
+                logs.push(`Tank01 returned no games for ${today}.`);
+            }
+        } catch (e: any) {
+            logs.push(`Tank01 Ingestion Error: ${e.message}`);
+        }
+
         console.log(`[sportsService] ${logs[logs.length - 1]}`);
         return logs;
     },

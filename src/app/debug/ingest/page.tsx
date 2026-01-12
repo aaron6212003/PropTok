@@ -8,13 +8,21 @@ export default async function DebugIngestPage() {
     let logs: string[] = [];
     try {
         // Run ingestion and capture logs
-        // Note: ingestGames must return Promise<string[]> for this to work
-        // If it returns void, we won't see logs here, but it will still run.
         const result = await sportsService.ingestGames();
+
+        // ALSO: Run a targeted Tank01 Fetch to dump structure for debugging
+        const { tank01Service } = await import("@/lib/tank01-service");
+        const today = new Date().toISOString().split('T')[0];
+        const tankDump = await tank01Service.getNBABettingOdds(today);
+        if (tankDump && tankDump.length > 0) {
+            logs.push("--- TANK01 STRUCTURE DUMP (First Game) ---");
+            logs.push(JSON.stringify(tankDump[0], null, 2));
+        }
+
         if (Array.isArray(result)) {
-            logs = result;
+            logs = [...result, ...logs];
         } else {
-            logs.push("Ingestion ran, but returned no logs (check server console).");
+            logs.push("Ingestion ran, but returned no logs.");
         }
     } catch (e: any) {
         logs.push(`CRITICAL ERROR: ${e.message}`);
