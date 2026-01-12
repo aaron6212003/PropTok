@@ -1,14 +1,13 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import Header from '@/components/layout/header';
 import BetCard from '@/components/profile/bet-card';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 
 export default async function GamePage({ params }: { params: { id: string } }) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { id } = params;
 
     // Fetch all predictions for this Game ID
@@ -25,8 +24,8 @@ export default async function GamePage({ params }: { params: { id: string } }) {
     }
 
     // Group by Market
-    const gameLines = predictions.filter(p => !p.question.includes('Score') && !p.question.includes('Rebounds') && !p.question.includes('Assists'));
-    const props = predictions.filter(p => !gameLines.includes(p));
+    const gameLines = predictions.filter((p: any) => !p.question.includes('Score') && !p.question.includes('Rebounds') && !p.question.includes('Assists'));
+    const props = predictions.filter((p: any) => !gameLines.includes(p));
 
     return (
         <main className="relative min-h-screen bg-black text-white pb-32">
@@ -43,7 +42,7 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                     <section>
                         <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-4">Game Lines</h2>
                         <div className="grid gap-4">
-                            {gameLines.map(p => (
+                            {gameLines.map((p: any) => (
                                 <div key={p.id} className="p-4 rounded-2xl bg-zinc-900 border border-white/5">
                                     <h3 className="font-bold text-lg leading-tight mb-4">{p.question}</h3>
                                     {/* Simple Yes/No Buttons (Mock reuse of logic needed) */}
@@ -69,7 +68,7 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                         <p className="text-zinc-500 italic">No player props available.</p>
                     ) : (
                         <div className="grid gap-4">
-                            {props.map(p => (
+                            {props.map((p: any) => (
                                 <div key={p.id} className="p-4 rounded-xl bg-zinc-900 border border-white/5">
                                     <div className="flex justify-between items-start gap-4">
                                         <p className="font-bold text-sm text-zinc-300">{p.question}</p>
