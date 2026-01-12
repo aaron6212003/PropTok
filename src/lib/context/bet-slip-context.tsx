@@ -16,6 +16,7 @@ interface BetSlipContextType {
     items: SlipItem[];
     addToSlip: (item: SlipItem) => void;
     removeFromSlip: (predictionId: string) => void;
+    toggleInSlip: (item: SlipItem) => void;
     clearSlip: () => void;
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
@@ -33,42 +34,56 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
     const searchParams = useSearchParams();
     const tournamentId = searchParams.get('tournament');
 
-    // Initial load from local storage could go here
-
     const addToSlip = (item: SlipItem) => {
-    });
-    // Auto-open if first item? Maybe not, keep it non-intrusive.
-};
+        setItems(prev => {
+            // Remove existing for same prediction if switching side
+            const filtered = prev.filter(i => i.predictionId !== item.predictionId);
+            setIsOpen(true);
+            return [...filtered, item];
+        });
+    };
 
-const removeFromSlip = (predictionId: string) => {
-    setItems(prev => prev.filter(i => i.predictionId !== predictionId));
-};
+    const removeFromSlip = (predictionId: string) => {
+        setItems(prev => prev.filter(i => i.predictionId !== predictionId));
+    };
 
-const toggleInSlip = (item: SlipItem) => {
-    setItems(prev => {
-        const exists = prev.find(i => i.predictionId === item.predictionId);
-        if (exists) {
-            // If clicking same side, remove. If diff side, switch.
-            if (exists.side === item.side) {
-                return prev.filter(i => i.predictionId !== item.predictionId);
-            } else {
-                return prev.map(i => i.predictionId === item.predictionId ? item : i);
+    const toggleInSlip = (item: SlipItem) => {
+        setItems(prev => {
+            const exists = prev.find(i => i.predictionId === item.predictionId);
+            if (exists) {
+                // If clicking same side, remove. If diff side, switch.
+                if (exists.side === item.side) {
+                    return prev.filter(i => i.predictionId !== item.predictionId);
+                } else {
+                    return prev.map(i => i.predictionId === item.predictionId ? item : i);
+                }
             }
-        }
-        return [...prev, item];
-    });
-};
+            setIsOpen(true);
+            return [...prev, item];
+        });
+    };
 
-const clearSlip = () => {
-    setItems([]);
-    setIsOpen(false);
-};
+    const clearSlip = () => {
+        setItems([]);
+        setIsOpen(false);
+    };
 
-return (
-    <BetSlipContext.Provider value={{ items, addToSlip, removeFromSlip, toggleInSlip, clearSlip, isOpen, setIsOpen, tournamentId }}>
-        {children}
-    </BetSlipContext.Provider>
-);
+    return (
+        <BetSlipContext.Provider value={{
+            items,
+            addToSlip,
+            removeFromSlip,
+            toggleInSlip,
+            clearSlip,
+            isOpen,
+            setIsOpen,
+            currency,
+            setCurrency,
+            tournamentId
+        }}>
+            {children}
+        </BetSlipContext.Provider>
+    );
 }
 
 export function useBetSlip() {
