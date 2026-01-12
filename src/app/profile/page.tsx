@@ -188,8 +188,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
             <div className="px-6">
                 <AdminAccessButton />
-                <Link href="/debug/ingest" className="block mt-4 text-center text-xs text-red-500 hover:text-red-400 underline opacity-50 hover:opacity-100 transition-opacity">
-                    [Dev] Test Ingestion (Check API Logs)
+                <Link href="/debug/real-props" className="block mt-4 text-center text-xs text-green-500 hover:text-green-400 underline opacity-50 hover:opacity-100 transition-opacity">
+                    [Dev] Seed REAL Props (Jan 11 Data)
                 </Link>
             </div>
 
