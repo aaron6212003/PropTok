@@ -2,7 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-import RedeemForm from "@/components/wallet/redeem-form";
+import DepositOptions from "@/components/wallet/deposit-options";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import BottomNavBar from "@/components/layout/bottom-nav";
@@ -15,25 +15,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
         redirect("/login");
     }
 
-    const { mode } = await searchParams;
 
-    // --- PROMO CODE REDEMPTION MODE ---
-    if (mode === 'promo') {
-        return (
-            <main className="min-h-screen bg-black text-white pb-24 relative">
-                <div className="flex items-center p-6 border-b border-white/10">
-                    <Link href="/" className="mr-4 p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
-                        <ArrowLeft />
-                    </Link>
-                    <h1 className="text-xl font-bold">Redeem Code</h1>
-                </div>
-                <div className="p-6">
-                    <RedeemForm />
-                </div>
-                <BottomNavBar />
-            </main>
-        );
-    }
 
     // --- STANDARD WALLET VIEW ---
     const { data: profile } = await supabase
@@ -63,11 +45,13 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
                     </div>
                 </div>
 
-                {/* Deposit Form */}
-                <RedeemForm />
+                </div>
+
+                {/* Deposit Options */}
+                <DepositOptions />
             </div>
 
             <BottomNavBar />
-        </main>
+        </main >
     );
 }
