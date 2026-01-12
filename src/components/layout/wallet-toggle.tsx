@@ -79,55 +79,14 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
             {isOpen && (
                 <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-zinc-900 p-2 shadow-xl shadow-black/50 overflow-hidden">
 
-                    {/* Header: Real Cash */}
-                    <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                        My Wallet
-                    </div>
-
-                    <button
-                        onClick={() => { setCurrency('CASH'); setIsOpen(false); }}
-                        className={cn(
-                            "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
-                            currency === 'CASH' ? "bg-white/10" : "hover:bg-white/5"
-                        )}
-                    >
-                        <div className="flex items-center gap-2">
-                            <Wallet className="h-4 w-4 text-[#00DC82]" />
-                            <div className="flex flex-col items-start">
-                                <span className="font-bold text-white">Real Cash</span>
-                                <span className="text-[10px] text-[#00DC82]">${cash.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        {currency === 'CASH' && <Check size={14} className="text-[#00DC82]" />}
-                    </button>
-
-                    <div className="my-2 h-px bg-white/5" />
-
                     {/* Header: Tournaments */}
                     <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
                         Active Tournaments
                     </div>
 
                     <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 scrollbar-none">
-                        {/* Global Chips (Fallback/Practice) */}
-                        <button
-                            onClick={handleSelectGlobalChips}
-                            className={cn(
-                                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
-                                (currency === 'CHIPS' && !tournamentId) ? "bg-white/10" : "hover:bg-white/5"
-                            )}
-                        >
-                            <div className="flex items-center gap-2">
-                                <Coins className="h-4 w-4 text-yellow-400" />
-                                <div className="flex flex-col items-start">
-                                    <span className="font-bold text-white">My Bankroll</span>
-                                    <span className="text-[10px] text-yellow-400">{chips.toLocaleString()}</span>
-                                </div>
-                            </div>
-                            {(currency === 'CHIPS' && !tournamentId) && <Check size={14} className="text-yellow-400" />}
-                        </button>
 
-                        {/* List Tournaments */}
+                        {/* List Tournaments ONLY */}
                         {tournaments.map(t => (
                             <Link
                                 key={t.tournament_id}
