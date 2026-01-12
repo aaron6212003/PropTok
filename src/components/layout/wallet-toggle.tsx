@@ -59,15 +59,7 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                 ) : (
                     <>
                         {tournamentId ? <Trophy className="h-4 w-4 text-yellow-500" /> : <Coins className="h-4 w-4 text-yellow-400" />}
-                        {/* Display either Tournament Stack or Global Chips based on context */}
                         <span className="font-bold text-yellow-400">
-                            {/* If we are in a tournament, showing that stack would be ideal, but we only have 'chips' prop here. 
-                                 Ideally we should rely on the context to display the correct amount, 
-                                 BUT 'chips' prop passed from parent is currently profile.bankroll (global).
-                                 To fully fix, we should maybe use context for value? 
-                                 For now, let's stick to the prop but maybe label it Generic if unsure? 
-                                 Actually, user wants to SELECT. 
-                             */}
                             {chips.toLocaleString()}
                         </span>
                     </>

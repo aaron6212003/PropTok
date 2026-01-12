@@ -31,7 +31,7 @@ const BetSlipContext = createContext<BetSlipContextType | undefined>(undefined);
 export function BetSlipProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<SlipItem[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [currency, setCurrency] = useState<'CASH' | 'CHIPS'>('CASH');
+    const [currency, setCurrency] = useState<'CASH' | 'CHIPS'>('CHIPS');
     const searchParams = useSearchParams();
     // Initialize from URL but allow overriding? 
     // Actually, normally the URL drives the state. If we want to set it via dropdown,
