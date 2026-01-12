@@ -852,23 +852,58 @@ export async function joinTournament(tournamentId: string) {
 
     if (!user) return { error: "Login required" };
 
-    try {
-        const { error } = await supabase.rpc("join_tournament_secure", {
-            p_tournament_id: tournamentId,
-            p_user_id: user.id
-        });
+    const admin = createAdminClient();
+    if (!admin) return { error: "System Error" };
 
-        if (error) {
-            console.error("Join Tournament Error:", error);
-            // Return clean error messages from the RPC raise exception
-            return { error: error.message };
-        }
+    // 1. Fetch Tournament & Balance
+    const { data: tournament } = await admin.from("tournaments").select("*").eq("id", tournamentId).single();
+    const { data: profile } = await admin.from("users").select("cash_balance").eq("id", user.id).single();
 
-        revalidatePath("/tournaments");
-        return { success: true };
-    } catch (e: any) {
-        return { error: "Failed to join: " + e.message };
+    if (!tournament) return { error: "Tournament not found" };
+
+    // Check if already joined
+    const { data: existing } = await supabase.from("tournament_entries").select("user_id").eq("tournament_id", tournamentId).eq("user_id", user.id).single();
+    if (existing) return { error: "You have already joined this tournament." };
+
+    const entryFee = tournament.entry_fee || 0;
+    const currentCash = profile?.cash_balance || 0;
+
+    // 2. Check Funds
+    if (currentCash < entryFee) {
+        return { error: `Insufficient Funds. This tournament costs $${entryFee}. Deposit funds in your wallet.` };
     }
+
+    // 3. Process Payment (Deduct Cash)
+    const { error: payError } = await admin.from("users")
+        .update({ cash_balance: currentCash - entryFee })
+        .eq("id", user.id);
+
+    if (payError) return { error: "Payment processing failed." };
+
+    // 4. Add to Pot
+    await admin.from("tournaments")
+        .update({ pot_size: (tournament.pot_size || 0) + entryFee })
+        .eq("id", tournamentId);
+
+    // 5. Log Transaction
+    await admin.from("transactions").insert({
+        user_id: user.id,
+        amount: -entryFee,
+        type: 'ENTRY_FEE',
+        description: `Join: ${tournament.name}`
+    });
+
+    // 6. Join (Add Chips)
+    const { error: joinError } = await supabase.from("tournament_entries").insert({
+        tournament_id: tournamentId,
+        user_id: user.id,
+        current_stack: tournament.starting_stack || 1000
+    });
+
+    if (joinError) return { error: "Failed to join tournament." };
+
+    revalidatePath("/tournaments");
+    return { success: true };
 }
 
 // --- Social Actions ---
@@ -992,71 +1027,8 @@ export async function hideBet(id: string, isBundle: boolean) {
     return { success: true };
 }
 
-export async function joinTournament(tournamentId: string) {
-    const supabase = await createClient(); // Auth Context
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("User not authenticated");
-
-    // We must use Admin Client for Money Operations to be safe/bypass generic RLS if needed
-    // or just use standard client if RLS is set up for 'users' update own.
-    // For Transactions table, usually we restrict insert to server only.
-    const admin = createAdminClient();
-    if (!admin) return { error: "System Error" };
-
-    // 1. Fetch Tournament Details & User Balance
-    const { data: tournament } = await admin.from("tournaments").select("*").eq("id", tournamentId).single();
-    const { data: profile } = await admin.from("users").select("cash_balance").eq("id", user.id).single();
-
-    if (!tournament) return { error: "Tournament not found" };
-
-    const entryFee = tournament.entry_fee || 0;
-    const currentCash = profile?.cash_balance || 0;
-
-    // 2. Check Balance
-    if (currentCash < entryFee) {
-        return { error: `Insufficient Funds. You need $${entryFee} to join.` };
-    }
-
-    // 3. Process Transaction (Ideally Atomic/RPC)
-    // We will do sequence for MVP.
-
-    // Deduct Cash
-    const { error: debitError } = await admin.from("users")
-        .update({ cash_balance: currentCash - entryFee })
-        .eq("id", user.id);
-
-    if (debitError) return { error: "Payment Failed" };
-
-    // Add to Pot
-    const newPot = (tournament.pot_size || 0) + entryFee;
-    await admin.from("tournaments").update({ pot_size: newPot }).eq("id", tournamentId);
-
-    // Log Transaction
-    await admin.from("transactions").insert({
-        user_id: user.id,
-        amount: -entryFee,
-        type: 'ENTRY_FEE',
-        description: `Join: ${tournament.name}`
-    });
-
-    // 4. Join Tournament (Add Entry)
-    const { error } = await supabase.from("tournament_entries").insert({
-        tournament_id: tournamentId,
-        user_id: user.id,
-        current_stack: tournament.starting_stack || 1000 // Give Chips
-    });
-
-    if (error) {
-        // Rollback? ideally yes. For MVP we log error.
-        console.error("Join Error after payment:", error);
-        return { error: "Joined failed but payment processed. Contact support." };
-    }
-
-    revalidatePath("/tournaments");
-    revalidatePath(`/game/${tournamentId}`); // Refresh game page
-    return { success: true };
-}
+// Removed duplicate joinTournament. Using the one above.
 
 export async function adminResetTournament(tournamentId: string) {
     const supabase = await createClient();
