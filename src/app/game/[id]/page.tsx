@@ -6,47 +6,69 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 
+export const dynamic = 'force-dynamic';
+
 export default async function GamePage({ params }: { params: { id: string } }) {
     const supabase = await createClient();
     const { id } = params;
 
-    // 1. Try fetching by Game ID (prefix of external_id)
-    let { data: predictions } = await supabase
+    console.log(`[GamePage] Loading for ID: ${id}`);
+
+    let predictions: any[] = [];
+    let gameId: string | null = null;
+
+    // STRATEGY 1: Treat 'id' as a specific UUID (Prediction ID)
+    // This is the new default since we changed the card link.
+    const { data: specificPrediction, error: uuidError } = await supabase
         .from('predictions')
-        .select('*')
-        .ilike('external_id', `${id}-%`)
-        .eq('resolved', false);
+        .select('external_id, question')
+        .eq('id', id)
+        .single();
 
-    // 2. Fallback: If no results, maybe 'id' is a specific Prediction UUID?
-    if (!predictions || predictions.length === 0) {
-        const { data: specificPrediction } = await supabase
+    if (specificPrediction && specificPrediction.external_id) {
+        console.log(`[GamePage] Found specific prediction: ${specificPrediction.question}`);
+        // Extract generic Game ID. Format usually: "gameId-market-..."
+        const tokens = specificPrediction.external_id.split('-');
+        gameId = tokens[0];
+        console.log(`[GamePage] Derived Game ID: ${gameId}`);
+    }
+
+    // STRATEGY 2: If finding by UUID failed, maybe 'id' *is* the Game ID?
+    if (!gameId) {
+        console.log(`[GamePage] UUID lookup failed or no external_id. Trying '${id}' as GameID directly.`);
+        gameId = id;
+    }
+
+    // FETCH SIBLINGS: Get all predictions for this Game ID
+    if (gameId) {
+        const { data: allProps, error: siblingsError } = await supabase
             .from('predictions')
-            .select('external_id')
-            .eq('id', id)
-            .single();
+            .select('*')
+            .ilike('external_id', `${gameId}-%`)
+            .eq('resolved', false)
+            .order('yes_multiplier', { ascending: true }); // sort interesting ones first?
 
-        if (specificPrediction && specificPrediction.external_id) {
-            // Extract Game ID from this prediction's external_id
-            // Format: gameId-market-outcome
-            const gameId = specificPrediction.external_id.split('-')[0];
-
-            // Re-fetch all siblings
-            const { data: siblings } = await supabase
-                .from('predictions')
-                .select('*')
-                .ilike('external_id', `${gameId}-%`)
-                .eq('resolved', false);
-
-            if (siblings) predictions = siblings;
+        if (allProps && allProps.length > 0) {
+            predictions = allProps;
+        } else {
+            console.error(`[GamePage] No siblings found for GameID: ${gameId}`, siblingsError);
         }
     }
 
     if (!predictions || predictions.length === 0) {
+        console.error(`[GamePage] 404 - No predictions found for ID: ${id}`);
         return notFound();
     }
 
-    // Group by Market
-    const gameLines = predictions.filter((p: any) => !p.question.includes('Score') && !p.question.includes('Rebounds') && !p.question.includes('Assists'));
+    // Group by Market for UI
+    // "Game Lines" are usually generic win/loss or spreads without player names
+    const gameLines = predictions.filter((p: any) =>
+        !p.question.includes('Score') &&
+        !p.question.includes('Rebounds') &&
+        !p.question.includes('Assists') &&
+        !p.question.includes('Touchdowns') &&
+        !p.question.includes('Yards')
+    );
     const props = predictions.filter((p: any) => !gameLines.includes(p));
 
     return (
@@ -67,13 +89,11 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                             {gameLines.map((p: any) => (
                                 <div key={p.id} className="p-4 rounded-2xl bg-zinc-900 border border-white/5">
                                     <h3 className="font-bold text-lg leading-tight mb-4">{p.question}</h3>
-                                    {/* Simple Yes/No Buttons (Mock reuse of logic needed) */}
-                                    {/* Ideally we reuse a mini-card or just list lines */}
                                     <div className="flex gap-2">
-                                        <button className="flex-1 py-3 rounded-xl bg-white/5 font-black uppercase tracking-widest hover:bg-green-500/20 hover:text-green-500 transition-colors">
+                                        <button className="flex-1 py-3 rounded-xl bg-white/5 font-black uppercase tracking-widest text-[#00DC82] border border-[#00DC82]/20 hover:bg-[#00DC82]/10 transition-colors">
                                             Yes {p.yes_multiplier}x
                                         </button>
-                                        <button className="flex-1 py-3 rounded-xl bg-white/5 font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-500 transition-colors">
+                                        <button className="flex-1 py-3 rounded-xl bg-white/5 font-black uppercase tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500/10 transition-colors">
                                             No {p.no_multiplier}x
                                         </button>
                                     </div>
@@ -91,12 +111,12 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                     ) : (
                         <div className="grid gap-4">
                             {props.map((p: any) => (
-                                <div key={p.id} className="p-4 rounded-xl bg-zinc-900 border border-white/5">
+                                <div key={p.id} className="p-4 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 transition-colors">
                                     <div className="flex justify-between items-start gap-4">
                                         <p className="font-bold text-sm text-zinc-300">{p.question}</p>
-                                        <div className="flex gap-1 shrink-0">
-                                            <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-xs font-black">{p.yes_multiplier}x</span>
-                                            <span className="px-2 py-1 rounded bg-red-500/10 text-red-500 text-xs font-black">{p.no_multiplier}x</span>
+                                        <div className="flex gap-2 shrink-0">
+                                            <span className="px-3 py-1.5 rounded-lg bg-[#00DC82]/10 text-[#00DC82] text-xs font-black border border-[#00DC82]/20">YES {p.yes_multiplier}x</span>
+                                            <span className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20">NO {p.no_multiplier}x</span>
                                         </div>
                                     </div>
                                 </div>
