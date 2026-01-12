@@ -1645,9 +1645,15 @@ export async function joinTournamentWithBalance(tournamentId: string) {
     const adminClient = createAdminClient();
     if (!adminClient) return { success: false, error: "System Error" };
 
+    console.log(`[joinTournamentWithBalance] Attempting join for TID: ${tournamentId} by User: ${user.id}`);
+
     // 1. Fetch Tournament & User Balance
-    const { data: tournament } = await adminClient.from("tournaments").select("entry_fee, name, starting_stack").eq("id", tournamentId).single();
-    if (!tournament) return { success: false, error: "Tournament not found" };
+    const { data: tournament, error: tError } = await adminClient.from("tournaments").select("entry_fee, name, starting_stack").eq("id", tournamentId).single();
+
+    if (tError || !tournament) {
+        console.error(`[joinTournamentWithBalance] Tournament Fetch Error:`, tError);
+        return { success: false, error: "Tournament not found" };
+    }
 
     const { data: profile } = await adminClient.from("users").select("cash_balance").eq("id", user.id).single();
     const balance = profile?.cash_balance || 0;
