@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useBetSlip } from "@/context/bet-slip-context";
+import { useBetSlip } from "@/lib/context/bet-slip-context";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -11,20 +11,19 @@ interface PropRowProps {
     yesMultiplier: number;
     noMultiplier: number;
     yesPercent: number;
+    category?: string;
 }
 
-export default function PropRow({ id, question, yesMultiplier, noMultiplier, yesPercent }: PropRowProps) {
+export default function PropRow({ id, question, yesMultiplier, noMultiplier, yesPercent, category = "Sports" }: PropRowProps) {
     const { addToSlip } = useBetSlip();
 
     const handleAdd = (side: 'YES' | 'NO') => {
         addToSlip({
-            id,
+            predictionId: id,
             question,
-            outcome: side,
-            wager: 0,
-            payoutMultiplier: side === 'YES' ? yesMultiplier : noMultiplier,
-            isBundle: false,
-            yesPercent
+            side,
+            multiplier: side === 'YES' ? yesMultiplier : noMultiplier,
+            category
         });
         toast.success(`Added to Slip: ${question} (${side})`);
     };

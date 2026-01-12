@@ -143,6 +143,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                                     yesMultiplier={p.yes_multiplier}
                                     noMultiplier={p.no_multiplier}
                                     yesPercent={p.yes_percent || 50}
+                                    category={p.category}
                                 />
                             ))}
                         </div>
