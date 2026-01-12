@@ -5,6 +5,10 @@ import { NextResponse } from "next/server";
 export async function GET() {
     const supabase = createAdminClient();
 
+    if (!supabase) {
+        return NextResponse.json({ error: "Failed to initialize Admin Client" }, { status: 500 });
+    }
+
     // 1. Reset all users cash to 0.00
     const { error: updateError } = await supabase
         .from('users')
