@@ -109,7 +109,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     return (
         <main className="relative min-h-screen bg-black text-white pb-64">
             <div className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 bg-black/90 backdrop-blur-md border-b border-white/5 shadow-xl">
-                <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
+                <Link href="/profile" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
                     <ArrowLeft className="text-white" />
                 </Link>
                 <h1 className="ml-2 text-lg font-black uppercase tracking-widest">Game Markets</h1>
