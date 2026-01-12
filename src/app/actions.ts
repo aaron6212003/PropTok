@@ -144,9 +144,6 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
     }
 
     // DIAGNOSTIC START
-    const { count: total, error: countError } = await query.range(0, 1).count("exact", { head: true });
-    // Clone query to get raw data for logging without affecting final return if possible, or just log result count
-
     // Actually, just execute query and log result size
     const { data: rawData, error } = await query;
     console.log(`[getPredictions LOG] Called with onlyOpen=${onlyOpen}, tournamentId=${tournamentId}`);
