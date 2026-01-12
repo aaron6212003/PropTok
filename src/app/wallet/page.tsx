@@ -1,7 +1,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import DepositForm from "@/components/wallet/deposit-form";
+
 import RedeemForm from "@/components/wallet/redeem-form";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -64,7 +64,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
                 </div>
 
                 {/* Deposit Form */}
-                <DepositForm userId={user.id} />
+                <RedeemForm />
             </div>
 
             <BottomNavBar />
