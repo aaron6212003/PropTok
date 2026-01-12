@@ -122,10 +122,10 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         .not('external_id', 'ilike', '%-player_%');
 
     if (onlyOpen) {
-        const now = new Date().toISOString();
+        // const now = new Date().toISOString();
         query = query
-            .eq("resolved", false)
-            .gt("expires_at", now); // Filter out expired games
+            .eq("resolved", false);
+        // .gt("expires_at", now); // REMOVED: Allow "Live" games (started but not resolved) to show
     }
 
     // Filter by Tournament Rules (League Filtering)
