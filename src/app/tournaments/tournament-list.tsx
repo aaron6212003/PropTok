@@ -119,10 +119,17 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                                         <Trophy size={14} />
                                         <span>
                                             ${((t.collected_pool || 0) * 0.9).toLocaleString()} • {
-                                                Object.entries(t.payout_structure || {})
-                                                    .sort(([a], [b]) => Number(a) - Number(b))
-                                                    .map(([_, val]) => `${val}%`)
-                                                    .join(" / ")
+                                                (() => {
+                                                    try {
+                                                        const structure = typeof t.payout_structure === 'string' ? JSON.parse(t.payout_structure) : t.payout_structure;
+                                                        return Object.entries(structure || {})
+                                                            .sort(([a], [b]) => Number(a) - Number(b))
+                                                            .map(([_, val]) => `${val}%`)
+                                                            .join(" / ");
+                                                    } catch (e) {
+                                                        return "Top Heavy";
+                                                    }
+                                                })()
                                             }
                                         </span>
                                     </div>

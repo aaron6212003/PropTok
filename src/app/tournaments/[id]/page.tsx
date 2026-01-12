@@ -70,10 +70,19 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                                     )}
                                     <span className="flex items-center gap-1 rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-purple-400">
                                         Payout: {
-                                            Object.entries(tournament.payout_structure || {})
-                                                .sort(([a], [b]) => Number(a) - Number(b))
-                                                .map(([_, val]) => `${val}%`)
-                                                .join(" / ")
+                                            (() => {
+                                                try {
+                                                    const structure = typeof tournament.payout_structure === 'string'
+                                                        ? JSON.parse(tournament.payout_structure)
+                                                        : tournament.payout_structure;
+                                                    return Object.entries(structure || {})
+                                                        .sort(([a], [b]) => Number(a) - Number(b))
+                                                        .map(([_, val]) => `${val}%`)
+                                                        .join(" / ");
+                                                } catch (e) {
+                                                    return "Top Heavy";
+                                                }
+                                            })()
                                         }
                                     </span>
                                     {tournament.allowed_leagues && tournament.allowed_leagues.length > 0 && (

@@ -15,6 +15,7 @@ import {
 } from "@/app/actions";
 import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import CreatePromoCodeForm from "./create-promo-code";
 
 export default function AdminPage() {
@@ -24,6 +25,7 @@ export default function AdminPage() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [games, setGames] = useState<any[]>([]);
     const [adminSelectedLeague, setAdminSelectedLeague] = useState("All");
+    const [adminSelectedGameIds, setAdminSelectedGameIds] = useState<string[]>([]);
 
 
     useEffect(() => {
@@ -308,12 +310,15 @@ export default function AdminPage() {
                                 className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white placeholder:text-zinc-700 focus:border-emerald-500 focus:outline-none"
                                 placeholder="Max Players (Leave empty for Unlimited)"
                             />
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4">
                                 <div className="relative">
                                     <select
                                         name="allowed_leagues"
                                         value={adminSelectedLeague}
-                                        onChange={(e) => setAdminSelectedLeague(e.target.value)}
+                                        onChange={(e) => {
+                                            setAdminSelectedLeague(e.target.value);
+                                            setAdminSelectedGameIds([]); // Clear games when league changes
+                                        }}
                                         className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white focus:border-emerald-500 focus:outline-none appearance-none"
                                     >
                                         <option value="All">All Leagues</option>
@@ -325,20 +330,48 @@ export default function AdminPage() {
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
                                 </div>
 
-                                <div className="relative">
-                                    <select
-                                        name="allowed_game_ids"
-                                        className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white focus:border-emerald-500 focus:outline-none appearance-none"
-                                    >
-                                        <option value="All">All Games</option>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                        Restrict to Matchups
+                                        {adminSelectedGameIds.length > 0 && <span className="ml-2 text-emerald-500">({adminSelectedGameIds.length} Selected)</span>}
+                                    </label>
+                                    <div className="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto p-2 border border-white/5 rounded-xl bg-black scrollbar-none">
                                         {games
                                             .filter(g => adminSelectedLeague === 'All' || g.category === adminSelectedLeague)
-                                            .map(g => (
-                                                <option key={g.id} value={g.id}>{g.label}</option>
-                                            ))
+                                            .map(g => {
+                                                const isSelected = adminSelectedGameIds.includes(g.id);
+                                                return (
+                                                    <button
+                                                        key={g.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setAdminSelectedGameIds(prev =>
+                                                                prev.includes(g.id)
+                                                                    ? prev.filter(id => id !== g.id)
+                                                                    : [...prev, g.id]
+                                                            );
+                                                        }}
+                                                        className={cn(
+                                                            "flex items-center gap-2 p-2 rounded-lg border transition-all text-left",
+                                                            isSelected
+                                                                ? "bg-emerald-500/10 border-emerald-500/50"
+                                                                : "bg-white/5 border-transparent hover:bg-white/10"
+                                                        )}
+                                                    >
+                                                        <div className={cn(
+                                                            "h-3 w-3 rounded border flex items-center justify-center transition-colors",
+                                                            isSelected ? "bg-emerald-500 border-emerald-500" : "border-white/20"
+                                                        )} />
+                                                        <span className={cn("text-[10px] font-bold truncate", isSelected ? "text-white" : "text-zinc-500")}>{g.label}</span>
+                                                    </button>
+                                                );
+                                            })
                                         }
-                                    </select>
-                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
+                                        {games.filter(g => adminSelectedLeague === 'All' || g.category === adminSelectedLeague).length === 0 && (
+                                            <p className="py-4 text-center text-[10px] text-zinc-600">No matchups found.</p>
+                                        )}
+                                    </div>
+                                    <input type="hidden" name="allowed_game_ids" value={adminSelectedGameIds.join(',')} disabled={adminSelectedGameIds.length === 0} />
                                 </div>
                             </div>
                             <textarea

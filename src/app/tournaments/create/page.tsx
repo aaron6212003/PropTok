@@ -18,7 +18,7 @@ export default function CreateTournamentPage() {
     const [payoutStructure, setPayoutStructure] = useState("top3"); // Default
     const [games, setGames] = useState<any[]>([]);
     const [selectedLeague, setSelectedLeague] = useState("All");
-    const [selectedGame, setSelectedGame] = useState("All");
+    const [selectedGameIds, setSelectedGameIds] = useState<string[]>([]);
 
     useEffect(() => {
         getUpcomingGames().then(setGames);
@@ -78,13 +78,16 @@ export default function CreateTournamentPage() {
                     </div>
 
                     {/* RESTRICTIONS */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Restriction (League)</label>
                             <select
                                 name="allowed_leagues"
                                 value={selectedLeague}
-                                onChange={(e) => setSelectedLeague(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedLeague(e.target.value);
+                                    setSelectedGameIds([]); // Clear games when league changes
+                                }}
                                 className="w-full rounded-xl border border-white/10 bg-zinc-900 p-4 text-sm font-bold text-white focus:border-brand focus:outline-none appearance-none"
                             >
                                 <option value="All">All Leagues</option>
@@ -98,22 +101,53 @@ export default function CreateTournamentPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Restriction (Matchup)</label>
-                            <select
-                                name="allowed_game_ids"
-                                value={selectedGame}
-                                onChange={(e) => setSelectedGame(e.target.value)}
-                                className="w-full rounded-xl border border-white/10 bg-zinc-900 p-4 text-sm font-bold text-white focus:border-brand focus:outline-none appearance-none disabled:opacity-50"
-                            >
-                                <option value="All">All Games</option>
+                            <label className="text-xs font-black uppercase tracking-widest text-zinc-500">
+                                Restriction (Specific Matchups)
+                                {selectedGameIds.length > 0 && <span className="ml-2 text-brand">({selectedGameIds.length} Selected)</span>}
+                            </label>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border border-white/5 rounded-xl bg-black/40 scrollbar-none">
                                 {games
                                     .filter(g => selectedLeague === 'All' || g.category === selectedLeague)
-                                    .map(g => (
-                                        <option key={g.id} value={g.id}>{g.label}</option>
-                                    ))
+                                    .map(g => {
+                                        const isSelected = selectedGameIds.includes(g.id);
+                                        return (
+                                            <button
+                                                key={g.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedGameIds(prev =>
+                                                        prev.includes(g.id)
+                                                            ? prev.filter(id => id !== g.id)
+                                                            : [...prev, g.id]
+                                                    );
+                                                }}
+                                                className={cn(
+                                                    "flex items-center gap-3 p-3 rounded-lg border transition-all text-left group",
+                                                    isSelected
+                                                        ? "bg-brand/10 border-brand shadow-lg shadow-brand/10"
+                                                        : "bg-white/5 border-white/5 hover:border-white/10"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                                                    isSelected ? "bg-brand border-brand" : "border-white/20 group-hover:border-white/40"
+                                                )}>
+                                                    {isSelected && <div className="h-2 w-2 rounded-full bg-black" />}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className={cn("text-xs font-bold truncate", isSelected ? "text-white" : "text-zinc-400")}>{g.label}</span>
+                                                    <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">{g.category}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
                                 }
-                            </select>
-                            <input type="hidden" name="allowed_game_ids" value={selectedGame === 'All' ? '' : selectedGame} disabled={selectedGame === 'All'} />
+                                {games.filter(g => selectedLeague === 'All' || g.category === selectedLeague).length === 0 && (
+                                    <p className="col-span-full py-8 text-center text-xs text-zinc-600">No matchups found for this filter.</p>
+                                )}
+                            </div>
+                            <input type="hidden" name="allowed_game_ids" value={selectedGameIds.join(',')} disabled={selectedGameIds.length === 0} />
                         </div>
                     </div>
                 </section>
