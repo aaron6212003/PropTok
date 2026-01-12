@@ -4,6 +4,7 @@ import { resolvePrediction } from "@/app/actions";
 import { sportsService } from "@/lib/sports-service";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
     const supabase = await createClient();
