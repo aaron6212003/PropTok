@@ -45,7 +45,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
                     </div>
                 </div>
 
-                </div>
+
 
                 {/* Deposit Options */}
                 <DepositOptions />
