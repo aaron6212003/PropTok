@@ -1716,20 +1716,19 @@ export async function joinTournamentWithBalance(tournamentId: string) {
         reference_id: tournamentId
     });
 
-    // C. Add to Tournament
-    // We can use the atomic RPC to ensure pot update + participant insert
-    const { error: joinError } = await adminClient.rpc("join_tournament_atomic", {
-        p_user_id: user.id,
-        p_tournament_id: tournamentId,
-        p_session_id: "WALLET_DEBIT",
-        p_payment_intent: "WALLET", // Marker
-        p_stack: tournament.starting_stack || 1000
+    // C. Add to Tournament (Manual Insert to bypass potential RPC table mismatch)
+    const { error: joinError } = await adminClient.from("tournament_entries").insert({
+        tournament_id: tournamentId,
+        user_id: user.id,
+        current_stack: tournament.starting_stack || 1000,
+        paid: true,
+        // stripe_xx fields are null for wallet join
     });
 
     if (joinError) {
-        // CRITICAL: ROLLBACK MONEY
-        // In a real app, use a transaction block. Here, we refund.
-        await adminClient.from("users").update({ cash_balance: balance }).eq("id", user.id); // set back to original
+        // Rollback money if insert fails
+        console.error("Join Insert Failed:", joinError);
+        await adminClient.from("users").update({ cash_balance: balance }).eq("id", user.id);
         return { success: false, error: "Join failed. Money refunded." };
     }
 
