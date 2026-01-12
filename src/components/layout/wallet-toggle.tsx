@@ -68,57 +68,59 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
             </button>
 
             {/* Dropdown Menu */}
-            {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-zinc-900 p-2 shadow-xl shadow-black/50 overflow-hidden">
+            {
+                isOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-zinc-900 p-2 shadow-xl shadow-black/50 overflow-hidden">
 
-                    {/* Header: Tournaments */}
-                    <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                        Active Tournaments
-                    </div>
+                        {/* Header: Tournaments */}
+                        <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                            Active Tournaments
+                        </div>
 
-                    <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 scrollbar-none">
+                        <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 scrollbar-none">
 
-                        {/* List Tournaments ONLY */}
-                        {tournaments.map(t => (
-                            <Link
-                                key={t.tournament_id}
-                                href={`/?tournament=${t.tournament_id}`}
-                                onClick={() => setIsOpen(false)}
-                                className={cn(
-                                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
-                                    (tournamentId === t.tournament_id) ? "bg-yellow-500/10" : "hover:bg-white/5"
-                                )}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Trophy className="h-4 w-4 text-yellow-500" />
-                                    <div className="flex flex-col items-start text-left">
-                                        <span className="font-bold text-white line-clamp-1">{t.tournament?.name || "Tournament"}</span>
-                                        <span className="text-[10px] text-yellow-500">${t.current_stack.toLocaleString()}</span>
+                            {/* List Tournaments ONLY */}
+                            {tournaments.map(t => (
+                                <Link
+                                    key={t.tournament_id}
+                                    href={`/?tournament=${t.tournament_id}`}
+                                    onClick={() => setIsOpen(false)}
+                                    className={cn(
+                                        "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+                                        (tournamentId === t.tournament_id) ? "bg-yellow-500/10" : "hover:bg-white/5"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Trophy className="h-4 w-4 text-yellow-500" />
+                                        <div className="flex flex-col items-start text-left">
+                                            <span className="font-bold text-white line-clamp-1">{t.tournament?.name || "Tournament"}</span>
+                                            <span className="text-[10px] text-yellow-500">${t.current_stack.toLocaleString()}</span>
+                                        </div>
                                     </div>
+                                    {(tournamentId === t.tournament_id) && <Check size={14} className="text-yellow-500" />}
+                                </Link>
+                            ))}
+
+                            {tournaments.length === 0 && (
+                                <div className="px-3 py-2 text-center text-xs text-zinc-500 italic">
+                                    No active tournaments
                                 </div>
-                                {(tournamentId === t.tournament_id) && <Check size={14} className="text-yellow-500" />}
-                            </Link>
-                        ))}
+                            )}
+                        </div>
 
-                        {tournaments.length === 0 && (
-                            <div className="px-3 py-2 text-center text-xs text-zinc-500 italic">
-                                No active tournaments
-                            </div>
-                        )}
+                        <div className="my-2 h-px bg-white/5" />
+
+                        {/* Deposit Link */}
+                        <Link
+                            href="/wallet?mode=promo"
+                            onClick={() => setIsOpen(false)}
+                            className="flex w-full items-center justify-center rounded-lg bg-[#00DC82]/10 py-2 text-xs font-bold text-[#00DC82] hover:bg-[#00DC82]/20 transition-colors"
+                        >
+                            Redeem Promo Code
+                        </Link>
                     </div>
-
-                    <div className="my-2 h-px bg-white/5" />
-
-                    {/* Deposit Link */}
-                    <Link
-                        href="/wallet?mode=promo"
-                        onClick={() => setIsOpen(false)}
-                        className="flex w-full items-center justify-center rounded-lg bg-[#00DC82]/10 py-2 text-xs font-bold text-[#00DC82] hover:bg-[#00DC82]/20 transition-colors"
-                    >
-                        Redeem Promo Code
-                    </Link>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
