@@ -17,7 +17,6 @@ export async function GET(req: Request) {
     if (!tournament || !entries) return NextResponse.json({ error: "Data not found" });
 
     // 2. Calculate Pot
-    // Assuming all 'entries' are PAID. We should filter by 'paid' = true ideally, but if not set default to true for testing
     const paidEntries = entries.filter(e => e.paid);
     const entryFee = tournament.entry_fee_cents || 0;
     const poolCents = paidEntries.length * entryFee;
@@ -33,18 +32,19 @@ export async function GET(req: Request) {
     const platformCut = poolCents - winnerCut - hostCut;
 
     // 5. Execute Payout Logic (Update Cash Balance)
-    // We update the User's cash_balance. 
-    // NOTE: This assumes we trust the 'users' table or have a 'transactions' table.
-
-    // Add to Winner
-    const { error: winErr } = await supabase.rpc('increment_balance', {
+    // Add to Winner - Handle RPC error correctly
+    const { error: rpcError } = await supabase.rpc('increment_balance', {
         user_id: winner.user_id,
         amount: winnerCut
-    }).catch(async () => {
-        // Fallback if RPC doesn't exist
-        const { data: u } = await supabase.from('users').select('cash_balance').eq('id', winner.user_id).single();
-        return supabase.from('users').update({ cash_balance: (u?.cash_balance || 0) + winnerCut }).eq('id', winner.user_id);
     });
+
+    let winErr = rpcError;
+    if (rpcError) {
+        // Fallback if RPC doesn't exist or fails
+        const { data: u } = await supabase.from('users').select('cash_balance').eq('id', winner.user_id).single();
+        const { error: updateError } = await supabase.from('users').update({ cash_balance: (u?.cash_balance || 0) + winnerCut }).eq('id', winner.user_id);
+        winErr = updateError;
+    }
 
     // Log Payout
     const { data: payout, error: pErr } = await supabase.from('tournament_payouts').insert({
