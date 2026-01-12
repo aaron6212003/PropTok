@@ -1,4 +1,4 @@
-import { getTournament, getTournamentLeaderboard } from "@/app/actions";
+import { getTournament, getTournamentLeaderboard, verifyTournamentPayment } from "@/app/actions";
 import BottomNavBar from "@/components/layout/bottom-nav";
 import { cn } from "@/lib/utils";
 import { Trophy, Clock, Users, ArrowLeft } from "lucide-react";
@@ -10,6 +10,13 @@ import JoinButton from "@/components/tournament/join-button";
 export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string }> }) {
     const { id } = await params;
     const searchParamsObj = await searchParams;
+
+    // Passive Verification (Auto-Fix if Webhook missed)
+    if (searchParamsObj.session_id) {
+        await verifyTournamentPayment(searchParamsObj.session_id);
+    }
+
+    // Fetch Data
     const tournament = await getTournament(id);
     const leaderboard = await getTournamentLeaderboard(id);
     const supabase = await createClient();

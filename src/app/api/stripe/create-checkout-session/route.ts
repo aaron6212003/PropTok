@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
                 },
             ],
             mode: 'payment',
-            success_url: `${req.headers.get("origin")}/tournaments/${tournamentId}?success=true`,
+            success_url: `${req.headers.get("origin")}/tournaments/${tournamentId}?success=true&session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.get("origin")}/tournaments/${tournamentId}?canceled=true`,
             metadata: {
                 tournamentId: tournament.id,
