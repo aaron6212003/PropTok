@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 
-export const dynamic = 'force-dynamic';
+import ProfileEditor from '@/components/profile/profile-editor';
+import { unstable_noStore as noStore } from 'next/cache';
 import { TrendingUp, Flame, Trophy, Settings, ChevronRight, LogOut, Coins, Clock, CheckCircle2, XCircle, Camera, Edit2, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
@@ -11,9 +12,13 @@ import AdminAccessButton from '@/components/profile/admin-access-button';
 import HistoryList from '@/components/profile/history-list';
 import ResolutionRecap from '@/components/social/resolution-recap';
 import WalletToggle from '@/components/layout/wallet-toggle';
-import ProfileEditor from '@/components/profile/profile-editor';
+import RefreshTrigger from '@/components/profile/refresh-trigger';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string, deposit_success?: string }> }) {
+    noStore();
     const { tournament: tournamentId, deposit_success } = await searchParams;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -106,13 +111,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
             {deposit_success === 'true' && (
                 <div className="mx-6 mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-500">
+                    <RefreshTrigger />
                     <div className="flex items-center gap-3">
                         <div className="bg-emerald-500 rounded-full p-1">
                             <CheckCircle2 size={16} className="text-black" />
                         </div>
                         <div>
                             <p className="text-sm font-black text-emerald-400 uppercase tracking-widest">Deposit Successful!</p>
-                            <p className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-wider">Your balance has been updated.</p>
+                            <p className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-wider italic">Refreshing your balance...</p>
                         </div>
                     </div>
                 </div>

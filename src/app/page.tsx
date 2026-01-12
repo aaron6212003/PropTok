@@ -7,9 +7,13 @@ import { Coins, Trophy as TrophyIcon, ChevronDown } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
 import WalletToggle from "@/components/layout/wallet-toggle";
 
+import { unstable_noStore as noStore } from "next/cache";
+
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
+  noStore();
   const { tournament: tournamentId } = await searchParams;
   const predictions = await getPredictions(true, tournamentId);
   const supabase = await createClient();

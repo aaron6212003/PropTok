@@ -9,8 +9,17 @@ BEGIN
   SET cash_balance = COALESCE(cash_balance, 0) + p_amount,
       updated_at = NOW()
   WHERE id = p_user_id;
+END;
+$$;
 
-  -- Ensure we log it if it matters (optional, as we do it in webhook too)
+-- Alias for wider compatibility
+CREATE OR REPLACE FUNCTION increment_user_balance(user_uuid UUID, amount DECIMAL)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  PERFORM increment_balance(user_uuid, amount);
 END;
 $$;
 
