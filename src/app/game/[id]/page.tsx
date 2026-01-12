@@ -48,8 +48,7 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                 const { data: cousins } = await supabase
                     .from('predictions')
                     .select('*')
-                    .ilike('external_id', `${gameId}%`) // Relaxed here too
-                    .eq('resolved', false);
+                    .ilike('external_id', `${gameId}%`); // Relaxed here too
                 predictions = cousins || [];
             } else {
                 errorDebug = `UUID Lookup failed. ID not found in DB.`;
