@@ -22,7 +22,8 @@ ALTER TABLE public.tournament_entries ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Entries are viewable by everyone." ON public.tournament_entries;
 DROP POLICY IF EXISTS "Users can join." ON public.tournament_entries;
 DROP POLICY IF EXISTS "Enable all access" ON public.tournament_entries; 
-DROP POLICY IF EXISTS "Enable all access for authenticated users" ON public.tournament_entries; -- ADDED THIS LINE
+DROP POLICY IF EXISTS "Enable all access for authenticated users" ON public.tournament_entries;
+DROP POLICY IF EXISTS "Enable public read access" ON public.tournament_entries; -- ADDED THIS LINE
 
 -- Create one permissive policy for ALL operations
 CREATE POLICY "Enable all access for authenticated users" 
