@@ -153,16 +153,18 @@ export const sportsService = {
         console.log("[sportsService] Starting Ingestion Process...");
         const logs: string[] = [];
 
-        // Expanded Sports List
+        // Expanded Sports List (Prioritized by Seasonality)
+        // Jan/Feb: NFL Playoffs, NBA, NHL, NCAAB are active. NCAAF is over/ending.
         const sports = [
-            "americanfootball_nfl",
-            "basketball_nba",
-            "icehockey_nhl",
+            "americanfootball_nfl", // Playoffs
+            "basketball_nba",       // Peak Season
+            "icehockey_nhl",        // Peak Season
+            "basketball_ncaab",     // Conference play
             "soccer_epl",
-            "soccer_uefa_champions_league",
-            "basketball_ncaab",
-            "americanfootball_ncaaf"
+            "soccer_uefa_champions_league"
         ];
+
+        // Removed ncaaf to avoid wasting quota on empty endpoints
 
         const sportCategoryMap: Record<string, string> = {
             "americanfootball_nfl": "NFL",
@@ -177,11 +179,17 @@ export const sportsService = {
         const allFetchedGames: any[] = [];
 
         for (const sport of sports) {
-            const res = await this.fetchLiveOdds(sport);
-            if (res.error) {
-                logs.push(`${sport} Error: ${res.error}`);
-            } else {
-                allFetchedGames.push(...(res.data || []));
+            try {
+                const res = await this.fetchLiveOdds(sport);
+                if (res.error) {
+                    logs.push(`${sport} Error: ${res.error}`);
+                } else if (res.data) {
+                    // Ensure data validation
+                    const validGames = res.data.filter((g: any) => g.bookmakers && g.bookmakers.length > 0);
+                    allFetchedGames.push(...validGames);
+                }
+            } catch (err) {
+                console.error(`Loop error for ${sport}:`, err);
             }
         }
 
