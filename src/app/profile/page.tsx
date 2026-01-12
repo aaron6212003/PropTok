@@ -17,9 +17,9 @@ import RefreshTrigger from '@/components/profile/refresh-trigger';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string, deposit_success?: string }> }) {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string, deposit_success?: string, session_id?: string }> }) {
     noStore();
-    const { tournament: tournamentId, deposit_success } = await searchParams;
+    const { tournament: tournamentId, deposit_success, session_id } = await searchParams;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -111,7 +111,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
             {deposit_success === 'true' && (
                 <div className="mx-6 mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-500">
-                    <RefreshTrigger />
+                    <RefreshTrigger sessionId={session_id} />
                     <div className="flex items-center gap-3">
                         <div className="bg-emerald-500 rounded-full p-1">
                             <CheckCircle2 size={16} className="text-black" />

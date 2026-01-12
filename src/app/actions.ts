@@ -1326,3 +1326,68 @@ export async function createPromoCode(code: string, value: number, maxUses: numb
     revalidatePath('/profile/admin');
     return { success: true };
 }
+
+export async function verifyStripeDeposit(sessionId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    try {
+        const stripeModule = await import("@/lib/stripe");
+        const stripe = stripeModule.stripe;
+
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        if (session.payment_status === 'paid') {
+            const userIdFromMeta = session.metadata?.userId;
+            const amountTotal = session.amount_total;
+
+            if (userIdFromMeta !== user.id) return { success: false, error: "Identity mismatch" };
+
+            // Use Admin for money update
+            const admin = createAdminClient();
+            if (!admin) return { success: false, error: "Admin client unavailable" };
+
+            // 1. Check if already processed (Idempotency)
+            // We can check the transactions table
+            const { data: existingTx } = await admin
+                .from('transactions')
+                .select('id')
+                .eq('reference_id', session.id)
+                .maybeSingle();
+
+            if (existingTx) {
+                console.log(`Deposit ${session.id} already processed.`);
+                return { success: true, processed: true };
+            }
+
+            // 2. Atomic Balance Update
+            const amountDollars = (amountTotal || 0) / 100;
+            const { error: balanceError } = await admin.rpc('increment_balance', {
+                p_user_id: user.id,
+                p_amount: amountDollars
+            });
+
+            if (balanceError) throw balanceError;
+
+            // 3. Log Transaction
+            await admin.from("transactions").insert({
+                user_id: user.id,
+                amount: amountDollars,
+                type: "DEPOSIT",
+                description: "Stripe Deposit (Verified)",
+                reference_id: session.id
+            });
+
+            console.log(`Manually verified and funded deposit ${session.id} for user ${user.id}`);
+            revalidatePath('/', 'layout');
+            return { success: true, newlyProcessed: true };
+        }
+
+        return { success: false, error: "Payment not completed" };
+    } catch (e: any) {
+        console.error("Manual verification failed:", e);
+        return { success: false, error: e.message };
+    }
+}

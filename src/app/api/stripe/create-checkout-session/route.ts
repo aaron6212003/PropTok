@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
         let lineItem;
         let metadata = { userId: user.id } as any;
-        let successUrl = `${req.headers.get("origin")}/profile?deposit_success=true`;
+        let successUrl = `${req.headers.get("origin")}/profile?deposit_success=true&session_id={CHECKOUT_SESSION_ID}`;
         let cancelUrl = `${req.headers.get("origin")}/wallet?canceled=true`;
 
         // CASE A: TOURNAMENT ENTRY
