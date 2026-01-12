@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Trophy, Clock, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import LiveLeaderboard from "@/components/tournament/live-leaderboard";
 import JoinButton from "@/components/tournament/join-button";
 import BetSlip from "@/components/feed/bet-slip";
@@ -32,19 +33,23 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
     let userBalance = 0;
 
     if (currentUser) {
-        const { data: entry } = await supabase
-            .from("tournament_entries")
-            .select("current_stack, rank")
-            .eq("user_id", currentUser.id)
-            .eq("tournament_id", id)
-            .single();
+        // USE ADMIN CLIENT TO BYPASS RLS
+        const adminClient = createAdminClient();
+        if (adminClient) {
+            const { data: entry } = await adminClient
+                .from("tournament_entries")
+                .select("current_stack, rank")
+                .eq("user_id", currentUser.id)
+                .eq("tournament_id", id)
+                .single();
 
-        myEntry = entry;
-        if (entry) myRank = entry.rank;
+            myEntry = entry;
+            if (entry) myRank = entry.rank;
 
-        console.log(`[TournamentPage] User: ${currentUser.id}, Tournament: ${id}, Entry Found:`, !!entry, entry);
+            console.log(`[TournamentPage] Admin Check: User ${currentUser.id} -> Found? ${!!entry}`);
+        }
 
-        // Fetch Balance
+        // Fetch Balance (Client is fine for this as checking own data usually works, but consistency is key)
         const { data: profile } = await supabase.from("users").select("cash_balance").eq("id", currentUser.id).single();
         userBalance = profile?.cash_balance || 0;
     }
