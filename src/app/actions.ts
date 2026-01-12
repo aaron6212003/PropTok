@@ -1717,12 +1717,11 @@ export async function joinTournamentWithBalance(tournamentId: string) {
     });
 
     // C. Add to Tournament (Manual Insert to bypass potential RPC table mismatch)
-    // C. Add to Tournament (Manual Insert to bypass potential RPC table mismatch)
     const { error: joinError } = await adminClient.from("tournament_entries").insert({
         tournament_id: tournamentId,
         user_id: user.id,
         current_stack: tournament.starting_stack || 1000,
-        // paid: true, // Removed: column likely does not exist in schema
+        paid: true, // Restored: SQL script will ensure this column exists
         // stripe_xx fields are null for wallet join
     });
 
