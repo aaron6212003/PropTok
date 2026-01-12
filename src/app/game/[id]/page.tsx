@@ -25,10 +25,11 @@ export default async function GamePage({ params }: { params: { id: string } }) {
 
     try {
         // 1. Try generic search first (matches GameID or legacy)
+        // BUGFIX: Use `${id}%` to allow exact matches or different separators (underscores etc)
         let { data, error } = await supabase
             .from('predictions')
             .select('*')
-            .ilike('external_id', `${id}-%`)
+            .ilike('external_id', `${id}%`)
             .eq('resolved', false);
 
         if (data && data.length > 0) {
