@@ -50,7 +50,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
         {user && (
           <WalletToggle
             cash={profile?.cash_balance || 0}
-            chips={profile?.bankroll || 1000}
+            chips={profile?.bankroll || 0}
           />
         )}
       </div>

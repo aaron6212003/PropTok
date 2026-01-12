@@ -1,7 +1,7 @@
 "use client";
 
 import { useBetSlip } from "@/lib/context/bet-slip-context";
-import { Coins, Wallet, ChevronDown, Check, Trophy, Banknote, CreditCard, DollarSign } from "lucide-react";
+import { ChevronDown, Check, Trophy, Banknote, CreditCard, DollarSign } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
@@ -33,14 +33,9 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelectGlobalChips = () => {
-        setCurrency('CHIPS');
-        setIsOpen(false);
-    };
-
     return (
         <div className="pointer-events-auto relative z-50" ref={containerRef}>
-            {/* TRIGGER: Simple Balance Display (No "Wallet" Button look) */}
+            {/* TRIGGER: Simple Balance Display */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 backdrop-blur-md border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all group"
@@ -73,93 +68,100 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
 
             {/* DASHBOARD DROPDOWN */}
             {isOpen && (
-                <div className="absolute right-0 top-full mt-3 w-80 rounded-2xl border border-white/10 bg-[#0A0A0A] p-4 shadow-2xl shadow-black/80 ring-1 ring-white/5 overflow-hidden backdrop-blur-3xl">
+                <div className="absolute right-0 top-full mt-3 w-80 rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black ring-1 ring-white/10 backdrop-blur-3xl">
 
                     {/* Header */}
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Wallet Summary</h3>
-                        <Link href="/wallet" className="text-[10px] font-bold text-blue-400 hover:text-blue-300">
-                            VIEW HISTORY
-                        </Link>
+                    <div className="mb-6 flex items-center justify-between">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Account Balance</h3>
                     </div>
 
                     {/* Section: Real Cash */}
-                    <div className="mb-4 rounded-xl bg-zinc-900/50 p-3 border border-white/5">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
-                                    <Banknote size={16} />
+                    <div className="mb-6">
+                        <div className="flex items-center justify-between rounded-2xl bg-zinc-900/50 p-4 border border-white/5 mb-2">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                                    <Banknote size={20} />
                                 </div>
-                                <span className="text-sm font-bold text-white">Real Cash</span>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-zinc-400">Cash Balance</span>
+                                    <span className="text-lg font-black text-white tracking-tight">${cash.toFixed(2)}</span>
+                                </div>
                             </div>
-                            <span className="text-sm font-bold text-white">${cash.toFixed(2)}</span>
+
+                            <button
+                                onClick={() => { setCurrency('CASH'); setIsOpen(false); }}
+                                className={cn(
+                                    "rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-wide transition-all",
+                                    currency === 'CASH'
+                                        ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20"
+                                        : "bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-white"
+                                )}
+                            >
+                                {currency === 'CASH' ? "Active" : "Select"}
+                            </button>
                         </div>
-                        <button
-                            onClick={() => { setCurrency('CASH'); setIsOpen(false); }}
-                            className={cn(
-                                "w-full rounded-lg py-1.5 text-xs font-bold transition-colors",
-                                currency === 'CASH'
-                                    ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20"
-                                    : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
-                            )}
+
+                        <Link
+                            href="/wallet?mode=promo"
+                            onClick={() => setIsOpen(false)}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-[10px] font-bold uppercase tracking-wide text-zinc-500 hover:text-white hover:bg-white/5 transition-colors"
                         >
-                            {currency === 'CASH' ? "Selected" : "Select Wallet"}
-                        </button>
+                            <CreditCard size={12} />
+                            Redeem Promo Code
+                        </Link>
                     </div>
 
-                    {/* Section: Active Tournaments */}
-                    <div className="space-y-2">
-                        <h4 className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-600">Your Tournaments</h4>
+                    <div className="my-4 h-px bg-white/5" />
 
-                        <div className="max-h-[240px] overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800">
+                    {/* Section: Active Tournaments */}
+                    <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Active Tournaments</h4>
+
+                        <div className="max-h-[240px] overflow-y-auto space-y-3 pr-1 scrollbar-none">
                             {tournaments.length === 0 && (
-                                <div className="rounded-xl border border-dashed border-white/10 p-4 text-center">
-                                    <Trophy className="mx-auto mb-2 h-5 w-5 text-zinc-700" />
-                                    <p className="text-xs text-zinc-500">No active tournaments</p>
+                                <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center">
+                                    <Trophy className="mx-auto mb-3 h-6 w-6 text-zinc-800" />
+                                    <p className="text-xs text-zinc-600 font-medium">No active tournaments</p>
                                 </div>
                             )}
 
                             {tournaments.map(t => (
                                 <button
                                     key={t.tournament_id}
-                                    onClick={() => {
-                                        // Update context via link navigation usually, but here we can just close?
-                                        // The link wrap is better for navigation
-                                    }}
                                     className="w-full"
                                 >
                                     <Link
                                         href={`/?tournament=${t.tournament_id}`}
                                         onClick={() => setIsOpen(false)}
                                         className={cn(
-                                            "group flex items-center justify-between rounded-xl border p-3 transition-all",
+                                            "group flex items-center justify-between rounded-2xl border p-4 transition-all",
                                             tournamentId === t.tournament_id
-                                                ? "bg-blue-500/10 border-blue-500/50"
+                                                ? "bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10"
                                                 : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/80 hover:border-white/10"
                                         )}
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-4">
                                             <div className={cn(
-                                                "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-                                                tournamentId === t.tournament_id ? "bg-blue-500 text-white" : "bg-zinc-800 text-zinc-500 group-hover:text-blue-400"
+                                                "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                                                tournamentId === t.tournament_id ? "bg-blue-500 text-white" : "bg-zinc-800 text-zinc-600 group-hover:text-blue-400 group-hover:bg-blue-500/10"
                                             )}>
-                                                <Trophy size={14} />
+                                                <Trophy size={18} />
                                             </div>
                                             <div className="flex flex-col items-start gap-0.5">
                                                 <span className={cn(
-                                                    "text-xs font-bold text-left line-clamp-1",
-                                                    tournamentId === t.tournament_id ? "text-white" : "text-zinc-300"
+                                                    "text-sm font-bold text-left line-clamp-1",
+                                                    tournamentId === t.tournament_id ? "text-white" : "text-zinc-400 group-hover:text-zinc-200"
                                                 )}>
                                                     {t.tournament?.name}
                                                 </span>
-                                                <span className="text-[10px] text-zinc-500">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">
                                                     Rank: #--
                                                 </span>
                                             </div>
                                         </div>
                                         <span className={cn(
-                                            "font-mono text-sm font-bold",
-                                            tournamentId === t.tournament_id ? "text-blue-400" : "text-zinc-400"
+                                            "font-mono text-sm font-black tracking-tight",
+                                            tournamentId === t.tournament_id ? "text-blue-400" : "text-zinc-500 group-hover:text-zinc-300"
                                         )}>
                                             ${t.current_stack.toLocaleString()}
                                         </span>
@@ -168,18 +170,6 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                             ))}
                         </div>
                     </div>
-
-                    <div className="my-4 h-px bg-white/5" />
-
-                    <Link
-                        href="/wallet?mode=promo"
-                        onClick={() => setIsOpen(false)}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 py-3 text-xs font-black uppercase tracking-wide text-black transition-transform active:scale-95 hover:bg-white"
-                    >
-                        <CreditCard size={14} />
-                        Redeem Promo Code
-                    </Link>
-
                 </div>
             )}
         </div>
