@@ -55,14 +55,19 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
 
                 <div className="flex flex-col items-start leading-none">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-400 transition-colors">
-                        {currency === 'CASH' ? 'Real Cash' : (tournamentId ? 'Tournament' : 'Balance')}
-                    </span>
-                    <span className={cn(
-                        "text-sm font-black tracking-tight",
-                        currency === 'CASH' ? "text-white" : "text-white"
-                    )}>
-                        {currency === 'CASH' ? `$${cash.toFixed(2)}` : `$${chips.toLocaleString()}`}
-                    </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-400 transition-colors max-w-[100px] truncate">
+                            {currency === 'CASH' ? 'Real Cash' : (
+                                tournamentId && tournaments.length > 0
+                                    ? (tournaments.find(t => t.tournament_id === tournamentId)?.tournament?.name || 'Tournament')
+                                    : 'Select Wallet'
+                            )}
+                        </span>
+                        <span className={cn(
+                            "text-sm font-black tracking-tight",
+                            currency === 'CASH' ? "text-white" : "text-white"
+                        )}>
+                            {currency === 'CASH' ? `$${cash.toFixed(2)}` : `$${chips.toLocaleString()}`}
+                        </span>
                 </div>
 
                 <ChevronDown size={14} className={cn("ml-2 text-zinc-600 transition-transform group-hover:text-zinc-400", isOpen && "rotate-180")} />
