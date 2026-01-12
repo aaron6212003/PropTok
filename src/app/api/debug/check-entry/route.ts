@@ -21,7 +21,7 @@ export async function GET(req: Request) {
         const tIds = tournaments.map(t => t.id);
         const { data: e, error: err } = await supabase
             .from('tournament_entries')
-            .select('*, users(username, email)')
+            .select('*, users(username)')
             .in('tournament_id', tIds);
         entries = e || [];
         eError = err;
