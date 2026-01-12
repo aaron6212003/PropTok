@@ -963,6 +963,49 @@ export async function settleTournament(tournamentId: string) {
     }
 }
 
+export async function requestWithdrawal(amount: number) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Login required" };
+    if (amount <= 0) return { error: "Invalid amount" };
+
+    const admin = createAdminClient();
+    if (!admin) return { error: "Configuration Error" };
+
+    // 1. Check current balance
+    const { data: profile } = await admin
+        .from('users')
+        .select('cash_balance')
+        .eq('id', user.id)
+        .single();
+
+    if (!profile || (profile.cash_balance || 0) < amount) {
+        return { error: "Insufficient balance" };
+    }
+
+    // 2. Perform withdrawal (simulated)
+    // Decrement balance
+    const { error: decError } = await admin.rpc('increment_balance', {
+        p_user_id: user.id,
+        p_amount: -amount
+    });
+
+    if (decError) return { error: decError.message };
+
+    // 3. Log transaction
+    await admin.from('transactions').insert({
+        user_id: user.id,
+        amount: -amount,
+        type: 'WITHDRAWAL',
+        status: 'COMPLETED'
+    });
+
+    revalidatePath("/wallet");
+    revalidatePath("/profile");
+    return { success: true };
+}
+
 export async function getUserTournamentEntries() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

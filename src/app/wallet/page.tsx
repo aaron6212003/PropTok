@@ -6,6 +6,7 @@ import DepositOptions from "@/components/wallet/deposit-options";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import BottomNavBar from "@/components/layout/bottom-nav";
+import WithdrawButton from "@/components/wallet/withdraw-button";
 
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -48,6 +49,10 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
                     <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-black text-white">$</span>
                         <span className="text-5xl font-black text-white">{cash.toFixed(2)}</span>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-white/10">
+                        <WithdrawButton currentBalance={cash} />
                     </div>
                 </div>
 
