@@ -1,0 +1,10 @@
+--- DEBUG START ---
+User Error: {
+  message: 'Invalid API key',
+  hint: 'Double check your Supabase `anon` or `service_role` API key.'
+}
+Tournament Error: {
+  message: 'Invalid API key',
+  hint: 'Double check your Supabase `anon` or `service_role` API key.'
+}
+--- DEBUG END ---

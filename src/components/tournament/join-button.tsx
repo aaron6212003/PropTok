@@ -126,6 +126,10 @@ export default function JoinButton({ tournamentId, entryFeeCents, isLoggedIn, us
             <p className="text-center text-[10px] text-zinc-500">
                 Insufficient wallet balance ({fv(userBalance)}). You will be redirected to Stripe.
             </p>
+            {/* DEBUG INFO */}
+            <div className="text-[10px] text-zinc-700 text-center font-mono">
+                DEBUG: Bal={userBalance} | Fee={entryFeeDollars} | CanAfford={canAfford.toString()}
+            </div>
         </div>
     );
 }
