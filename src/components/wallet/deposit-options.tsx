@@ -62,6 +62,10 @@ export default function DepositOptions() {
                     }}
                 />
                 <button
+                    onClick={() => {
+                        const val = Number((document.querySelector('input[type="number"]') as HTMLInputElement).value);
+                        if (val >= 5) handleDeposit(val);
+                    }}
                     className="absolute inset-y-2 right-2 px-4 bg-emerald-500 text-black font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors"
                 >
                     Deposit
