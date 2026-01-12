@@ -8,18 +8,27 @@ import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { getUserTournamentEntries } from "@/app/actions";
 
-export default function WalletToggle({ cash, chips }: { cash: number, chips: number }) {
+export default function WalletToggle({ cash, chips, initialTournaments = [] }: { cash: number, chips: number, initialTournaments?: any[] }) {
     const { currency, setCurrency, tournamentId, setTournamentId } = useBetSlip();
     const [isOpen, setIsOpen] = useState(false);
-    const [tournaments, setTournaments] = useState<any[]>([]);
+    const [tournaments, setTournaments] = useState<any[]>(initialTournaments);
     const containerRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
 
-    // Fetch Tournaments on mount
+    // Sync initialTournaments if they change (e.g. from SSR)
+    useEffect(() => {
+        if (initialTournaments.length > 0) {
+            setTournaments(initialTournaments);
+        }
+    }, [initialTournaments]);
+
+    // Fetch Tournaments on mount as fallback/refresh
     useEffect(() => {
         const loadTournaments = async () => {
             const data = await getUserTournamentEntries();
-            setTournaments(data || []);
+            if (data && data.length > 0) {
+                setTournaments(data);
+            }
         };
         loadTournaments();
     }, []);
@@ -65,7 +74,12 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                         "text-sm font-black tracking-tight",
                         currency === 'CASH' ? "text-white" : "text-white"
                     )}>
-                        {currency === 'CASH' ? `$${cash.toFixed(2)}` : `$${chips.toLocaleString()}`}
+                        {currency === 'CASH'
+                            ? `$${cash.toFixed(2)}`
+                            : `$${(tournamentId
+                                ? (tournaments.find(t => t.tournament_id === tournamentId)?.current_stack || 0)
+                                : chips).toLocaleString()}`
+                        }
                     </span>
                 </div>
 

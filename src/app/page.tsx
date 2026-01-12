@@ -37,7 +37,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
     profile = data;
   }
 
-  const tournamentEntries = user ? await getUserTournamentEntries() : [];
+  const tournamentEntries = user ? (await getUserTournamentEntries() || []) : [];
   // Use tournamentStack if tournament is active, otherwise use cash_balance (Real) or fallback to bankroll (Play)
   // Actually, Main Feed "Bankroll" usually implies the betting power. 
   // If NO tournament, it should be Real Cash.
@@ -55,6 +55,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
           <WalletToggle
             cash={profile?.cash_balance || 0}
             chips={profile?.bankroll || 0}
+            initialTournaments={tournamentEntries}
           />
         )}
       </div>

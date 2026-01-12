@@ -28,15 +28,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     }
 
     // Fetch data in parallel
-    const [profileRes, votes, bundles, entriesRes] = await Promise.all([
+    const [profileRes, votes, bundles] = await Promise.all([
         supabase.from('users').select('*').eq('id', user.id).single(),
         getUserVotes(50),
         getUserBundles(50),
-        getUserTournamentEntries()
     ]);
+    const tournamentEntries = user ? (await getUserTournamentEntries() || []) : [];
 
     const profile = profileRes.data;
-    const tournamentEntries = entriesRes;
 
     // Determine Active Stats (Cash vs. Tournament)
     let stats = {
@@ -156,10 +155,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <div className="mt-6 px-6">
                 <div className="flex flex-col items-center rounded-3xl border border-brand/20 bg-brand/5 p-8 text-center backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(37,99,235,0.1)]">
                     <div className="mb-4">
-                        <WalletToggle
-                            cash={profile?.cash_balance || 0}
-                            chips={0}
-                        />
+                        <WalletToggle cash={profile?.cash_balance || 0} chips={profile?.bankroll || 0} initialTournaments={tournamentEntries} />
                     </div>
                     <Link href="/wallet" className="group relative">
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500 transition-colors group-hover:text-emerald-400">
