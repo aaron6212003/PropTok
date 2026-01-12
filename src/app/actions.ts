@@ -143,12 +143,22 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         }
     }
 
-    const { data, error } = await query;
+    // DIAGNOSTIC START
+    const { count: total, error: countError } = await query.range(0, 1).count("exact", { head: true });
+    // Clone query to get raw data for logging without affecting final return if possible, or just log result count
+
+    // Actually, just execute query and log result size
+    const { data: rawData, error } = await query;
+    console.log(`[getPredictions LOG] Called with onlyOpen=${onlyOpen}, tournamentId=${tournamentId}`);
+    if (error) console.error(`[getPredictions ERROR]`, error);
+    else console.log(`[getPredictions SUCCESS] Found ${rawData?.length} raw predictions.`);
 
     if (error) {
         console.error("Error fetching predictions:", error);
         return [];
     }
+    const data = rawData;
+    // DIAGNOSTIC END
 
     // --- DEDUPLICATION LOGIC ---
     // Filter out "mirrored" duplicates (e.g. "Team A vs Team B" and "Team B vs Team A" for same market)
