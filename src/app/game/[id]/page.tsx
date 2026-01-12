@@ -75,9 +75,9 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                 <Link href="/" className="mb-4 inline-block text-brand">← Back to Feed</Link>
                 <h1 className="text-2xl font-bold text-red-500 mb-4">⚠️ Game Not Found</h1>
 
-                <div className="bg-zinc-900 p-4 rounded-xl border border-red-500/20 mb-8">
+                <div className="bg-zinc-900 p-4 rounded-xl border border-red-500/20 mb-8 text-left">
                     <p className="text-zinc-400 mb-2">We couldn't find bets for ID:</p>
-                    <p className="bg-black p-2 rounded text-white mb-4 break-all">{id}</p>
+                    <p className="bg-white/10 p-2 rounded text-white font-mono mb-4 break-all">{id || "UNDEFINED"}</p>
                     <p className="text-zinc-500 text-xs">{errorDebug}</p>
                 </div>
 

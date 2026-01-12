@@ -120,7 +120,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </span>
                         </div>
 
-                        <Link href={`/game/${prediction.id}`} className="block pointer-events-auto">
+                        <Link href={`/game/${prediction.externalId?.split('-')[0] || prediction.id}`} className="block pointer-events-auto">
                             <h1 className="text-3xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl active:scale-95 transition-transform hover:text-brand">
                                 {prediction.question}
                             </h1>
