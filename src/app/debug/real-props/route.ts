@@ -24,7 +24,17 @@ export async function GET() {
         { team: "Suns", player: "Dillon Brooks", stat: "Rebounds", line: 3.5, type: "Over" },
         { team: "Wolves", player: "Jaden McDaniels", stat: "Points", line: 14.5, type: "Under" },
         { team: "Grizzlies", player: "Desmond Bane", stat: "Threes", line: 1.5, type: "Under" },
-        { team: "Raptors", player: "Scottie Barnes", stat: "Assists", line: 5.5, type: "Under" }
+        { team: "Raptors", player: "Scottie Barnes", stat: "Assists", line: 5.5, type: "Under" },
+
+        // NFL: Texans vs Steelers (User Request)
+        { team: "Texans", player: "CJ Stroud", stat: "Passing Yards", line: 245.5, type: "Over" },
+        { team: "Texans", player: "Joe Mixon", stat: "Rushing Yards", line: 65.5, type: "Over" },
+        { team: "Texans", player: "Stefon Diggs", stat: "Receiving Yards", line: 58.5, type: "Over" },
+        { team: "Steelers", player: "Russell Wilson", stat: "Passing Yards", line: 205.5, type: "Under" },
+        { team: "Steelers", player: "Najee Harris", stat: "Rushing Yards", line: 60.5, type: "Over" },
+        { team: "Steelers", player: "George Pickens", stat: "Receiving Yards", line: 52.5, type: "Over" },
+        { team: "Texans", player: "Tank Dell", stat: "Receiving Yards", line: 45.5, type: "Over" },
+        { team: "Steelers", player: "TJ Watt", stat: "Sacks", line: 0.5, type: "Over" }
     ];
 
     let insertedCount = 0;
