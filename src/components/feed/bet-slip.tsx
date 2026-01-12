@@ -207,7 +207,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                                                     : "border-white/10 bg-zinc-900 hover:bg-zinc-800"
                                             )}
                                         >
-                                            <span className={cn("text-[10px] font-black uppercase tracking-widest", activeWalletId === "chips" ? "text-brand" : "text-zinc-500")}>Prop Chips</span>
+                                            <span className={cn("text-[10px] font-black uppercase tracking-widest", activeWalletId === "chips" ? "text-brand" : "text-zinc-500")}>Real Cash</span>
                                             <span className="text-sm font-bold text-white">${bankroll.toLocaleString()}</span>
                                         </button>
 

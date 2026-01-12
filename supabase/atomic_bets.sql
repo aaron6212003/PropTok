@@ -34,13 +34,13 @@ BEGIN
     UPDATE tournament_entries SET current_stack = current_stack - p_wager 
     WHERE user_id = p_user_id AND tournament_id = p_tournament_id;
   ELSE
-    -- specific Cash Context
-    SELECT bankroll INTO v_balance FROM users WHERE id = p_user_id FOR UPDATE;
+    -- specific Cash Context (REAL MONEY)
+    SELECT cash_balance INTO v_balance FROM users WHERE id = p_user_id FOR UPDATE;
     
     IF v_balance IS NULL THEN RETURN jsonb_build_object('error', 'User not found'); END IF;
     IF v_balance < p_wager THEN RETURN jsonb_build_object('error', 'Insufficient funds'); END IF;
 
-    UPDATE users SET bankroll = bankroll - p_wager WHERE id = p_user_id;
+    UPDATE users SET cash_balance = cash_balance - p_wager WHERE id = p_user_id;
   END IF;
 
   -- Insert Vote
@@ -82,13 +82,13 @@ BEGIN
     UPDATE tournament_entries SET current_stack = current_stack - p_wager 
     WHERE user_id = p_user_id AND tournament_id = p_tournament_id;
   ELSE
-    -- Cash Context
-    SELECT bankroll INTO v_balance FROM users WHERE id = p_user_id FOR UPDATE;
+    -- Cash Context (REAL MONEY)
+    SELECT cash_balance INTO v_balance FROM users WHERE id = p_user_id FOR UPDATE;
     
     IF v_balance IS NULL THEN RETURN jsonb_build_object('error', 'User not found'); END IF;
     IF v_balance < p_wager THEN RETURN jsonb_build_object('error', 'Insufficient funds'); END IF;
 
-    UPDATE users SET bankroll = bankroll - p_wager WHERE id = p_user_id;
+    UPDATE users SET cash_balance = cash_balance - p_wager WHERE id = p_user_id;
   END IF;
 
   -- Create Bundle
