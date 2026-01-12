@@ -5,6 +5,52 @@ import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sportsService } from "@/lib/sports-service";
 
+// ... imports
+
+export async function processDeposit(amount: number) {
+    const supabase = await createClient(); // Use logged-in client for ID
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    // In a real app, this is where Stripe/Worldpay verification happens.
+    // For this simulation/MVP: We trust the client input and just update DB.
+
+    // 1. Log Transaction
+    const adminClient = createAdminClient(); // Need admin to write to transactions/update balance safely if we want strictness, 
+    // but RLS on 'users' allows update own profile? Maybe. 
+    // Safest is Admin for money.
+
+    if (!adminClient) return { success: false, error: "System Error (Admin)" };
+
+    const { error: txError } = await adminClient.from('transactions').insert({
+        user_id: user.id,
+        amount: amount,
+        type: 'DEPOSIT',
+        description: 'Simulated Deposit'
+    });
+
+    if (txError) return { success: false, error: txError.message };
+
+    // 2. Update Balance
+    // We use RPC or raw increment if concurrent, but for MVP fetching+update is 'okay' risk.
+    // Better: use rpc 'increment_balance'? We don't have it.
+    // We will just read-update-write for now or use `cash_balance = cash_balance + amount` if supabase supports valid sql in update? No.
+    // Let's just fetch simulate.
+
+    const { data: profile } = await adminClient.from('users').select('cash_balance').eq('id', user.id).single();
+    const newBalance = (profile?.cash_balance || 0) + amount;
+
+    const { error: balError } = await adminClient.from('users')
+        .update({ cash_balance: newBalance })
+        .eq('id', user.id);
+
+    if (balError) return { success: false, error: balError.message };
+
+    revalidatePath('/', 'layout');
+    return { success: true };
+}
+
 export async function ingestOdds() {
     const logs = await sportsService.ingestGames();
     revalidatePath("/", "layout");
@@ -942,8 +988,73 @@ export async function hideBet(id: string, isBundle: boolean) {
         }
         return { error: `Database update failed: ${dbError.message}` };
     }
-
     revalidatePath("/profile");
+    return { success: true };
+}
+
+export async function joinTournament(tournamentId: string) {
+    const supabase = await createClient(); // Auth Context
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("User not authenticated");
+
+    // We must use Admin Client for Money Operations to be safe/bypass generic RLS if needed
+    // or just use standard client if RLS is set up for 'users' update own.
+    // For Transactions table, usually we restrict insert to server only.
+    const admin = createAdminClient();
+    if (!admin) return { error: "System Error" };
+
+    // 1. Fetch Tournament Details & User Balance
+    const { data: tournament } = await admin.from("tournaments").select("*").eq("id", tournamentId).single();
+    const { data: profile } = await admin.from("users").select("cash_balance").eq("id", user.id).single();
+
+    if (!tournament) return { error: "Tournament not found" };
+
+    const entryFee = tournament.entry_fee || 0;
+    const currentCash = profile?.cash_balance || 0;
+
+    // 2. Check Balance
+    if (currentCash < entryFee) {
+        return { error: `Insufficient Funds. You need $${entryFee} to join.` };
+    }
+
+    // 3. Process Transaction (Ideally Atomic/RPC)
+    // We will do sequence for MVP.
+
+    // Deduct Cash
+    const { error: debitError } = await admin.from("users")
+        .update({ cash_balance: currentCash - entryFee })
+        .eq("id", user.id);
+
+    if (debitError) return { error: "Payment Failed" };
+
+    // Add to Pot
+    const newPot = (tournament.pot_size || 0) + entryFee;
+    await admin.from("tournaments").update({ pot_size: newPot }).eq("id", tournamentId);
+
+    // Log Transaction
+    await admin.from("transactions").insert({
+        user_id: user.id,
+        amount: -entryFee,
+        type: 'ENTRY_FEE',
+        description: `Join: ${tournament.name}`
+    });
+
+    // 4. Join Tournament (Add Entry)
+    const { error } = await supabase.from("tournament_entries").insert({
+        tournament_id: tournamentId,
+        user_id: user.id,
+        current_stack: tournament.starting_stack || 1000 // Give Chips
+    });
+
+    if (error) {
+        // Rollback? ideally yes. For MVP we log error.
+        console.error("Join Error after payment:", error);
+        return { error: "Joined failed but payment processed. Contact support." };
+    }
+
+    revalidatePath("/tournaments");
+    revalidatePath(`/game/${tournamentId}`); // Refresh game page
     return { success: true };
 }
 
