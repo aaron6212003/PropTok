@@ -6,7 +6,7 @@ import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 import PropRow from '@/components/game/prop-row';
 import BackButton from '@/components/layout/back-button';
-import PropCategoryAccordion from '@/components/game/prop-category-accordion';
+import GameMarketsView from '@/components/game/game-markets-view';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,82 +169,17 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     });
 
     return (
-        <main className="relative min-h-screen bg-black text-white pb-96">
+        <main className="relative min-h-screen bg-black text-white">
             <div className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 bg-black/90 backdrop-blur-md border-b border-white/5 shadow-xl">
                 <BackButton />
                 <h1 className="ml-2 text-lg font-black uppercase tracking-widest">Game Markets</h1>
             </div>
 
-            <div className="p-6 pt-24 space-y-8">
-                {/* Game Lines Section (Main Cards) */}
-                {gameLines.length > 0 && (
-                    <section>
-                        <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-4">Game Lines</h2>
-                        <div className="grid gap-4">
-                            {gameLines.map((p: any) => (
-                                <PropRow
-                                    key={p.id}
-                                    id={p.id}
-                                    question={p.question}
-                                    yesMultiplier={p.yes_multiplier}
-                                    noMultiplier={p.no_multiplier}
-                                    yesPercent={p.yes_percent || 50}
-                                    category={p.category}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Player Props Section (Categorized) */}
-                <section>
-                    <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-6 mt-8">Player Props</h2>
-                    {Object.keys(categorizedProps).length === 0 ? (
-                        <p className="text-zinc-500 italic px-4">No player props available.</p>
-                    ) : (
-                        Object.entries(categorizedProps).map(([catName, subCats]) => (
-                            <PropCategoryAccordion
-                                key={catName}
-                                title={catName}
-                                defaultExpanded={catName === "Passing" || catName === "Points & Stats"}
-                            >
-                                {Object.entries(subCats).map(([subName, players]) => (
-                                    <div key={subName} className="mt-4 first:mt-0">
-                                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-4 pl-1 border-l-2 border-brand/20">
-                                            {subName}
-                                        </h3>
-                                        {Object.entries(players).map(([playerName, props]) => (
-                                            <div key={playerName} className="mb-6 last:mb-2 bg-white/[0.02] rounded-xl p-3 border border-white/5">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_rgba(0,220,130,0.5)]" />
-                                                    <span className="text-xs font-bold text-zinc-300">{playerName}</span>
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    {props.sort((a: any, b: any) => {
-                                                        // Sort by line value if available
-                                                        const lineA = parseFloat(a.question.match(/[\d.]+/)?.[0] || "0");
-                                                        const lineB = parseFloat(b.question.match(/[\d.]+/)?.[0] || "0");
-                                                        return lineA - lineB;
-                                                    }).map((p: any) => (
-                                                        <PropRow
-                                                            key={p.id}
-                                                            id={p.id}
-                                                            question={p.question}
-                                                            yesMultiplier={p.yes_multiplier}
-                                                            noMultiplier={p.no_multiplier}
-                                                            yesPercent={p.yes_percent || 50}
-                                                            category={p.category}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ))}
-                            </PropCategoryAccordion>
-                        ))
-                    )}
-                </section>
+            <div className="p-6 pt-24">
+                <GameMarketsView
+                    gameLines={gameLines}
+                    categorizedProps={categorizedProps}
+                />
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 z-40">

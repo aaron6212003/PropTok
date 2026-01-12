@@ -13,10 +13,9 @@ interface PropRowProps {
     category?: string;
 }
 
-export default function PropRow({ id, question, yesMultiplier, noMultiplier, yesPercent, category = "Sports" }: PropRowProps) {
+export default function PropRow({ id, question, yesMultiplier, noMultiplier, category = "Sports" }: PropRowProps) {
     const { items, toggleInSlip } = useBetSlip();
 
-    // Check if this card is in the slip
     const slipItem = items.find(i => i.predictionId === id);
     const selectedSide = slipItem?.side || null;
 
@@ -30,42 +29,53 @@ export default function PropRow({ id, question, yesMultiplier, noMultiplier, yes
         });
     };
 
+    // Extract the line/value from the question for cleaner display
+    // "Will LeBron James record Over 25.5 PLAYER POINTS?" -> "Over 25.5"
+    let displayQuestion = question;
+    const match = question.match(/(Over|Under|[\+\-]\d+\.?\d*)/i);
+    if (match) {
+        // Find the numeric line and type
+        const lineMatch = question.match(/(Over|Under)\s+([\d.]+)/i);
+        if (lineMatch) {
+            displayQuestion = `${lineMatch[1]} ${lineMatch[2]}`;
+        }
+    }
+
     return (
         <div className={cn(
-            "p-4 rounded-xl transition-all duration-300 border",
+            "flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 border mb-1",
             selectedSide
-                ? "bg-white/[0.05] border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                : "bg-zinc-900 border-white/5 hover:border-white/10"
+                ? "bg-white/[0.08] border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                : "bg-zinc-900/50 border-white/5 hover:border-white/10"
         )}>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <p className={cn(
-                    "font-bold text-sm leading-tight transition-colors",
-                    selectedSide ? "text-white" : "text-zinc-300"
-                )}>{question}</p>
-                <div className="flex gap-2 w-full shrink-0 sm:w-auto mt-3 sm:mt-0">
-                    <button
-                        onClick={() => handleAdd('YES')}
-                        className={cn(
-                            "flex-1 min-w-0 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all truncate",
-                            selectedSide === 'YES'
-                                ? "bg-[#00DC82] text-black shadow-[0_0_15px_rgba(0,220,130,0.4)]"
-                                : "bg-black/40 text-[#00DC82] border border-[#00DC82]/20 hover:bg-[#00DC82]/10"
-                        )}
-                    >
-                        YES {yesMultiplier}x
-                    </button>
-                    <button
-                        onClick={() => handleAdd('NO')}
-                        className={cn(
-                            "flex-1 min-w-0 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all truncate",
-                            selectedSide === 'NO'
-                                ? "bg-[#FF2A6D] text-white shadow-[0_0_15px_rgba(255,42,109,0.4)]"
-                                : "bg-black/40 text-[#FF2A6D] border border-[#FF2A6D]/20 hover:bg-[#FF2A6D]/10"
-                        )}
-                    >
-                        NO {noMultiplier}x
-                    </button>
-                </div>
+            <p className={cn(
+                "font-bold text-xs transition-colors pr-2 truncate",
+                selectedSide ? "text-white" : "text-zinc-400"
+            )} title={question}>{displayQuestion}</p>
+
+            <div className="flex gap-1.5 shrink-0">
+                <button
+                    onClick={() => handleAdd('YES')}
+                    className={cn(
+                        "w-20 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all truncate",
+                        selectedSide === 'YES'
+                            ? "bg-[#00DC82] text-black shadow-[0_0_10px_rgba(0,220,130,0.4)]"
+                            : "bg-zinc-800 text-[#00DC82] border border-[#00DC82]/10 hover:bg-[#00DC82]/20"
+                    )}
+                >
+                    {yesMultiplier}x
+                </button>
+                <button
+                    onClick={() => handleAdd('NO')}
+                    className={cn(
+                        "w-20 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all truncate",
+                        selectedSide === 'NO'
+                            ? "bg-[#FF2A6D] text-white shadow-[0_0_10px_rgba(255,42,109,0.4)]"
+                            : "bg-zinc-800 text-[#FF2A6D] border border-[#FF2A6D]/10 hover:bg-[#FF2A6D]/20"
+                    )}
+                >
+                    {noMultiplier}x
+                </button>
             </div>
         </div>
     );
