@@ -145,7 +145,7 @@ export default function PullToRefresh({ onRefresh, children, className, scrollCo
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.5 }}
                             >
-                                <Sparkles className="h-5 w-5 text-success fill-current" />
+                                <Sparkles className="h-5 w-5 text-yellow-400 fill-yellow-400 animate-pulse" />
                             </motion.div>
                         ) : (
                             <motion.div

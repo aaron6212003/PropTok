@@ -2,7 +2,8 @@
 
 import { useBetSlip } from "@/lib/context/bet-slip-context";
 import { placeBundleWager, submitVote, getUserTournamentEntries } from "@/app/actions";
-import { useState, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { cn, vibrate } from "@/lib/utils";
@@ -67,6 +68,12 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 if (res.error) toast.error(res.error);
                 else {
                     vibrate([10, 50, 10]);
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#2563eb', '#00dc82', '#ff2a6d']
+                    });
                     toast.success("Bet Placed!");
                     clearSlip();
                     router.refresh();
@@ -78,6 +85,12 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 if (res.error) toast.error(res.error);
                 else {
                     vibrate([10, 50, 10]);
+                    confetti({
+                        particleCount: 200,
+                        spread: 100,
+                        origin: { y: 0.6 },
+                        colors: ['#2563eb', '#00dc82', '#ff2a6d', '#facc15']
+                    });
                     toast.success("Bundle Placed!");
                     clearSlip();
                     router.refresh();

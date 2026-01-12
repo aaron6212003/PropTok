@@ -9,6 +9,7 @@ import CommentsDrawer from '@/components/social/comments-drawer';
 import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
 import { CountdownTimer } from './countdown-timer';
 import { useBetSlip } from '@/lib/context/bet-slip-context';
+import { getTeamLogos } from '@/lib/logos';
 
 interface PredictionCardProps {
     prediction: Prediction;
@@ -18,6 +19,7 @@ interface PredictionCardProps {
 
 export default function PredictionCard({ prediction, isActive, bankroll }: PredictionCardProps) {
     const [showComments, setShowComments] = useState(false);
+    const logos = getTeamLogos(prediction.question);
 
     // Bet Slip Integration
     const { items, toggleInSlip } = useBetSlip();
@@ -110,6 +112,23 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                     {/* Main Content Area - Centered */}
                     <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-xs mx-auto gap-6 pt-12 text-center pointer-events-none">
+                        {/* Team Logos */}
+                        {logos.length > 0 && (
+                            <div className="flex items-center justify-center -space-x-4 mb-4 z-30 pointer-events-auto">
+                                {logos.map((logo, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="h-20 w-20 rounded-full border-4 border-black bg-zinc-900 shadow-2xl overflow-hidden flex items-center justify-center p-2 group-hover:scale-110 transition-transform duration-500"
+                                        style={{
+                                            transform: `translateX(${idx === 0 ? '-10px' : '10px'}) rotate(${idx === 0 ? '-5deg' : '5deg'})`
+                                        }}
+                                    >
+                                        <img src={logo} alt="Team Logo" className="h-full w-full object-contain filter drop-shadow-md" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Category Badge - Centered above question */}
                         <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2 pointer-events-auto z-30">
                             <span className={cn(
