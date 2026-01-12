@@ -33,7 +33,7 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
 
     if (currentUser) {
         const { data: entry } = await supabase
-            .from("tournament_participants")
+            .from("tournament_entries")
             .select("current_stack, rank")
             .eq("user_id", currentUser.id)
             .eq("tournament_id", id)
