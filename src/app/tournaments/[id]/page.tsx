@@ -25,6 +25,12 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
 
     if (!tournament) return <div className="p-10 text-center text-white">Tournament not found</div>;
 
+    let cashBalance = 0;
+    if (currentUser) {
+        const { data: profile } = await supabase.from("users").select("cash_balance").eq("id", currentUser.id).single();
+        cashBalance = profile?.cash_balance || 0;
+    }
+
     const myEntry = leaderboard.find(e => e.user_id === currentUser?.id);
     const myRank = myEntry ? leaderboard.indexOf(myEntry) + 1 : null;
 
@@ -139,7 +145,7 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                 <BottomNavBar />
             </div>
 
-            <BetSlip bankroll={myEntry?.current_stack || 0} />
+            <BetSlip cashBalance={cashBalance} />
         </main>
     );
 }

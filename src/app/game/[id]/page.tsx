@@ -186,7 +186,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                 <BottomNavBar />
             </div>
 
-            <BetSlip bankroll={activeBankroll} />
+            <BetSlip cashBalance={activeBankroll} />
         </main>
     );
 }
