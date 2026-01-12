@@ -104,15 +104,11 @@ export const sportsService = {
             // Updated to include Player Props markets tailored to each sport
             // Requesting "player_pass_tds" for NBA causes a 422 Error.
 
-            let markets = "h2h,spreads,totals,alternate_spreads,alternate_totals"; // Enhanced Defaults
+            let markets = "h2h,spreads,totals"; // BASIC MARKETS ONLY (Safest)
 
-            if (sport.includes("basketball_nba")) {
-                markets += ",player_points,player_assists,player_rebounds,player_threes,player_blocks,player_steals,player_turnovers,player_points_rebounds_assists,player_points_rebounds,player_points_assists,player_rebounds_assists,player_double_double";
-            } else if (sport.includes("americanfootball_nfl")) {
-                markets += ",player_pass_tds,player_rush_yds,player_reception_yds,player_anytime_scorer,player_pass_attempts,player_pass_completions,player_pass_interceptions,player_rush_attempts,player_receptions";
-            } else if (sport.includes("icehockey_nhl")) {
-                markets += ",player_points,player_assists,player_power_play_points,player_blocked_shots,player_shots_on_goal,player_goals";
-            }
+            // REMOVED PROPS FROM LIST VIEW TO PREVENT 422 ERRORS
+            // Props range handled in Step 2 (Hydration) via Event Endpoint
+
             // Soccer typically uses different prop names or just h2h/totals in basic plans.
             // keeping soccer simple for now to avoid 422s.
 
@@ -209,7 +205,9 @@ export const sportsService = {
                     else if (sport.includes("nhl")) propMarkets = "player_points,player_goals,player_assists,player_shots_on_goal";
 
                     if (propMarkets && games.length > 0) {
-                        logs.push(`Hydrating ${games.length} ${sport} games with props...`);
+                        const msg = `Hydrating ${games.length} ${sport} games with props...`;
+                        logs.push(msg);
+                        console.log(`[sportsService] ${msg}`); // FORCE LOG TO CONSOLE
 
                         // Limit to first 10 games to avoid hitting rate limits instantly if list is huge
                         const gamesToHydrate = games.slice(0, 15);
