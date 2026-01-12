@@ -1,5 +1,3 @@
-
-import { createAdminClient } from '@/lib/supabase/admin'; // Bypass RLS
 import { createClient } from '@/lib/supabase/server';
 import BetCard from '@/components/profile/bet-card';
 import { ArrowLeft } from 'lucide-react';
@@ -8,16 +6,10 @@ import BottomNavBar from '@/components/layout/bottom-nav';
 
 export const dynamic = 'force-dynamic';
 
-export default async function GamePage({ params }: { params: { id: string } }) {
-    // Use Admin Client to ensure we can read ALL bets regardless of permissions
-    let supabase = createAdminClient();
-
-    // Fallback if Admin Client fails (e.g. missing env vars)
-    if (!supabase) {
-        console.warn("[GamePage] Admin Client failed to initialize, falling back to public client.");
-        supabase = await createClient();
-    }
-    const { id } = params;
+export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
+    const supabase = await createClient();
+    const { id: rawId } = await params;
+    const id = decodeURIComponent(rawId);
 
     let predictions: any[] = [];
     let gameId: string | null = null;
