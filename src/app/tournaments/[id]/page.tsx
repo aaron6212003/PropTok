@@ -5,6 +5,7 @@ import { Trophy, Clock, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import LiveLeaderboard from "@/components/tournament/live-leaderboard";
+import JoinButton from "@/components/tournament/join-button";
 
 export default async function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -43,6 +44,11 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                                         <Users size={10} />
                                         {leaderboard.length} Players
                                     </span>
+                                    {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 && (
+                                        <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-emerald-500">
+                                            Entry: ${(tournament.entry_fee_cents / 100).toFixed(2)}
+                                        </span>
+                                    )}
                                 </div>
                                 <h1 className="text-3xl font-black italic tracking-tighter text-white">
                                     {tournament.name}
@@ -53,8 +59,8 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                             </div>
                         </div>
 
-                        {/* My Stats */}
-                        {myEntry && (
+                        {/* My Stats or Join CTA */}
+                        {myEntry ? (
                             <div className="mt-6 flex flex-col gap-4">
                                 <div className="flex items-center justify-between rounded-xl bg-white/5 p-4 border border-white/10">
                                     <div>
@@ -73,6 +79,21 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                                 >
                                     Bet Now
                                 </Link>
+                            </div>
+                        ) : (
+                            <div className="mt-6">
+                                {/* Only show Pay Button if there is a fee */}
+                                {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 ? (
+                                    <JoinButton
+                                        tournamentId={tournament.id}
+                                        entryFeeCents={tournament.entry_fee_cents}
+                                        isLoggedIn={!!currentUser}
+                                    />
+                                ) : (
+                                    <button className="w-full py-4 bg-white/10 text-zinc-500 font-bold uppercase tracking-widest rounded-xl cursor-not-allowed">
+                                        Free Entry (Coming Soon)
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

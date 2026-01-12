@@ -28,27 +28,24 @@ export async function POST(req: NextRequest) {
             // Ideally we allow joining 'open'.
         }
 
-        // 2. Create Stripe Checkout Session
+        // 2. Create Stripe Checkout Session (Hosted)
         const session = await stripe.checkout.sessions.create({
-            ui_mode: 'embedded',
             line_items: [
                 {
-                    // Provide the exact Price ID (e.g. pr_1234) of the product you want to sell
-                    // OR use price_data to create one on the fly (easier for dynamic fees)
                     price_data: {
                         currency: 'usd',
                         product_data: {
-                            name: `Entry: ${tournament.title}`,
-                            description: `Entry fee for tournament ${tournament.title}`,
+                            name: `Entry: ${tournament.title || tournament.name}`, // Fallback if title missing
+                            description: `Entry fee for tournament ${tournament.name}`,
                         },
-                        unit_amount: tournament.entry_fee_cents || 1000, // Default $10 if missing
+                        unit_amount: tournament.entry_fee_cents || 1000,
                     },
                     quantity: 1,
                 },
             ],
             mode: 'payment',
-            redirect_on_completion: 'if_required',
-            return_url: `${req.headers.get("origin")}/tournament/${tournamentId}?session_id={CHECKOUT_SESSION_ID}`,
+            success_url: `${req.headers.get("origin")}/tournaments/${tournamentId}?success=true`,
+            cancel_url: `${req.headers.get("origin")}/tournaments/${tournamentId}?canceled=true`,
             metadata: {
                 tournamentId: tournament.id,
                 userId: user.id,
@@ -61,7 +58,7 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        return NextResponse.json({ clientSecret: session.client_secret, sessionId: session.id });
+        return NextResponse.json({ url: session.url });
     } catch (err: any) {
         console.error(err);
         return NextResponse.json({ error: err.message }, { status: 500 });
