@@ -70,13 +70,22 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                                     )}
                                     <span className="flex items-center gap-1 rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-purple-400">
                                         Payout: {
-                                            tournament.payout_structure?.["1"] === 100
-                                                ? "Winner Takes All"
-                                                : tournament.payout_structure?.["1"] === 70
-                                                    ? "Top 3 Split"
-                                                    : "Custom"
+                                            Object.entries(tournament.payout_structure || {})
+                                                .sort(([a], [b]) => Number(a) - Number(b))
+                                                .map(([_, val]) => `${val}%`)
+                                                .join(" / ")
                                         }
                                     </span>
+                                    {tournament.allowed_leagues && tournament.allowed_leagues.length > 0 && (
+                                        <span className="flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-blue-400">
+                                            {tournament.allowed_leagues.join(", ")} Only
+                                        </span>
+                                    )}
+                                    {tournament.allowed_game_ids && tournament.allowed_game_ids.length > 0 && (
+                                        <span className="flex items-center gap-1 rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-orange-400">
+                                            Matchup Restricted
+                                        </span>
+                                    )}
                                 </div>
                                 <h1 className="text-3xl font-black italic tracking-tighter text-white">
                                     {tournament.name}

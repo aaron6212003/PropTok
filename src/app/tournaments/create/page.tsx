@@ -6,7 +6,8 @@ import Link from "next/link";
 import { ArrowLeft, Trophy, DollarSign, Calendar, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { createTournament } from "@/app/actions";
+import { createTournament, getUpcomingGames } from "@/app/actions";
+import { useEffect } from "react";
 
 export default function CreateTournamentPage() {
     const router = useRouter();
@@ -15,6 +16,13 @@ export default function CreateTournamentPage() {
     const [maxPlayers, setMaxPlayers] = useState(10); // Default to 10
     const [rakePercent, setRakePercent] = useState(10); // Standard House Take (5% creator + 5% platform)
     const [payoutStructure, setPayoutStructure] = useState("top3"); // Default
+    const [games, setGames] = useState<any[]>([]);
+    const [selectedLeague, setSelectedLeague] = useState("All");
+    const [selectedGame, setSelectedGame] = useState("All");
+
+    useEffect(() => {
+        getUpcomingGames().then(setGames);
+    }, []);
 
     // Prize Pool Calculation
     // Assuming 10 players for the preview
@@ -67,6 +75,46 @@ export default function CreateTournamentPage() {
                             placeholder="Trash talk goes here..."
                             className="w-full rounded-xl border border-white/10 bg-zinc-900 p-4 text-sm text-zinc-300 placeholder:text-zinc-700 focus:border-brand focus:outline-none resize-none"
                         />
+                    </div>
+
+                    {/* RESTRICTIONS */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Restriction (League)</label>
+                            <select
+                                name="allowed_leagues"
+                                value={selectedLeague}
+                                onChange={(e) => setSelectedLeague(e.target.value)}
+                                className="w-full rounded-xl border border-white/10 bg-zinc-900 p-4 text-sm font-bold text-white focus:border-brand focus:outline-none appearance-none"
+                            >
+                                <option value="All">All Leagues</option>
+                                <option value="NFL">NFL Only</option>
+                                <option value="NBA">NBA Only</option>
+                                <option value="MLB">MLB Only</option>
+                                <option value="NHL">NHL Only</option>
+                                <option value="Soccer">Soccer Only</option>
+                            </select>
+                            <input type="hidden" name="allowed_leagues" value={selectedLeague === 'All' ? '' : selectedLeague} disabled={selectedLeague === 'All'} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Restriction (Matchup)</label>
+                            <select
+                                name="allowed_game_ids"
+                                value={selectedGame}
+                                onChange={(e) => setSelectedGame(e.target.value)}
+                                className="w-full rounded-xl border border-white/10 bg-zinc-900 p-4 text-sm font-bold text-white focus:border-brand focus:outline-none appearance-none disabled:opacity-50"
+                            >
+                                <option value="All">All Games</option>
+                                {games
+                                    .filter(g => selectedLeague === 'All' || g.category === selectedLeague)
+                                    .map(g => (
+                                        <option key={g.id} value={g.id}>{g.label}</option>
+                                    ))
+                                }
+                            </select>
+                            <input type="hidden" name="allowed_game_ids" value={selectedGame === 'All' ? '' : selectedGame} disabled={selectedGame === 'All'} />
+                        </div>
                     </div>
                 </section>
 

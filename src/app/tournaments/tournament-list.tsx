@@ -119,13 +119,10 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                                         <Trophy size={14} />
                                         <span>
                                             ${((t.collected_pool || 0) * 0.9).toLocaleString()} • {
-                                                t.payout_structure?.["1"] === 100
-                                                    ? "Winner Takes All"
-                                                    : t.payout_structure?.["1"] === 70
-                                                        ? "Top 3 Split"
-                                                        : t.payout_structure?.["1"] === 50
-                                                            ? "Top Heavy"
-                                                            : "Custom Payout"
+                                                Object.entries(t.payout_structure || {})
+                                                    .sort(([a], [b]) => Number(a) - Number(b))
+                                                    .map(([_, val]) => `${val}%`)
+                                                    .join(" / ")
                                             }
                                         </span>
                                     </div>

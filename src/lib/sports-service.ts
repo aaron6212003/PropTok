@@ -371,6 +371,7 @@ export const sportsService = {
                         category,
                         question,
                         external_id: externalId,
+                        game_id: game.id, // STORE GAME ID FOR TOURNAMENT FILTERING
                         yes_multiplier: yesMultiplier,
                         no_multiplier: noMultiplier,
                         yes_percent: yesPercent,

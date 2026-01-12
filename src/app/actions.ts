@@ -127,18 +127,38 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         // .gt("expires_at", now); // REMOVED: Allow "Live" games (started but not resolved) to show
     }
 
-    // Filter by Tournament Rules (League Filtering)
+    // Filter by Tournament Rules (League & Game Filtering)
     if (tournamentId) {
-        const { data: t } = await supabase.from("tournaments").select("allowed_leagues").eq("id", tournamentId).single();
+        const { data: t } = await supabase
+            .from("tournaments")
+            .select("allowed_leagues, allowed_game_ids")
+            .eq("id", tournamentId)
+            .single();
 
-        if (t && t.allowed_leagues && t.allowed_leagues.length > 0) {
-            // allowed_leagues is an array like ['NFL', 'NBA']
-            // We need to filter predictions where 'category' contains any of these
-            // OR checks: category ILIKE '%NFL%' OR category ILIKE '%NBA%'
+        if (t) {
+            let filterParts: string[] = [];
 
-            // Supabase 'or' syntax: category.ilike.%NFL%,category.ilike.%NBA%
-            const orConditions = t.allowed_leagues.map((l: string) => `category.ilike.%${l}%`).join(',');
-            query = query.or(orConditions);
+            // 1. League Filter
+            if (t.allowed_leagues && t.allowed_leagues.length > 0) {
+                const orConditions = t.allowed_leagues.map((l: string) => `category.ilike.%${l}%`).join(',');
+                filterParts.push(`or(${orConditions})`);
+            }
+
+            // 2. Game ID Filter
+            if (t.allowed_game_ids && t.allowed_game_ids.length > 0) {
+                // game_id is text, so we use 'in' syntax
+                const gameIds = t.allowed_game_ids.join(',');
+                filterParts.push(`game_id.in.(${gameIds})`);
+            }
+
+            if (filterParts.length > 0) {
+                // If both league and game are set, they act as AND? 
+                // Usually user picks one or the other. If they pick both, we restrict to BOTH.
+                filterParts.forEach(f => {
+                    if (f.startsWith('or')) query = query.or(f.substring(3, f.length - 1));
+                    else if (f.startsWith('game_id')) query = query.in('game_id', t.allowed_game_ids);
+                });
+            }
         }
     }
 
@@ -213,6 +233,40 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         imageUrl: p.image_url,
         commentCount: p.comments?.[0]?.count || 0
     }));
+}
+
+export async function getUpcomingGames() {
+    const supabase = await createClient();
+    // Fetch unique games from unresolved predictions
+    const { data } = await supabase
+        .from("predictions")
+        .select("game_id, question, category")
+        .eq("resolved", false)
+        .not("game_id", "is", null);
+
+    if (!data) return [];
+
+    // Group by game_id to get one entry per match
+    const gamesMap = new Map();
+    data.forEach(p => {
+        if (!gamesMap.has(p.game_id)) {
+            // Extract team names from question if possible
+            const match = p.question.match(/Will (.+?) vs (.+?) go|Will (.+?) win against (.+?)\?|cover (.+?) vs (.+?)\?/i);
+            let label = p.question;
+            if (match) {
+                const teams = match.slice(1).filter(Boolean);
+                if (teams.length >= 2) label = `${teams[0]} vs ${teams[1]}`;
+            }
+
+            gamesMap.set(p.game_id, {
+                id: p.game_id,
+                label,
+                category: p.category
+            });
+        }
+    });
+
+    return Array.from(gamesMap.values());
 }
 
 export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager: number, tournamentId?: string) {
@@ -773,6 +827,8 @@ export async function createTournament(formData: FormData) {
             creator_fee_percent: 5,
             payout_structure: payoutStructure,
             max_players: maxPlayers,
+            allowed_leagues: (formData.get("allowed_leagues") && formData.get("allowed_leagues") !== 'All') ? (formData.get("allowed_leagues") as string).split(",").filter(Boolean) : null,
+            allowed_game_ids: (formData.get("allowed_game_ids") && formData.get("allowed_game_ids") !== 'All') ? (formData.get("allowed_game_ids") as string).split(",").filter(Boolean) : null,
             status: 'ACTIVE',
             is_public: true,
             owner_id: user.id
@@ -819,6 +875,8 @@ export async function createFeaturedTournament(formData: FormData) {
             creator_fee_percent: 5,
             payout_structure: JSON.stringify({ "1": 70, "2": 20, "3": 10 }),
             max_players: maxPlayers,
+            allowed_leagues: (formData.get("allowed_leagues") && formData.get("allowed_leagues") !== 'All') ? (formData.get("allowed_leagues") as string).split(",").filter(Boolean) : null,
+            allowed_game_ids: (formData.get("allowed_game_ids") && formData.get("allowed_game_ids") !== 'All') ? (formData.get("allowed_game_ids") as string).split(",").filter(Boolean) : null,
             status: 'ACTIVE',
             is_public: true,
             owner_id: null, // System Owned (Featured)
