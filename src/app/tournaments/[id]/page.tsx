@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import LiveLeaderboard from "@/components/tournament/live-leaderboard";
 import JoinButton from "@/components/tournament/join-button";
 
-export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string }> }) {
+export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string; session_id?: string }> }) {
     const { id } = await params;
     const searchParamsObj = await searchParams;
 
