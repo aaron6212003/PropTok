@@ -61,68 +61,17 @@ export async function GET() {
         }
     ];
 
-    // --- PART 2: FALLBACK SEEDING (If Feed Empty OR API Key Missing) ---
-    // If TheOddsAPI fails or returns 0 games, or if keys are missing, we MUST show something.
+    // --- PART 2: FALLBACK SEEDING (DISABLED) ---
+    // User requested removal of placeholders. 
+    // If feed is empty, it stays empty until API resolves.
+    /*
     const { count } = await supabase.from('predictions').select('*', { count: 'exact', head: true }).eq('resolved', false);
     const apiKeyMissing = !process.env.THE_ODDS_API_KEY;
 
     if (count === 0 || apiKeyMissing) {
-        results.push({ type: "Fallback", message: "Feed empty or Keys Missing. Injecting mock data." });
-
-        const MOCKS = [
-            {
-                category: "NFL",
-                question: "Will Kansas City Chiefs win against Baltimore Ravens?",
-                external_id: "mock-nfl-chiefs-ravens",
-                yes_multiplier: 1.85,
-                no_multiplier: 1.95,
-                expires_at: new Date(Date.now() + 86400000).toISOString(),
-                resolved: false,
-                yes_percent: 65,
-                volume: 12000
-            },
-            {
-                category: "NBA",
-                question: "Will Lakers vs Warriors go OVER 235.5 points?",
-                external_id: "mock-nba-lakers-warriors-total",
-                yes_multiplier: 1.91,
-                no_multiplier: 1.91,
-                expires_at: new Date(Date.now() + 43200000).toISOString(),
-                resolved: false,
-                yes_percent: 50,
-                volume: 5400
-            },
-            {
-                category: "NFL",
-                question: "Will Patrick Mahomes throw OVER 2.5 Touchdowns?",
-                external_id: "mock-nfl-mahomes-tds",
-                yes_multiplier: 2.10,
-                no_multiplier: 1.70,
-                expires_at: new Date(Date.now() + 86400000).toISOString(),
-                resolved: false,
-                yes_percent: 45,
-                volume: 8900
-            },
-            {
-                category: "Crypto",
-                question: "Will Bitcoin hit $100k by tomorrow?",
-                external_id: "mock-crypto-btc-100k",
-                oracle_type: "crypto_price_gt",
-                oracle_id: "bitcoin",
-                target_value: 100000,
-                yes_multiplier: 3.5,
-                no_multiplier: 1.25,
-                expires_at: new Date(Date.now() + 86400000).toISOString(),
-                resolved: false,
-                yes_percent: 15,
-                volume: 25000
-            }
-        ];
-
-        for (const mock of MOCKS) {
-            await supabase.from("predictions").insert(mock);
-        }
+       // Mock injection removed per user request
     }
+    */
 
     // --- PART 2: ORACLE RESOLUTION ---
     const { data: predictions } = await supabase
