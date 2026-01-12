@@ -152,12 +152,23 @@ export const sportsService = {
         }
     },
 
+    async fetchEventProps(sport: string, eventId: string, markets: string) {
+        const apiKey = process.env.THE_ODDS_API_KEY;
+        const url = `${BASE_URL}/${sport}/events/${eventId}/odds?apiKey=${apiKey}&regions=us&markets=${markets}&oddsFormat=decimal`;
+        try {
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            return await res.json();
+        } catch (e) {
+            return null;
+        }
+    },
+
     async ingestGames() {
         console.log("[sportsService] Starting Ingestion Process...");
         const logs: string[] = [];
 
         // Expanded Sports List (Prioritized by Seasonality)
-        // Jan/Feb: NFL Playoffs, NBA, NHL, NCAAB are active. NCAAF is over/ending.
         const sports = [
             "americanfootball_nfl", // Playoffs
             "basketball_nba",       // Peak Season
@@ -166,8 +177,6 @@ export const sportsService = {
             "soccer_epl",
             "soccer_uefa_champions_league"
         ];
-
-        // Removed ncaaf to avoid wasting quota on empty endpoints
 
         const sportCategoryMap: Record<string, string> = {
             "americanfootball_nfl": "NFL",
@@ -181,14 +190,52 @@ export const sportsService = {
 
         const allFetchedGames: any[] = [];
 
+        // 1. FETCH SCHEDULE & BASIC PROPS
         for (const sport of sports) {
             try {
+                // Fetch Basic Odds (Lines) Only first to get IDs
                 const res = await this.fetchLiveOdds(sport);
+
                 if (res.error) {
                     logs.push(`${sport} Error: ${res.error}`);
                 } else if (res.data) {
+                    let games = res.data;
+
+                    // 2. HYDRATE WITH PLAYER PROPS (Two-Step Fetch)
+                    // Only for major prop sports
+                    let propMarkets = "";
+                    if (sport.includes("nba")) propMarkets = "player_points,player_assists,player_rebounds,player_threes,player_blocks,player_steals";
+                    else if (sport.includes("nfl")) propMarkets = "player_pass_tds,player_pass_attempts,player_rush_yds,player_reception_yds,player_anytime_scorer";
+                    else if (sport.includes("nhl")) propMarkets = "player_points,player_goals,player_assists,player_shots_on_goal";
+
+                    if (propMarkets && games.length > 0) {
+                        logs.push(`Hydrating ${games.length} ${sport} games with props...`);
+
+                        // Limit to first 10 games to avoid hitting rate limits instantly if list is huge
+                        const gamesToHydrate = games.slice(0, 15);
+
+                        await Promise.all(gamesToHydrate.map(async (game: any) => {
+                            const propData = await this.fetchEventProps(sport, game.id, propMarkets);
+                            if (propData && propData.bookmakers) {
+                                // Merge prop bookmakers into existing bookmakers
+                                // We want to append detailed markets to the bookmakers list
+                                // Actually, The Odds API returns a similar bookmaker structure.
+                                // We should merge markets for matching bookies.
+
+                                propData.bookmakers.forEach((propBookie: any) => {
+                                    const existingBookie = game.bookmakers.find((b: any) => b.key === propBookie.key);
+                                    if (existingBookie) {
+                                        existingBookie.markets.push(...propBookie.markets);
+                                    } else {
+                                        game.bookmakers.push(propBookie);
+                                    }
+                                });
+                            }
+                        }));
+                    }
+
                     // Ensure data validation
-                    const validGames = res.data.filter((g: any) => g.bookmakers && g.bookmakers.length > 0);
+                    const validGames = games.filter((g: any) => g.bookmakers && g.bookmakers.length > 0);
                     allFetchedGames.push(...validGames);
                 }
             } catch (err) {
@@ -196,7 +243,7 @@ export const sportsService = {
             }
         }
 
-        logs.push(`Total games fetched across all sports: ${allFetchedGames.length}`);
+        logs.push(`Total games fetched & hydrated: ${allFetchedGames.length}`);
 
         const supabase = createAdminClient();
         if (!supabase) {
