@@ -6,6 +6,7 @@ import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 import PropRow from '@/components/game/prop-row';
 import BackButton from '@/components/layout/back-button';
+import PropCategoryAccordion from '@/components/game/prop-category-accordion';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,15 +98,75 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         );
     }
 
-    // NORMAL RENDER
-    const gameLines = predictions.filter((p: any) =>
-        !p.question.includes('Score') &&
-        !p.question.includes('Rebounds') &&
-        !p.question.includes('Assists') &&
-        !p.question.includes('Touchdowns') &&
-        !p.question.includes('Yards')
-    );
-    const props = predictions.filter((p: any) => !gameLines.includes(p));
+    // --- DATA GROUPING LOGIC (Hard Rock Style) ---
+
+    // 1. Separate Game Lines (Top Level)
+    const gameLines = predictions.filter((p: any) => {
+        const eid = p.external_id || "";
+        return eid.includes("-h2h-") || eid.includes("-spreads-") || eid.includes("-totals-");
+    });
+
+    // 2. Cluster Player Props
+    const playerPropList = predictions.filter((p: any) => !gameLines.includes(p));
+
+    // Grouping structure: { CategoryName: { PropType: { PlayerName: [predictions] } } }
+    const categorizedProps: Record<string, Record<string, Record<string, any[]>>> = {};
+
+    const CATEGORY_MAP: Record<string, string> = {
+        "player_pass_tds": "Passing",
+        "player_pass_yds": "Passing",
+        "player_pass_attempts": "Passing",
+        "player_pass_completions": "Passing",
+        "player_pass_interceptions": "Passing",
+        "player_rush_yds": "Rushing & Receiving",
+        "player_reception_yds": "Rushing & Receiving",
+        "player_receptions": "Rushing & Receiving",
+        "player_rush_attempts": "Rushing & Receiving",
+        "player_anytime_scorer": "Touchdowns",
+        "player_points": "Points & Stats",
+        "player_assists": "Points & Stats",
+        "player_rebounds": "Points & Stats",
+        "player_threes": "Points & Stats",
+        "player_blocks": "Defense",
+        "player_steals": "Defense",
+        "player_goals": "Scoring",
+        "player_shots_on_goal": "Stats"
+    };
+
+    const SUB_CATEGORY_MAP: Record<string, string> = {
+        "player_pass_tds": "Passing Touchdowns",
+        "player_pass_yds": "Passing Yards",
+        "player_rush_yds": "Rushing Yards",
+        "player_reception_yds": "Receiving Yards",
+        "player_points": "Player Points",
+        "player_anytime_scorer": "Anytime Touchdown"
+    };
+
+    playerPropList.forEach(p => {
+        const eid = p.external_id || "";
+        const parts = eid.split('-');
+        // Format: gameId - marketKey - playerName - OverUnder - Line
+        // Market key is usually parts[1]
+        const marketKey = parts[1] || "other";
+        const category = CATEGORY_MAP[marketKey] || "Other Props";
+        const subCategory = SUB_CATEGORY_MAP[marketKey] || marketKey.replace('player_', '').replace(/_/g, ' ').toUpperCase();
+
+        // Extract Player Name from question if possible (more reliable for UI)
+        // "Will LeBron James record Over 25.5 PLAYER POINTS?" -> "LeBron James"
+        let playerName = "Player";
+        const match = p.question.match(/Will (.*) record/);
+        if (match && match[1]) playerName = match[1];
+        else if (p.question.includes("score a Touchdown")) {
+            const tdMatch = p.question.match(/Will (.*) score/);
+            if (tdMatch) playerName = tdMatch[1];
+        }
+
+        if (!categorizedProps[category]) categorizedProps[category] = {};
+        if (!categorizedProps[category][subCategory]) categorizedProps[category][subCategory] = {};
+        if (!categorizedProps[category][subCategory][playerName]) categorizedProps[category][subCategory][playerName] = [];
+
+        categorizedProps[category][subCategory][playerName].push(p);
+    });
 
     return (
         <main className="relative min-h-screen bg-black text-white pb-64">
@@ -115,7 +176,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="p-6 pt-24 space-y-8">
-                {/* Game Lines Section */}
+                {/* Game Lines Section (Main Cards) */}
                 {gameLines.length > 0 && (
                     <section>
                         <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-4">Game Lines</h2>
@@ -135,25 +196,53 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                     </section>
                 )}
 
-                {/* Player Props Section */}
+                {/* Player Props Section (Categorized) */}
                 <section>
-                    <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-4">Player Props</h2>
-                    {props.length === 0 ? (
-                        <p className="text-zinc-500 italic">No player props available.</p>
+                    <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-6 mt-8">Player Props</h2>
+                    {Object.keys(categorizedProps).length === 0 ? (
+                        <p className="text-zinc-500 italic px-4">No player props available.</p>
                     ) : (
-                        <div className="grid gap-4">
-                            {props.map((p: any) => (
-                                <PropRow
-                                    key={p.id}
-                                    id={p.id}
-                                    question={p.question}
-                                    yesMultiplier={p.yes_multiplier}
-                                    noMultiplier={p.no_multiplier}
-                                    yesPercent={p.yes_percent || 50}
-                                    category={p.category}
-                                />
-                            ))}
-                        </div>
+                        Object.entries(categorizedProps).map(([catName, subCats]) => (
+                            <PropCategoryAccordion
+                                key={catName}
+                                title={catName}
+                                defaultExpanded={catName === "Passing" || catName === "Points & Stats"}
+                            >
+                                {Object.entries(subCats).map(([subName, players]) => (
+                                    <div key={subName} className="mt-4 first:mt-0">
+                                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-4 pl-1 border-l-2 border-brand/20">
+                                            {subName}
+                                        </h3>
+                                        {Object.entries(players).map(([playerName, props]) => (
+                                            <div key={playerName} className="mb-6 last:mb-2 bg-white/[0.02] rounded-xl p-3 border border-white/5">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_rgba(0,220,130,0.5)]" />
+                                                    <span className="text-xs font-bold text-zinc-300">{playerName}</span>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    {props.sort((a: any, b: any) => {
+                                                        // Sort by line value if available
+                                                        const lineA = parseFloat(a.question.match(/[\d.]+/)?.[0] || "0");
+                                                        const lineB = parseFloat(b.question.match(/[\d.]+/)?.[0] || "0");
+                                                        return lineA - lineB;
+                                                    }).map((p: any) => (
+                                                        <PropRow
+                                                            key={p.id}
+                                                            id={p.id}
+                                                            question={p.question}
+                                                            yesMultiplier={p.yes_multiplier}
+                                                            noMultiplier={p.no_multiplier}
+                                                            yesPercent={p.yes_percent || 50}
+                                                            category={p.category}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </PropCategoryAccordion>
+                        ))
                     )}
                 </section>
             </div>

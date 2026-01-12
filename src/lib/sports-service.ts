@@ -201,7 +201,7 @@ export const sportsService = {
                     // Only for major prop sports
                     let propMarkets = "";
                     if (sport.includes("nba")) propMarkets = "player_points,player_assists,player_rebounds,player_threes,player_blocks,player_steals";
-                    else if (sport.includes("nfl")) propMarkets = "player_pass_tds,player_pass_attempts,player_rush_yds,player_reception_yds,player_anytime_scorer";
+                    else if (sport.includes("nfl")) propMarkets = "player_pass_tds,player_pass_yds,player_rush_yds,player_reception_yds,player_pass_attempts,player_pass_completions,player_receptions";
                     else if (sport.includes("nhl")) propMarkets = "player_points,player_goals,player_assists,player_shots_on_goal";
 
                     if (propMarkets && games.length > 0) {
@@ -280,8 +280,9 @@ export const sportsService = {
                 // Expanded support to include player props
                 const supportedMarkets = [
                     'h2h', 'spreads', 'totals',
-                    'player_points', 'player_assists', 'player_rebounds', 'player_threes',
-                    'player_pass_tds', 'player_rush_yds', 'player_reception_yds'
+                    'player_points', 'player_assists', 'player_rebounds', 'player_threes', 'player_blocks', 'player_steals',
+                    'player_pass_tds', 'player_pass_yds', 'player_rush_yds', 'player_reception_yds', 'player_pass_attempts', 'player_pass_completions', 'player_receptions',
+                    'player_goals', 'player_shots_on_goal'
                 ];
 
                 if (!supportedMarkets.includes(market.key)) continue;
