@@ -46,6 +46,27 @@ export default function DepositOptions() {
                     </button>
                 ))}
             </div>
+
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-zinc-500 font-bold">$</div>
+                <input
+                    type="number"
+                    min="5"
+                    placeholder="Custom Amount"
+                    className="w-full bg-zinc-900 border border-white/5 rounded-2xl py-4 pl-8 pr-4 text-white font-bold placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            const val = Number((e.target as HTMLInputElement).value);
+                            if (val >= 5) handleDeposit(val);
+                        }
+                    }}
+                />
+                <button
+                    className="absolute inset-y-2 right-2 px-4 bg-emerald-500 text-black font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors"
+                >
+                    Deposit
+                </button>
+            </div>
         </div>
     );
 }
