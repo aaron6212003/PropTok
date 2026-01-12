@@ -2,9 +2,24 @@
 // Scripts/manual_ingest.ts
 // USAGE: npx tsx scripts/manual_ingest.ts
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import fs from 'fs';
+import path from 'path';
+
+// Load keys from manual_keys.json (Bypass .env issues)
+try {
+    const keysPath = path.resolve(process.cwd(), 'manual_keys.json');
+    if (fs.existsSync(keysPath)) {
+        const keys = JSON.parse(fs.readFileSync(keysPath, 'utf-8'));
+        Object.entries(keys).forEach(([k, v]) => {
+            process.env[k] = v as string;
+        });
+        console.log("✅ Loaded keys from manual_keys.json");
+    } else {
+        console.warn("⚠️ manual_keys.json not found, relying on existing env");
+    }
+} catch (e) {
+    console.error("Failed to load manual keys:", e);
+}
 
 const THE_ODDS_API_KEY = process.env.THE_ODDS_API_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -15,7 +30,7 @@ if (!THE_ODDS_API_KEY || !SUPABASE_URL || !SUPABASE_KEY) {
     process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Client removed (delegated to sports-service)
 
 const MAX_GAMES_PER_SPORT = 6; // Limit for rate limits
 
