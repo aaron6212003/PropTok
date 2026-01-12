@@ -316,6 +316,17 @@ export const sportsService = {
         // Since The Odds API Free Plan often fails for props, we use Tank01 as a backup/primary for NBA.
         try {
             logs.push("Starting Tank01 NBA Prop Ingestion...");
+            // NFL INGESTION (DISABLED PER USER REQUEST)
+            /*
+            logs.push("Starting Tank01 NFL Prop Ingestion...");
+            const tankNFLGames = await tank01Service.getNFLBettingOdds(today);
+            if (tankNFLGames && Array.isArray(tankNFLGames)) {
+                for (const tGame of tankNFLGames) {
+                    await processTank01Game(tGame, 'NFL');
+                }
+                logs.push(`Tank01 NFL Ingestion Completed.`);
+            }
+            */
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
             const tankGames = await tank01Service.getNBABettingOdds(today);
 
