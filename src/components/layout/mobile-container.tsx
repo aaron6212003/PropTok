@@ -18,7 +18,7 @@ export default function MobileContainer({
     <div className="flex min-h-screen w-full justify-center bg-black">
       <div
         className={cn(
-          "relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-background shadow-2xl ring-1 ring-white/10",
+          "relative flex h-[100dvh] w-full max-w-md flex-col overflow-y-auto bg-background shadow-2xl ring-1 ring-white/10 no-scrollbar",
           className
         )}
       >
