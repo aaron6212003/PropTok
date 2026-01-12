@@ -238,11 +238,21 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
 export async function getUpcomingGames() {
     const supabase = await createClient();
     // Fetch unique games from unresolved predictions
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from("predictions")
         .select("game_id, question, category")
         .eq("resolved", false)
         .not("game_id", "is", null);
+
+    if (error) {
+        console.error("[getUpcomingGames ERROR]", error);
+        return [];
+    }
+    console.log(`[getUpcomingGames] Found ${data?.length} unresolved predictions.`);
+    if (data?.length > 0) {
+        const categories = [...new Set(data.map(p => p.category))];
+        console.log(`[getUpcomingGames] Categories found:`, categories);
+    }
 
     if (!data) return [];
 
@@ -258,10 +268,21 @@ export async function getUpcomingGames() {
                 if (teams.length >= 2) label = `${teams[0]} vs ${teams[1]}`;
             }
 
+            // Normalize category to match filter keys (NFL, NBA, NHL, MLB, Soccer)
+            let category = p.category;
+            if (category.toLowerCase().includes('nfl')) category = 'NFL';
+            else if (category.toLowerCase().includes('nba')) category = 'NBA';
+            else if (category.toLowerCase().includes('nhl')) category = 'NHL';
+            else if (category.toLowerCase().includes('mlb')) category = 'MLB';
+            else if (category.toLowerCase().includes('soccer') || category.toLowerCase().includes('football')) {
+                // Keep 'NFL' check first so American Football doesn't match 'Soccer' if we use 'football'
+                if (!category.toLowerCase().includes('nfl')) category = 'Soccer';
+            }
+
             gamesMap.set(p.game_id, {
                 id: p.game_id,
                 label,
-                category: p.category
+                category: category
             });
         }
     });
