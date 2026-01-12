@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
     const body = await req.text();
@@ -28,7 +28,12 @@ export async function POST(req: NextRequest) {
         const userId = session.metadata?.userId;
 
         if (tournamentId && userId) {
-            const supabase = await createClient();
+            const supabase = createAdminClient();
+
+            if (!supabase) {
+                console.error("Webhook Error: Admin Client failed to initialize. Check SUPABASE_SERVICE_ROLE_KEY.");
+                return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
+            }
 
             // 1. Mark as Paid or Create Entry
             // We assume entry exists or we upsert it.
