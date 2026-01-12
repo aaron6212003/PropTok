@@ -128,14 +128,18 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
             .gt("expires_at", now); // Filter out expired games
     }
 
-    // Filter by Tournament Category if applicable
+    // Filter by Tournament Rules (League Filtering)
     if (tournamentId) {
-        const { data: t } = await supabase.from("tournaments").select("filter_category").eq("id", tournamentId).single();
-        if (t && t.filter_category && t.filter_category !== 'All') {
-            // Check if category matches (e.g. "NFL" matches "americanfootball_nfl" or "NFL")
-            // To be safe, we use ILIKE lookup or exact match if we standardize.
-            // For now, let's assume specific sport categories map to the 'category' column in predictions
-            query = query.ilike('category', `%${t.filter_category}%`);
+        const { data: t } = await supabase.from("tournaments").select("allowed_leagues").eq("id", tournamentId).single();
+
+        if (t && t.allowed_leagues && t.allowed_leagues.length > 0) {
+            // allowed_leagues is an array like ['NFL', 'NBA']
+            // We need to filter predictions where 'category' contains any of these
+            // OR checks: category ILIKE '%NFL%' OR category ILIKE '%NBA%'
+
+            // Supabase 'or' syntax: category.ilike.%NFL%,category.ilike.%NBA%
+            const orConditions = t.allowed_leagues.map((l: string) => `category.ilike.%${l}%`).join(',');
+            query = query.or(orConditions);
         }
     }
 

@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import LiveLeaderboard from "@/components/tournament/live-leaderboard";
 import JoinButton from "@/components/tournament/join-button";
 
-export default async function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string }> }) {
     const { id } = await params;
+    const searchParamsObj = await searchParams;
     const tournament = await getTournament(id);
     const leaderboard = await getTournamentLeaderboard(id);
     const supabase = await createClient();
@@ -82,17 +83,29 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                             </div>
                         ) : (
                             <div className="mt-6">
-                                {/* Only show Pay Button if there is a fee */}
-                                {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 ? (
-                                    <JoinButton
-                                        tournamentId={tournament.id}
-                                        entryFeeCents={tournament.entry_fee_cents}
-                                        isLoggedIn={!!currentUser}
-                                    />
+                                {/* Success Handler from Stripe Redirect */}
+                                {searchParamsObj.success === 'true' ? (
+                                    <div className="w-full py-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-bold uppercase tracking-widest rounded-xl text-center animate-pulse">
+                                        Processing Entry...
+                                        <span className="block text-[10px] text-zinc-500 normal-case mt-1">
+                                            Your payment was successful. We are confirming with the bank. Refresh in 10s.
+                                        </span>
+                                    </div>
                                 ) : (
-                                    <button className="w-full py-4 bg-white/10 text-zinc-500 font-bold uppercase tracking-widest rounded-xl cursor-not-allowed">
-                                        Free Entry (Coming Soon)
-                                    </button>
+                                    <>
+                                        {/* Only show Pay Button if there is a fee */}
+                                        {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 ? (
+                                            <JoinButton
+                                                tournamentId={tournament.id}
+                                                entryFeeCents={tournament.entry_fee_cents}
+                                                isLoggedIn={!!currentUser}
+                                            />
+                                        ) : (
+                                            <button className="w-full py-4 bg-white/10 text-zinc-500 font-bold uppercase tracking-widest rounded-xl cursor-not-allowed">
+                                                Free Entry (Coming Soon)
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}
