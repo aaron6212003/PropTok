@@ -844,7 +844,8 @@ export async function createTournament(formData: FormData) {
     const maxPlayers = maxPlayersRaw > 100 ? null : maxPlayersRaw;
 
     // Standard Game Config
-    const startingStack = 1000;
+    const startingStackRaw = Number(formData.get("starting_stack"));
+    const startingStack = startingStackRaw > 0 ? startingStackRaw : 1000;
     const payoutStructure = formData.get("payout_structure") as string || JSON.stringify({ "1": 70, "2": 20, "3": 10 });
 
     const { data, error } = await supabase

@@ -14,6 +14,7 @@ export default function CreateTournamentPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [entryFee, setEntryFee] = useState(20);
     const [maxPlayers, setMaxPlayers] = useState(10); // Default to 10
+    const [startingStack, setStartingStack] = useState(1000); // Default to 1000
     const [rakePercent, setRakePercent] = useState(10); // Standard House Take (5% creator + 5% platform)
     const [payoutStructure, setPayoutStructure] = useState("top3"); // Default
     const [games, setGames] = useState<any[]>([]);
@@ -201,6 +202,28 @@ export default function CreateTournamentPage() {
                             <div className="flex justify-between text-[10px] text-zinc-500 uppercase font-black tracking-widest">
                                 <span>Heads Up (2)</span>
                                 <span>No Limit</span>
+                            </div>
+                        </div>
+
+                        {/* Starting Stack */}
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <label className="text-xs font-bold text-white">Starting Chips</label>
+                                <span className="font-mono font-bold text-brand">${Number(startingStack).toLocaleString()}</span>
+                            </div>
+                            <input
+                                name="starting_stack"
+                                type="range"
+                                min="100"
+                                max="10000"
+                                step="100"
+                                value={startingStack}
+                                onChange={(e) => setStartingStack(Number(e.target.value))}
+                                className="w-full h-2 bg-zinc-800 rounded-full appearance-none accent-brand cursor-pointer"
+                            />
+                            <div className="flex justify-between text-[10px] text-zinc-500 uppercase font-black tracking-widest">
+                                <span>$100</span>
+                                <span>$10,000</span>
                             </div>
                         </div>
 
