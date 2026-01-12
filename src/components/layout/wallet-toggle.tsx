@@ -107,14 +107,29 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                             </button>
                         </div>
 
-                        <Link
-                            href="/wallet?mode=promo"
-                            onClick={() => setIsOpen(false)}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-[10px] font-bold uppercase tracking-wide text-zinc-500 hover:text-white hover:bg-white/5 transition-colors"
-                        >
-                            <CreditCard size={12} />
-                            Redeem Promo Code
-                        </Link>
+                        <div className="space-y-2">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Quick Deposit</span>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[10, 25, 50].map((amount) => (
+                                    <button
+                                        key={amount}
+                                        onClick={async () => {
+                                            if (confirm(`Deposit $${amount}?`)) {
+                                                const res = await fetch("/api/stripe/create-checkout-session", {
+                                                    method: "POST",
+                                                    body: JSON.stringify({ amount: amount * 100, type: 'deposit' }), // Cents
+                                                });
+                                                const { url } = await res.json();
+                                                if (url) window.location.href = url;
+                                            }
+                                        }}
+                                        className="rounded-lg bg-emerald-500/10 py-2 text-xs font-bold text-emerald-500 hover:bg-emerald-500 hover:text-black transition-all"
+                                    >
+                                        +${amount}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="my-4 h-px bg-white/5" />

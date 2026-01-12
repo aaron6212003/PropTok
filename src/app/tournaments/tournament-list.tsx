@@ -162,14 +162,24 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                                             </a>
                                         </div>
                                     ) : (
-                                        <button
-                                            onClick={() => joinTournament(t.id)}
-                                            disabled={loading}
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-black transition-transform active:scale-95 disabled:opacity-50"
-                                        >
-                                            <span>Join for ${t.entry_fee}</span>
-                                            <ArrowRight size={18} />
-                                        </button>
+                                        {
+                                            t.entry_fee_cents > 0 ? (
+                                                <JoinButton
+                                                    tournamentId={t.id}
+                                                    entryFeeCents={t.entry_fee_cents}
+                                                    isLoggedIn={!!currentUserId}
+                                                />
+                                            ) : (
+                                                <button
+                                                    onClick={() => joinTournament(t.id)}
+                                                    disabled={loading}
+                                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-black transition-transform active:scale-95 disabled:opacity-50"
+                                                >
+                                                    <span>Join Free</span>
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                            )
+                                        }
                                     )}
                                 </div>
                             </div>
