@@ -88,7 +88,7 @@ export default function WalletToggle({ cash, chips, initialTournaments = [] }: {
 
             {/* DASHBOARD DROPDOWN */}
             {isOpen && (
-                <div className="absolute right-0 top-full mt-3 w-80 rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black ring-1 ring-white/10 backdrop-blur-3xl">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-80 rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black ring-1 ring-white/10 backdrop-blur-3xl z-[100]">
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">

@@ -152,7 +152,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             />
 
             {/* Bankroll Highlights */}
-            <div className="mt-6 px-6">
+            <div className="mt-6 px-6 relative z-40">
                 <div className="flex flex-col items-center rounded-3xl border border-brand/20 bg-brand/5 p-8 text-center backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(37,99,235,0.1)]">
                     <div className="mb-4">
                         <WalletToggle cash={profile?.cash_balance || 0} chips={profile?.bankroll || 0} initialTournaments={tournamentEntries} />
