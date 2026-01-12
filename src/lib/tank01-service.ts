@@ -133,6 +133,29 @@ export const tank01Service = {
         }
     },
 
+    async getNFLBettingOdds(gameDate: string) {
+        // Endpoint: /getNFLBettingOdds
+        const url = `${TANK01_BASE_URL}/getNFLBettingOdds?gameDate=${gameDate}&itemFormat=list`;
+
+        try {
+            // Use NFL Host
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': RAPID_API_KEY,
+                    'X-RapidAPI-Host': 'tank01-nfl-live-in-game-real-time-statistics-nfl.p.rapidapi.com'
+                }
+            });
+
+            if (!response.ok) return null;
+            const json = await response.json();
+            return json.body || [];
+        } catch (e) {
+            console.error("Tank01 NFL Odds Error:", e);
+            return null;
+        }
+    },
+
     async getNFLTeamRoster(teamAbv: string) {
         // Endpoint: /getNFLTeamRoster?teamAbv=HOU
         const url = `${TANK01_BASE_URL}/getNFLTeamRoster?teamAbv=${teamAbv}&getStats=true`;
