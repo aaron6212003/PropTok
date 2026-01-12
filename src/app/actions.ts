@@ -1652,7 +1652,8 @@ export async function joinTournamentWithBalance(tournamentId: string) {
 
     if (tError || !tournament) {
         console.error(`[joinTournamentWithBalance] Tournament Fetch Error:`, tError);
-        return { success: false, error: "Tournament not found" };
+        const detailedError = tError?.message || tError?.details || JSON.stringify(tError) || "Unknown Error";
+        return { success: false, error: `Tournament Fetch Failed: ${detailedError} (ID: ${tournamentId})` };
     }
 
     const { data: profile } = await adminClient.from("users").select("cash_balance").eq("id", user.id).single();
