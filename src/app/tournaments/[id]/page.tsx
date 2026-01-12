@@ -42,6 +42,8 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
         myEntry = entry;
         if (entry) myRank = entry.rank;
 
+        console.log(`[TournamentPage] User: ${currentUser.id}, Tournament: ${id}, Entry Found:`, !!entry, entry);
+
         // Fetch Balance
         const { data: profile } = await supabase.from("users").select("cash_balance").eq("id", currentUser.id).single();
         userBalance = profile?.cash_balance || 0;
