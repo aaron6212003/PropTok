@@ -138,7 +138,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     <div className="mb-4">
                         <WalletToggle
                             cash={profile?.cash_balance || 0}
-                            chips={profile?.bankroll || 0}
+                            chips={0}
                         />
                     </div>
                     <Link href="/wallet" className="group relative">
