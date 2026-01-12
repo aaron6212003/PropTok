@@ -64,7 +64,9 @@ export default function JoinButton({ tournamentId, entryFeeCents, isLoggedIn, us
                 toast.error(result.error);
             } else {
                 toast.success("Successfully joined the tournament!");
-                // Force reload or redirect? The revalidatePath in action handles data, but we might want to refresh client feedback
+                // Redirect to leaderboard/detail
+                router.push(`/tournaments/${tournamentId}`);
+                router.refresh();
             }
         } catch (e: any) {
             toast.error("Failed to join: " + e.message);

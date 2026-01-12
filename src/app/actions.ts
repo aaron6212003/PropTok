@@ -1655,14 +1655,35 @@ export async function joinTournamentWithBalance(tournamentId: string) {
         console.error(`[joinTournamentWithBalance] Tournament Fetch Error:`, tError);
         const detailedError = tError?.message || tError?.details || JSON.stringify(tError) || "Unknown Error";
         return { success: false, error: `Tournament Fetch Failed: ${detailedError} (ID: ${tournamentId})` };
+        if (tError || !tournament) {
+            console.error(`[joinTournamentWithBalance] Tournament Fetch Error:`, tError);
+            return { success: false, error: "Insufficient funds. Please deposit." };
+        }
+
+        // 3. Atomic Join (or robust sequence)
+        // We already have 'join_tournament_atomic' RPC from webhook? Let's check or use a similar logic.
+        // The webhook uses: join_tournament_atomic(p_user_id, p_tournament_id, p_session_id, p_payment_intent, p_stack)
+
+        // Option A: Reuse RPC but pass 'WALLET' as payment reference
+        // Option B: Manual Transaction here (easier for now if RPC is strict on session)
+
+        // Let's optimize for speed: Use RPC if possible, but let's look at the RPC signature first.
+        // Assuming RPC is capable, we pass 'WALLET_BALANCE' as session_id.
+
     }
 
-    const { data: profile } = await adminClient.from("users").select("cash_balance").eq("id", user.id).single();
-    const balance = profile?.cash_balance || 0;
+    const entryFeeCents = tournament.entry_fee_cents || 0;
+    const entryFeeDollars = entryFeeCents / 100;
 
-    const entryFeeDollars = (tournament.entry_fee_cents || 0) / 100;
+    const { data: userProfile, error: uError } = await adminClient.from("users").select("cash_balance").eq("id", user.id).single();
 
-    // 2. Check Funds
+    if (uError || !userProfile) {
+        console.error(`[joinTournamentWithBalance] User Profile Fetch Error:`, uError);
+        return { success: false, error: "Failed to fetch user balance." };
+    }
+
+    const balance = userProfile.cash_balance || 0;
+
     if (balance < entryFeeDollars) {
         return { success: false, error: "Insufficient funds. Please deposit." };
     }
