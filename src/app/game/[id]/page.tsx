@@ -169,7 +169,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     });
 
     return (
-        <main className="relative min-h-screen bg-black text-white pb-64">
+        <main className="relative min-h-screen bg-black text-white pb-96">
             <div className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 bg-black/90 backdrop-blur-md border-b border-white/5 shadow-xl">
                 <BackButton />
                 <h1 className="ml-2 text-lg font-black uppercase tracking-widest">Game Markets</h1>
