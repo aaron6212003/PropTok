@@ -47,7 +47,7 @@ export default async function GamePage({ params }: { params: { id: string } }) {
                 const { data: cousins } = await supabase
                     .from('predictions')
                     .select('*')
-                    .ilike('external_id', `${gameId}-%`)
+                    .ilike('external_id', `${gameId}%`) // Relaxed here too
                     .eq('resolved', false);
                 predictions = cousins || [];
             } else {
