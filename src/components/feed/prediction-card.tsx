@@ -120,9 +120,11 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </span>
                         </div>
 
-                        <h1 className="text-3xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl">
-                            {prediction.question}
-                        </h1>
+                        <Link href={`/game/${prediction.externalId?.split('-')[0] || '#'}`} className="block">
+                            <h1 className="text-3xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl active:scale-95 transition-transform hover:text-brand">
+                                {prediction.question}
+                            </h1>
+                        </Link>
 
                         {/* Removed Old Horizontal Buttons */}
                     </div>
