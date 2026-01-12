@@ -71,18 +71,18 @@ export default function GameMarketsView({ gameLines, categorizedProps }: GameMar
 
     return (
         <div className="space-y-6">
-            {/* Sticky Horizontal Tab Bar */}
-            <div className="sticky top-16 z-40 -mx-6 px-6 bg-black/80 backdrop-blur-md border-b border-white/5 overflow-x-auto no-scrollbar py-3">
-                <div className="flex gap-2 min-w-max">
+            {/* Wrapped Tab Bar (No horizontal scroll) */}
+            <div className="sticky top-16 z-40 -mx-6 px-6 bg-black/80 backdrop-blur-md border-b border-white/5 py-3">
+                <div className="flex flex-wrap gap-2">
                     {categories.map((cat) => (
                         <button
                             key={cat}
                             onClick={() => setActiveTab(cat)}
                             className={cn(
-                                "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                                "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
                                 activeTab === cat
-                                    ? "bg-brand text-black shadow-[0_0_15px_rgba(0,220,130,0.4)]"
-                                    : "bg-zinc-900 text-zinc-500 border border-white/5 hover:bg-zinc-800"
+                                    ? "bg-brand text-black border-brand shadow-[0_0_15px_rgba(0,220,130,0.4)]"
+                                    : "bg-zinc-900 text-zinc-500 border-white/5 hover:bg-zinc-800 hover:border-white/10"
                             )}
                         >
                             {cat}

@@ -29,17 +29,17 @@ export default function PropRow({ id, question, yesMultiplier, noMultiplier, cat
         });
     };
 
-    // Extract the line/value from the question for cleaner display
-    // "Will LeBron James record Over 25.5 PLAYER POINTS?" -> "Over 25.5"
+    // Clean up the question for display
+    // "Will LeBron James record Over 25.5 PLAYER POINTS?" -> "Over 25.5 PLAYER POINTS"
     let displayQuestion = question;
-    const match = question.match(/(Over|Under|[\+\-]\d+\.?\d*)/i);
-    if (match) {
-        // Find the numeric line and type
-        const lineMatch = question.match(/(Over|Under)\s+([\d.]+)/i);
-        if (lineMatch) {
-            displayQuestion = `${lineMatch[1]} ${lineMatch[2]}`;
-        }
-    }
+
+    // 1. Remove "Will [Any Name] record" prefix
+    displayQuestion = displayQuestion.replace(/Will .* record\s+/i, '');
+
+    // 2. Remove trailing question mark
+    displayQuestion = displayQuestion.replace(/\?$/, '');
+
+    // 3. Keep everything else (Line + Stat)
 
     return (
         <div className={cn(
@@ -49,7 +49,7 @@ export default function PropRow({ id, question, yesMultiplier, noMultiplier, cat
                 : "bg-zinc-900/50 border-white/5 hover:border-white/10"
         )}>
             <p className={cn(
-                "font-bold text-xs transition-colors pr-2 truncate",
+                "font-bold text-[11px] leading-tight transition-colors pr-2 flex-1",
                 selectedSide ? "text-white" : "text-zinc-400"
             )} title={question}>{displayQuestion}</p>
 
