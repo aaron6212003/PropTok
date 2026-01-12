@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import BetCard from '@/components/profile/bet-card';
+import BetSlip from '@/components/feed/bet-slip';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
@@ -11,6 +12,15 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     const supabase = await createClient();
     const { id: rawId } = await params;
     const id = decodeURIComponent(rawId);
+
+    // Fetch User & Bankroll for BetSlip
+    const { data: { user } } = await supabase.auth.getUser();
+    let profile = null;
+    if (user) {
+        const { data } = await supabase.from("users").select("bankroll, cash_balance").eq("id", user.id).single();
+        profile = data;
+    }
+    const activeBankroll = profile?.cash_balance || 0;
 
     let predictions: any[] = [];
     let gameId: string | null = null;
@@ -97,9 +107,9 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     const props = predictions.filter((p: any) => !gameLines.includes(p));
 
     return (
-        <main className="relative min-h-screen bg-black text-white pb-48">
-            <div className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 bg-black/80 backdrop-blur-md border-b border-white/5">
-                <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10">
+        <main className="relative min-h-screen bg-black text-white pb-64">
+            <div className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 bg-black/90 backdrop-blur-md border-b border-white/5 shadow-xl">
+                <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
                     <ArrowLeft className="text-white" />
                 </Link>
                 <h1 className="ml-2 text-lg font-black uppercase tracking-widest">Game Markets</h1>
@@ -112,17 +122,15 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                         <h2 className="text-xl font-black italic uppercase tracking-tighter text-brand mb-4">Game Lines</h2>
                         <div className="grid gap-4">
                             {gameLines.map((p: any) => (
-                                <div key={p.id} className="p-4 rounded-2xl bg-zinc-900 border border-white/5">
-                                    <h3 className="font-bold text-lg leading-tight mb-4">{p.question}</h3>
-                                    <div className="flex gap-2">
-                                        <button className="flex-1 py-3 rounded-xl bg-white/5 font-black uppercase tracking-widest text-[#00DC82] border border-[#00DC82]/20 hover:bg-[#00DC82]/10 transition-colors">
-                                            Yes {p.yes_multiplier}x
-                                        </button>
-                                        <button className="flex-1 py-3 rounded-xl bg-white/5 font-black uppercase tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500/10 transition-colors">
-                                            No {p.no_multiplier}x
-                                        </button>
-                                    </div>
-                                </div>
+                                <PropRow
+                                    key={p.id}
+                                    id={p.id}
+                                    question={p.question}
+                                    yesMultiplier={p.yes_multiplier}
+                                    noMultiplier={p.no_multiplier}
+                                    yesPercent={p.yes_percent || 50}
+                                    category={p.category}
+                                />
                             ))}
                         </div>
                     </section>
