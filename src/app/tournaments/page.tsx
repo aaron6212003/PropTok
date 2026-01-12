@@ -11,13 +11,15 @@ export default async function TournamentsPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     // Parallel Fetching for Performance
-    const [tournamentsRes, entriesRes] = await Promise.all([
+    const [tournamentsRes, entriesRes, profile] = await Promise.all([
         getAllTournaments(),
-        user ? supabase.from('tournament_entries').select('*').eq('user_id', user.id) : Promise.resolve({ data: [] })
+        user ? supabase.from('tournament_entries').select('*').eq('user_id', user.id) : Promise.resolve({ data: [] }),
+        user ? supabase.from("users").select("cash_balance").eq("id", user.id).single() : Promise.resolve({ data: null })
     ]);
 
     const tournaments = tournamentsRes.data || [];
     const myEntries = entriesRes.data || [];
+    const userBalance = profile?.data?.cash_balance || 0;
 
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-32 text-white">
@@ -25,6 +27,7 @@ export default async function TournamentsPage() {
                 initialTournaments={tournaments}
                 initialEntries={myEntries}
                 currentUserId={user?.id || null}
+                userBalance={userBalance}
             />
 
             <nav className="fixed bottom-0 left-0 right-0 z-50">

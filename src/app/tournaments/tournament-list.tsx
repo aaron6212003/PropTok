@@ -10,9 +10,10 @@ interface TournamentListProps {
     initialTournaments: any[];
     initialEntries: any[];
     currentUserId: string | null;
+    userBalance: number;
 }
 
-export default function TournamentList({ initialTournaments, initialEntries, currentUserId }: TournamentListProps) {
+export default function TournamentList({ initialTournaments, initialEntries, currentUserId, userBalance }: TournamentListProps) {
     const [tournaments, setTournaments] = useState(initialTournaments);
     const [myEntries, setMyEntries] = useState(initialEntries);
     const [loading, setLoading] = useState(false);
@@ -178,11 +179,14 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                                         </div>
                                     ) : (
                                         (t.entry_fee_cents || 0) > 0 ? (
-                                            <JoinButton
-                                                tournamentId={t.id}
-                                                entryFeeCents={t.entry_fee_cents}
-                                                isLoggedIn={!!currentUserId}
-                                            />
+                                            <div className="flex-1">
+                                                <JoinButton
+                                                    tournamentId={t.id}
+                                                    entryFeeCents={t.entry_fee_cents}
+                                                    isLoggedIn={!!currentUserId}
+                                                    userBalance={userBalance}
+                                                />
+                                            </div>
                                         ) : (
                                             <button
                                                 onClick={() => joinTournament(t.id)}
