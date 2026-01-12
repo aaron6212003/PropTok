@@ -36,12 +36,14 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
         // USE ADMIN CLIENT TO BYPASS RLS
         const adminClient = createAdminClient();
         if (adminClient) {
-            const { data: entry } = await adminClient
+            const { data: entries } = await adminClient
                 .from("tournament_entries")
                 .select("current_stack, rank")
                 .eq("user_id", currentUser.id)
                 .eq("tournament_id", id)
-                .single();
+                .limit(1);
+
+            const entry = entries && entries.length > 0 ? entries[0] : null;
 
             myEntry = entry;
             if (entry) myRank = entry.rank;
