@@ -10,7 +10,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function GamePage({ params }: { params: { id: string } }) {
     // Use Admin Client to ensure we can read ALL bets regardless of permissions
-    const supabase = createAdminClient();
+    let supabase = createAdminClient();
+
+    // Fallback if Admin Client fails (e.g. missing env vars)
+    if (!supabase) {
+        console.warn("[GamePage] Admin Client failed to initialize, falling back to public client.");
+        supabase = await createClient();
+    }
     const { id } = params;
 
     let predictions: any[] = [];
