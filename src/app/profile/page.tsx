@@ -13,8 +13,8 @@ import ResolutionRecap from '@/components/social/resolution-recap';
 import WalletToggle from '@/components/layout/wallet-toggle';
 import ProfileEditor from '@/components/profile/profile-editor';
 
-export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
-    const { tournament: tournamentId } = await searchParams;
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tournament?: string, deposit_success?: string }> }) {
+    const { tournament: tournamentId, deposit_success } = await searchParams;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -103,6 +103,20 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     return (
         <main className="relative flex h-full w-full flex-col overflow-y-auto bg-black pb-24 text-white">
             <ResolutionRecap results={resolvedUnseen} />
+
+            {deposit_success === 'true' && (
+                <div className="mx-6 mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-emerald-500 rounded-full p-1">
+                            <CheckCircle2 size={16} className="text-black" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-black text-emerald-400 uppercase tracking-widest">Deposit Successful!</p>
+                            <p className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-wider">Your balance has been updated.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex items-center justify-between p-6">

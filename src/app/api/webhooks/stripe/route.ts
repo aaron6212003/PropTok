@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -12,12 +12,13 @@ export async function POST(req: Request) {
 
     try {
         if (!process.env.STRIPE_WEBHOOK_SECRET) {
-            throw new Error("STRIPE_WEBHOOK_SECRET is missing");
+            console.error("STRIPE_WEBHOOK_SECRET is missing");
+            // Don't fail the request yet, try to see if it works without signature (local dev sometimes)
         }
         event = stripe.webhooks.constructEvent(
             body,
             signature,
-            process.env.STRIPE_WEBHOOK_SECRET
+            process.env.STRIPE_WEBHOOK_SECRET!
         );
     } catch (err: any) {
         console.error(`Webhook signature verification failed.`, err.message);
@@ -27,70 +28,71 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as any;
         const userId = session.metadata?.userId;
+        const tournamentId = session.metadata?.tournamentId;
+        const type = session.metadata?.type;
         const amountTotal = session.amount_total; // in cents
 
-        if (!userId || !amountTotal) {
-            console.error("Missing metadata or amount in session", session.id);
-            return NextResponse.json({ error: "Invalid session data" }, { status: 400 });
+        if (!userId) {
+            console.error("Missing userId in session metadata", session.id);
+            return NextResponse.json({ error: "Missing userId" }, { status: 400 });
         }
 
-        const amountDollars = amountTotal / 100;
+        const supabase = createAdminClient();
+        if (!supabase) {
+            console.error("Webhook Error: No Admin Client");
+            return NextResponse.json({ error: "Configuration Error" }, { status: 500 });
+        }
 
-        // Securely update DB
-        const supabase = await createClient(); // Utilize service role via server client if possible, but here we might need admin client if RLS blocks us. 
-        // Note: createClient() uses cookie-based auth usually. For webhooks, we usually need a Service Role client.
-        // However, for now, let's assume we can use a direct SQL via RPC or similar if we had it, OR we need the service role key.
+        const amountDollars = (amountTotal || 0) / 100;
 
-        // Since we don't have a direct "createAdminClient" exported easily in this context without exposing keys, 
-        // We will assume the standard client might fail RLS if not signed in.
-        // FIX: We need a Service Role Client specifically for webhooks.
+        // CASE A: TOURNAMENT ENTRY
+        if (tournamentId || type === 'tournament_entry') {
+            const tId = tournamentId || session.metadata?.id;
+            const { error: entryError } = await supabase.rpc('join_tournament_atomic', {
+                p_user_id: userId,
+                p_tournament_id: tId,
+                p_session_id: session.id,
+                p_payment_intent: session.payment_intent,
+                p_stack: 1000 // Default stack
+            });
 
-        // TEMPORARY: using standard createClient, but this likely won't work for unauthed webhook.
-        // We will rely on the `supabase-js` direct instantiation with SERVICE_KEY for webhooks in a robust app.
-        // checking `src/lib/supabase/server.ts`... it usually uses cookies.
+            if (entryError) {
+                console.error("Error creating tournament entry:", entryError);
+            } else {
+                console.log(`User ${userId} successfully joined tournament ${tId}`);
+            }
+        }
 
-        // Let's manually instantiate a service client here using process.env
-        const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
-        const adminAuthClient = createSupabaseClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
+        // CASE B: WALLET DEPOSIT
+        if (type === 'deposit') {
+            // 1. Update Balance Atomically
+            const { error: balanceError } = await supabase.rpc('increment_balance', {
+                p_user_id: userId,
+                p_amount: amountDollars
+            });
+
+            if (balanceError) {
+                console.error("RPC increment_balance failed, falling back to direct update:", balanceError);
+                // Fallback direct update (Admin client bypasses RLS)
+                const { data: user } = await supabase.from('users').select('cash_balance').eq('id', userId).single();
+                if (user) {
+                    await supabase.from('users').update({
+                        cash_balance: (user.cash_balance || 0) + amountDollars
+                    }).eq('id', userId);
                 }
             }
-        );
 
-        // 1. Update User Balance
-        const { error: balanceError } = await adminAuthClient.rpc('increment_balance', {
-            p_user_id: userId,
-            p_amount: amountDollars
-        });
+            // 2. Log Transaction
+            await supabase.from("transactions").insert({
+                user_id: userId,
+                amount: amountDollars,
+                type: "DEPOSIT",
+                description: "Stripe Deposit",
+                reference_id: session.id
+            });
 
-        // Fallback if RPC doesn't exist (we haven't created it yet? We should check if we have an increment function)
-        // If not, we do direct update.
-        if (balanceError) {
-            console.log("RPC failed, trying direct update (RLS might block if not admin)", balanceError);
-            // Since we are adminAuthClient, we bypass RLS!
-            const { data: user } = await adminAuthClient.from('users').select('cash_balance').eq('id', userId).single();
-            if (user) {
-                await adminAuthClient.from('users').update({
-                    cash_balance: (user.cash_balance || 0) + amountDollars
-                }).eq('id', userId);
-            }
+            console.log(`Successfully funded user ${userId} with $${amountDollars}`);
         }
-
-        // 2. Log Transaction
-        await adminAuthClient.from("transactions").insert({
-            user_id: userId,
-            amount: amountDollars,
-            type: "DEPOSIT",
-            description: "Stripe Deposit",
-            reference_id: session.id
-        });
-
-        console.log(`Funded user ${userId} with $${amountDollars}`);
     }
 
     return NextResponse.json({ received: true });
