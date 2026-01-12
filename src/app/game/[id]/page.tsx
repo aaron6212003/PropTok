@@ -3,6 +3,7 @@ import BetCard from '@/components/profile/bet-card';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
+import PropRow from '@/components/game/prop-row';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,15 +136,14 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                     ) : (
                         <div className="grid gap-4">
                             {props.map((p: any) => (
-                                <div key={p.id} className="p-4 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 transition-colors">
-                                    <div className="flex justify-between items-start gap-4">
-                                        <p className="font-bold text-sm text-zinc-300">{p.question}</p>
-                                        <div className="flex gap-2 shrink-0">
-                                            <span className="px-3 py-1.5 rounded-lg bg-[#00DC82]/10 text-[#00DC82] text-xs font-black border border-[#00DC82]/20">YES {p.yes_multiplier}x</span>
-                                            <span className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20">NO {p.no_multiplier}x</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <PropRow
+                                    key={p.id}
+                                    id={p.id}
+                                    question={p.question}
+                                    yesMultiplier={p.yes_multiplier}
+                                    noMultiplier={p.no_multiplier}
+                                    yesPercent={p.yes_percent || 50}
+                                />
                             ))}
                         </div>
                     )}
