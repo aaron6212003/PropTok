@@ -138,7 +138,7 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                                 >
                                     <Link
                                         href={pathname === '/profile' ? `/profile?tournament=${t.tournament_id}` : `/?tournament=${t.tournament_id}`}
-                                        onClick={() => setIsOpen(false)}
+                                        onClick={() => { setIsOpen(false); setCurrency('CHIPS'); }}
                                         className={cn(
                                             "group flex items-center justify-between rounded-2xl border p-4 transition-all",
                                             tournamentId === t.tournament_id
