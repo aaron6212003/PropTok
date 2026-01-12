@@ -1,6 +1,7 @@
 "use client";
 
-import { useBetSlip } from "@/lib/context/bet-slip-context";
+// Simplified Wallet Display
+
 import { Coins, Wallet, Plus } from "lucide-react";
 import Link from 'next/link';
 
