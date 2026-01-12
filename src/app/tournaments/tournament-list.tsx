@@ -134,7 +134,7 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                                 <div className="grid grid-cols-3 gap-2 border-t border-white/5 pt-4">
                                     <div className="text-center p-2 rounded-lg bg-white/5">
                                         <span className="block text-[10px] uppercase text-zinc-500">Buy-in</span>
-                                        <span className="font-mono text-sm font-bold text-white">${t.entry_fee}</span>
+                                        <span className="font-mono text-sm font-bold text-white">${((t.entry_fee_cents || 0) / 100).toFixed(2)}</span>
                                     </div>
                                     <div className="text-center p-2 rounded-lg bg-white/5">
                                         <span className="block text-[10px] uppercase text-zinc-500">Stack</span>
@@ -163,7 +163,7 @@ export default function TournamentList({ initialTournaments, initialEntries, cur
                                             </a>
                                         </div>
                                     ) : (
-                                        t.entry_fee_cents > 0 ? (
+                                        (t.entry_fee_cents || 0) > 0 ? (
                                             <JoinButton
                                                 tournamentId={t.id}
                                                 entryFeeCents={t.entry_fee_cents}

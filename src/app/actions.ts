@@ -766,7 +766,7 @@ export async function createTournament(formData: FormData) {
         .insert({
             name,
             description,
-            entry_fee: entryFee,
+            entry_fee_cents: entryFee * 100, // Save as cents
             starting_stack: startingStack,
             rake_percent: 10,
             platform_fee_percent: 5,
@@ -812,7 +812,7 @@ export async function createFeaturedTournament(formData: FormData) {
         .insert({
             name,
             description,
-            entry_fee: entryFee,
+            entry_fee_cents: entryFee * 100,
             starting_stack: startingStack,
             rake_percent: 10,
             platform_fee_percent: 5,
@@ -1114,7 +1114,7 @@ export async function joinTournament(tournamentId: string) {
     const { data: existing } = await supabase.from("tournament_entries").select("user_id").eq("tournament_id", tournamentId).eq("user_id", user.id).single();
     if (existing) return { error: "You have already joined this tournament." };
 
-    const entryFee = tournament.entry_fee || 0;
+    const entryFee = (tournament.entry_fee_cents || 0) / 100;
     const currentCash = profile?.cash_balance || 0;
 
     // 2. Check Funds
