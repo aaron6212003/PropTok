@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import LiveLeaderboard from "@/components/tournament/live-leaderboard";
 import JoinButton from "@/components/tournament/join-button";
+import BetSlip from "@/components/feed/bet-slip";
 
 export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string; session_id?: string }> }) {
     const { id } = await params;
@@ -137,6 +138,8 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
             <div className="fixed bottom-0 left-0 right-0 z-50">
                 <BottomNavBar />
             </div>
+
+            <BetSlip bankroll={myEntry?.current_stack || 0} />
         </main>
     );
 }

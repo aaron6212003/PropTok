@@ -150,7 +150,47 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         return [];
     }
 
-    return data.map((p: any) => ({
+    // --- DEDUPLICATION LOGIC ---
+    // Filter out "mirrored" duplicates (e.g. "Team A vs Team B" and "Team B vs Team A" for same market)
+    // We group by the unique GameID + MarketKey prefix of the external_id
+    // Format is: {gameId}-{marketKey}-{uniqueIdentifier}
+    // We assume the first 2 parts form the unique market group.
+
+    const seenMarkets = new Set();
+    const uniqueTranslations = [];
+
+    for (const p of data) {
+        // external_id is like: "f123456-h2h-Lakers"
+        // We want to extract "f123456-h2h"
+        // But some markets like player props have more dashes.
+        // Game IDs are usually 32 chars hash or similar.
+        // Let's rely on the fact that for h2h/spreads/totals, duplicates are the main issue.
+
+        let shouldInclude = true;
+
+        if (p.category === 'NCAA' || p.category === 'NBA' || p.category === 'NFL') { // Target US Sports mainly
+            const parts = p.external_id.split('-');
+            if (parts.length >= 2) {
+                const marketKey = parts[1]; // 'h2h', 'spreads', 'totals'
+                if (['h2h', 'spreads', 'totals'].includes(marketKey)) {
+                    const gameId = parts[0];
+                    const compositeKey = `${gameId}-${marketKey}`;
+
+                    if (seenMarkets.has(compositeKey)) {
+                        shouldInclude = false;
+                    } else {
+                        seenMarkets.add(compositeKey);
+                    }
+                }
+            }
+        }
+
+        if (shouldInclude) {
+            uniqueTranslations.push(p);
+        }
+    }
+
+    return uniqueTranslations.map((p: any) => ({
         ...p,
         // Map snake_case to camelCase for UI components
         yesMultiplier: p.yes_multiplier,
