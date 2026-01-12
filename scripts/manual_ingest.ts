@@ -33,7 +33,7 @@ const BASE_URL = "https://api.the-odds-api.com/v4/sports";
 
 async function run() {
     console.log("🚀 Starting Manual Ingestion...");
-    console.log(`🔑 Using Odds Key: ${THE_ODDS_API_KEY.slice(0, 5)}...`);
+    console.log(`🔑 Using Odds Key: ${THE_ODDS_API_KEY!.slice(0, 5)}...`);
 
     for (const sport of SPORTS) {
         // Request Expanded Markets
