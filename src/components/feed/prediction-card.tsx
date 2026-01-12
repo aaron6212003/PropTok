@@ -111,7 +111,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     {/* Main Content Area - Centered */}
                     <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-xs mx-auto gap-6 pt-12 text-center pointer-events-none">
                         {/* Category Badge - Centered above question */}
-                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2 pointer-events-auto">
+                        <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2 pointer-events-auto z-30">
                             <span className={cn(
                                 "text-[10px] font-black uppercase tracking-widest",
                                 CATEGORY_TEXT_COLORS[prediction.category] || 'text-white'
@@ -120,10 +120,16 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             </span>
                         </div>
 
-                        <Link href={`/game/${prediction.externalId?.split('-')[0] || prediction.id}`} className="block pointer-events-auto">
-                            <h1 className="text-3xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl active:scale-95 transition-transform hover:text-brand">
+                        <Link
+                            href={`/game/${prediction.externalId?.split('-')[0] || prediction.id}`}
+                            className="group relative block pointer-events-auto z-30 p-4 -m-4 rounded-xl transition-colors hover:bg-white/5"
+                        >
+                            <h1 className="text-3xl font-black leading-tight tracking-tighter text-center shadow-black drop-shadow-xl active:scale-95 transition-transform group-hover:text-brand group-hover:scale-105">
                                 {prediction.question}
                             </h1>
+                            <div className="mt-2 text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">
+                                Tap to view more lines
+                            </div>
                         </Link>
 
                         {/* Removed Old Horizontal Buttons */}
