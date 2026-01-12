@@ -101,6 +101,14 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
 
     return data.map((p: any) => ({
         ...p,
+        // Map snake_case to camelCase for UI components
+        yesMultiplier: p.yes_multiplier,
+        noMultiplier: p.no_multiplier,
+        yesPercent: p.yes_percent,
+        externalId: p.external_id,
+        expiresAt: p.expires_at,
+        createdAt: p.created_at,
+        imageUrl: p.image_url,
         commentCount: p.comments?.[0]?.count || 0
     }));
 }
