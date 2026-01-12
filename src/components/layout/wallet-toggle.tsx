@@ -81,7 +81,7 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
                         <div className="flex items-center gap-2">
                             <Coins className="h-4 w-4 text-yellow-500" />
                             <div className="flex flex-col items-start">
-                                <span className="font-bold text-white">Prop Chips</span>
+                                <span className="font-bold text-white">Tournament Cash</span>
                                 <span className="text-[10px] text-yellow-500">{chips.toLocaleString()}</span>
                             </div>
                         </div>
@@ -92,11 +92,11 @@ export default function WalletToggle({ cash, chips }: { cash: number, chips: num
 
                     {/* Deposit Link */}
                     <Link
-                        href="/wallet"
+                        href="/wallet?mode=promo"
                         onClick={() => setIsOpen(false)}
                         className="flex w-full items-center justify-center rounded-lg bg-[#00DC82]/10 py-2 text-xs font-bold text-[#00DC82] hover:bg-[#00DC82]/20 transition-colors"
                     >
-                        Deposit Funds
+                        Redeem Promo Code
                     </Link>
                 </div>
             )}
