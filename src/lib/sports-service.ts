@@ -40,15 +40,15 @@ export const sportsService = {
     generateQuestion(marketType: string, game: SportsMarket, outcome: any): string {
         const team = outcome.name;
 
-        // --- 1. GAME LINES ---
+        // --- 1. GAME LINES (Standard & Alt) ---
         if (marketType === 'h2h') {
             return `Will ${team} win against ${team === game.home_team ? game.away_team : game.home_team}?`;
         }
-        if (marketType === 'spreads') {
+        if (marketType === 'spreads' || marketType === 'alternate_spreads') {
             const points = outcome.point > 0 ? `+${outcome.point}` : outcome.point;
             return `Will ${team} cover ${points} vs ${team === game.home_team ? game.away_team : game.home_team}?`;
         }
-        if (marketType === 'totals') {
+        if (marketType === 'totals' || marketType === 'alternate_totals') {
             // Outcome name is usually 'Over' or 'Under'
             return `Will ${game.home_team} vs ${game.away_team} go ${outcome.name.toUpperCase()} ${outcome.point} points?`;
         }
@@ -63,26 +63,26 @@ export const sportsService = {
 
             if (!player) return `Will ${team} win?`; // Fallback
 
-            switch (marketType) {
-                case 'player_points':
-                    return `Will ${player} score ${type} ${line} Points?`;
-                case 'player_assists':
-                    return `Will ${player} record ${type} ${line} Assists?`;
-                case 'player_rebounds':
-                    return `Will ${player} grab ${type} ${line} Rebounds?`;
-                case 'player_threes':
-                    return `Will ${player} make ${type} ${line} Three-Pointers?`;
-                case 'player_pass_tds':
-                    return `Will ${player} throw ${type} ${line} Touchdowns?`;
-                case 'player_rush_yds':
-                    return `Will ${player} rush for ${type} ${line} Yards?`;
-                case 'player_reception_yds':
-                    return `Will ${player} have ${type} ${line} Receiving Yards?`;
-                case 'player_anytime_scorer':
-                    return `Will ${player} score a Touchdown anytime?`;
-                default:
-                    return `Will ${player} hit ${type} ${line} in ${marketType.replace('player_', '')}?`;
-            }
+            // Formatting Helper
+            const propName = marketType.replace('player_', '')
+                .replace(/_/g, ' ')
+                .replace('three', '3')
+                .replace('pass tds', 'Passing TDs')
+                .replace('rush yds', 'Rushing Yards')
+                .replace('reception yds', 'Receiving Yards')
+                .replace('pass attempts', 'Pass Attempts')
+                .replace('pass completions', 'Pass Completions')
+                .replace('pass interceptions', 'Interceptions')
+                .replace('rush attempts', 'Rush Attempts')
+                .replace('receptions', 'Receptions')
+                .replace('anytime scorer', 'Score a TD')
+                .replace('double double', 'Record a Double-Double')
+                .replace('points rebounds assists', 'PRA')
+                .toUpperCase();
+
+            if (marketType === 'player_anytime_scorer') return `Will ${player} score a Touchdown?`;
+
+            return `Will ${player} record ${type} ${line} ${propName}?`;
         }
 
         return `Will ${team} win?`;
@@ -101,14 +101,17 @@ export const sportsService = {
             // Updated to include Player Props markets tailored to each sport
             // Requesting "player_pass_tds" for NBA causes a 422 Error.
 
-            let markets = "h2h,spreads,totals"; // Defaults
+            // Updated to include Player Props markets tailored to each sport
+            // Requesting "player_pass_tds" for NBA causes a 422 Error.
+
+            let markets = "h2h,spreads,totals,alternate_spreads,alternate_totals"; // Enhanced Defaults
 
             if (sport.includes("basketball_nba")) {
-                markets += ",player_points,player_assists,player_rebounds,player_threes";
+                markets += ",player_points,player_assists,player_rebounds,player_threes,player_blocks,player_steals,player_turnovers,player_points_rebounds_assists,player_points_rebounds,player_points_assists,player_rebounds_assists,player_double_double";
             } else if (sport.includes("americanfootball_nfl")) {
-                markets += ",player_pass_tds,player_rush_yds,player_reception_yds,player_anytime_scorer";
+                markets += ",player_pass_tds,player_rush_yds,player_reception_yds,player_anytime_scorer,player_pass_attempts,player_pass_completions,player_pass_interceptions,player_rush_attempts,player_receptions";
             } else if (sport.includes("icehockey_nhl")) {
-                markets += ",player_points,player_assists"; // NHL "points" = goals + assists
+                markets += ",player_points,player_assists,player_power_play_points,player_blocked_shots,player_shots_on_goal,player_goals";
             }
             // Soccer typically uses different prop names or just h2h/totals in basic plans.
             // keeping soccer simple for now to avoid 422s.
