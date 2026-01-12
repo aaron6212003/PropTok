@@ -5,6 +5,10 @@ import { NextResponse } from 'next/server';
 export async function GET(req: Request) {
     const supabase = createAdminClient();
 
+    if (!supabase) {
+        return NextResponse.json({ error: "Admin Client Init Failed" }, { status: 500 });
+    }
+
     // Get ALL tournaments to test connectivity
     const { data: tournaments, error: tError } = await supabase
         .from('tournaments')
