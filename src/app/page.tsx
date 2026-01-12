@@ -66,7 +66,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
         tournamentId={tournamentId}
       />
 
-      <BetSlip bankroll={activeBankroll} />
+      <BetSlip cashBalance={profile?.cash_balance || 0} />
 
       <div className="fixed bottom-0 left-0 right-0 z-50">
         <BottomNavBar />

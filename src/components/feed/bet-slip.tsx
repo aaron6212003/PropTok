@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface BetSlipProps {
-    bankroll: number;
+    cashBalance: number;
 }
 
-export default function BetSlip({ bankroll }: BetSlipProps) {
+export default function BetSlip({ cashBalance }: BetSlipProps) {
     const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId: contextTournamentId } = useBetSlip();
     const [wager, setWager] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +36,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
 
     // Derived Balance
     const activeBalance = activeWalletId === "chips"
-        ? bankroll
+        ? cashBalance
         : myTournaments.find(t => t.tournament_id === activeWalletId)?.current_stack || 0;
 
     // Default wager
@@ -221,7 +221,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                                             )}
                                         >
                                             <span className={cn("text-[10px] font-black uppercase tracking-widest", activeWalletId === "chips" ? "text-brand" : "text-zinc-500")}>Real Cash</span>
-                                            <span className="text-sm font-bold text-white">${bankroll.toLocaleString()}</span>
+                                            <span className="text-sm font-bold text-white">${cashBalance.toLocaleString()}</span>
                                         </button>
 
                                         {/* Tournament Options */}

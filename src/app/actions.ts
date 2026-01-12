@@ -255,7 +255,7 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
     const { data, error } = await supabase.rpc('place_bet', {
         p_user_id: user.id,
         p_prediction_id: predictionId,
-        p_amount: wager,
+        p_wager: wager,
         p_side: side,
         p_multiplier: multiplier,
         p_tournament_id: tournamentId
