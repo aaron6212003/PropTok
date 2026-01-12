@@ -95,7 +95,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
         <>
             {/* Floating AB (FAB) - Bottom Right */}
             {!isOpen && (
-                <div className="fixed bottom-[96px] right-4 z-40">
+                <div className="fixed bottom-28 right-4 z-[100]">
                     <motion.button
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
