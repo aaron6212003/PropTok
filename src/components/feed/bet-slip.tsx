@@ -14,56 +14,62 @@ interface BetSlipProps {
 }
 
 export default function BetSlip({ bankroll }: BetSlipProps) {
-    const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId: contextTournamentId } = useBetSlip();
+    const { items, isOpen, setIsOpen, removeFromSlip, clearSlip, tournamentId: contextTournamentId, currency, setCurrency } = useBetSlip();
     const [wager, setWager] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [myTournaments, setMyTournaments] = useState<any[]>([]);
-    const [activeWalletId, setActiveWalletId] = useState<string | "cash">("cash"); // "cash" or tournament_id
     const router = useRouter();
 
-    // Fetch Tournaments on Load
+    // Fetch Tournaments
     useEffect(() => {
         const fetchTournaments = async () => {
-            // Import dynamically to avoid server-action issues if needed, or just call imported
             const entries = await getUserTournamentEntries();
             setMyTournaments(entries || []);
-
-            // If context already has a tournament set, default to it
-            if (contextTournamentId) {
-                setActiveWalletId(contextTournamentId);
-            }
         };
         fetchTournaments();
-    }, [contextTournamentId]);
+    }, []);
 
-    // Derived State for Current Balance
-    const activeBalance = activeWalletId === "cash"
-        ? bankroll
-        : myTournaments.find(t => t.tournament_id === activeWalletId)?.current_stack || 0;
+    // Derived State
+    const isTournamentMode = !!contextTournamentId;
 
-    // Default wager to a safe amount of active balance
+    // Calculate Active Balance
+    let activeBalance = 0;
+    if (isTournamentMode) {
+        // Find stack in tournament
+        activeBalance = myTournaments.find(t => t.tournament_id === contextTournamentId)?.current_stack || 0;
+    } else {
+        // Global Mode
+        if (currency === 'CASH') {
+            activeBalance = 0; // You cannot bet cash directly
+        } else {
+            activeBalance = bankroll; // Global Chips
+        }
+    }
+
+    // Default wager
     useEffect(() => {
-        // Only set default if wager is 0 to avoid overriding user input
-        if (wager === 0 && activeBalance > 0) {
+        if (wager === 0 && activeBalance > 0 && (currency === 'CHIPS' || isTournamentMode)) {
             setWager(Math.min(25, activeBalance));
         }
-        // Clamp if balance drops below current wager (e.g. switching wallets)
-        if (wager > activeBalance) {
-            setWager(activeBalance);
-        }
-    }, [activeBalance, wager]);
+    }, [activeBalance, currency, isTournamentMode]);
 
     if (items.length === 0) return null;
 
-    // Calculate Odds
+    // Odds
     const totalMultiplier = items.reduce((acc, item) => acc * item.multiplier, 1);
     const payout = (wager * totalMultiplier).toFixed(0);
 
     const handlePlaceBet = async () => {
-        vibrate(20); // Initial press feedback
+        // Block if trying to bet Cash
+        if (!isTournamentMode && currency === 'CASH') {
+            toast.error("You cannot bet Real Cash directly. Switch to Chips or Join a Tournament.");
+            return;
+        }
+
+        vibrate(20);
         setIsSubmitting(true);
         try {
-            const targetTournamentId = activeWalletId === "cash" ? undefined : activeWalletId;
+            const targetTournamentId = contextTournamentId || undefined;
 
             if (items.length === 1) {
                 // Single Bet
@@ -71,8 +77,8 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 const res = await submitVote(item.predictionId, item.side, wager, targetTournamentId);
                 if (res.error) toast.error(res.error);
                 else {
-                    vibrate([10, 50, 10]); // Success pattern
-                    toast.success("Bundle Placed!");
+                    vibrate([10, 50, 10]);
+                    toast.success("Bet Placed!");
                     clearSlip();
                     router.refresh();
                 }
@@ -82,7 +88,7 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                 const res = await placeBundleWager(legs, wager, targetTournamentId);
                 if (res.error) toast.error(res.error);
                 else {
-                    vibrate([10, 50, 10]); // Success pattern
+                    vibrate([10, 50, 10]);
                     toast.success("Bundle Placed!");
                     clearSlip();
                     router.refresh();
@@ -197,61 +203,44 @@ export default function BetSlip({ bankroll }: BetSlipProps) {
                             {/* Wallet Selector & Controls */}
                             <div className="border-t border-white/10 bg-black p-6 pb-10">
 
-                                {/* Wallet Selector */}
-                                <div className="mb-6">
-                                    <div className="mb-2 flex items-center justify-between">
+                                {/* Active Wallet Display */}
+                                <div className="mb-6 rounded-xl bg-zinc-900 border border-white/5 p-4 flex items-center justify-between">
+                                    <div className="flex flex-col">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                            Pay With
+                                            Betting With
                                         </span>
-                                        <span className="text-[10px] font-bold text-white">
-                                            Balance: <span className="text-success">${activeBalance.toLocaleString()}</span>
+                                        <span className={cn(
+                                            "font-black text-lg",
+                                            isTournamentMode ? "text-yellow-500" : (currency === 'CASH' ? "text-emerald-500" : "text-brand")
+                                        )}>
+                                            {isTournamentMode
+                                                ? "Tournament Chips"
+                                                : (currency === 'CASH' ? "Real Cash" : "Prop Chips")
+                                            }
                                         </span>
                                     </div>
-
-                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                                        {/* Cash Option */}
-                                        <button
-                                            onClick={() => setActiveWalletId("cash")}
-                                            className={cn(
-                                                "flex flex-col items-start gap-1 rounded-xl border p-3 min-w-[120px] transition-all",
-                                                activeWalletId === "cash"
-                                                    ? "border-brand bg-brand/10"
-                                                    : "border-white/10 bg-zinc-900 hover:bg-zinc-800"
-                                            )}
-                                        >
-                                            <span className={cn("text-[10px] font-black uppercase tracking-widest", activeWalletId === "cash" ? "text-brand" : "text-zinc-500")}>Prop Cash</span>
-                                            <span className="text-sm font-bold text-white">${bankroll.toLocaleString()}</span>
-                                        </button>
-
-                                        {/* Tournament Options */}
-                                        {myTournaments.map(t => (
-                                            <button
-                                                key={t.tournament_id}
-                                                onClick={() => setActiveWalletId(t.tournament_id)}
-                                                className={cn(
-                                                    "flex flex-col items-start gap-1 rounded-xl border p-3 min-w-[140px] max-w-[160px] transition-all",
-                                                    activeWalletId === t.tournament_id
-                                                        ? "border-yellow-500 bg-yellow-500/10"
-                                                        : "border-white/10 bg-zinc-900 hover:bg-zinc-800"
-                                                )}
-                                            >
-                                                <span className={cn(
-                                                    "text-[10px] font-black uppercase tracking-widest truncate w-full text-left",
-                                                    activeWalletId === t.tournament_id ? "text-yellow-500" : "text-zinc-500"
-                                                )}>
-                                                    {t.tournament?.name || "Tournament"}
-                                                </span>
-                                                <span className="text-sm font-bold text-white">${t.current_stack.toLocaleString()}</span>
-                                            </button>
-                                        ))}
-
-                                        {myTournaments.length === 0 && (
-                                            <div className="flex items-center justify-center rounded-xl border border-dashed border-white/5 bg-transparent px-4">
-                                                <span className="text-[10px] text-zinc-600">No Tournaments</span>
-                                            </div>
-                                        )}
+                                    <div className="text-right">
+                                        <span className="text-[10px] font-bold uppercase text-zinc-500">Balance</span>
+                                        <div className="text-xl font-bold text-white">
+                                            ${activeBalance.toLocaleString()}
+                                        </div>
                                     </div>
                                 </div>
+
+                                {/* Warning for Cash Mode */}
+                                {!isTournamentMode && currency === 'CASH' && (
+                                    <div className="mb-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-center">
+                                        <p className="text-xs font-bold text-emerald-400 mb-2">
+                                            Real Money cannot be bet directly.
+                                        </p>
+                                        <button
+                                            onClick={() => setCurrency('CHIPS')}
+                                            className="w-full rounded-lg bg-emerald-500 py-2 text-xs font-black text-black hover:bg-emerald-400"
+                                        >
+                                            Switch to Chips to Bet
+                                        </button>
+                                    </div>
+                                )}
 
                                 <div className="mb-6 flex flex-col items-center">
                                     <div className="mb-2 flex items-baseline gap-1">
