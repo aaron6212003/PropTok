@@ -13,7 +13,8 @@ export default function CreateTournamentPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [entryFee, setEntryFee] = useState(20);
     const [maxPlayers, setMaxPlayers] = useState(10); // Default to 10
-    const [rakePercent, setRakePercent] = useState(10); // Standard House Take
+    const [rakePercent, setRakePercent] = useState(10); // Standard House Take (5% creator + 5% platform)
+    const [payoutStructure, setPayoutStructure] = useState("top3"); // Default
 
     // Prize Pool Calculation
     // Assuming 10 players for the preview
@@ -119,19 +120,61 @@ export default function CreateTournamentPage() {
                             </div>
                         </div>
 
+                        {/* Payout Structure Selection */}
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold text-white flex items-center gap-2">
+                                <Trophy size={14} className="text-brand" />
+                                Payout Structure
+                            </label>
+                            <div className="grid grid-cols-1 gap-2">
+                                {[
+                                    { id: "winner", name: "Winner Takes All", desc: "100% to 1st place", value: { "1": 100 } },
+                                    { id: "top3", name: "Top 3 Split", desc: "70% / 20% / 10%", value: { "1": 70, "2": 20, "3": 10 } },
+                                    { id: "fifty", name: "Top Heavy", desc: "50% / 30% / 20%", value: { "1": 50, "2": 30, "3": 20 } },
+                                ].map((p) => (
+                                    <button
+                                        key={p.id}
+                                        type="button"
+                                        onClick={() => setPayoutStructure(p.id)}
+                                        className={cn(
+                                            "flex flex-col items-start p-4 rounded-xl border transition-all text-left",
+                                            payoutStructure === p.id
+                                                ? "bg-brand/10 border-brand shadow-lg shadow-brand/10"
+                                                : "bg-black/40 border-white/5 hover:border-white/10"
+                                        )}
+                                    >
+                                        <div className="flex items-center justify-between w-full">
+                                            <span className={cn("text-sm font-bold", payoutStructure === p.id ? "text-white" : "text-zinc-400")}>{p.name}</span>
+                                            {payoutStructure === p.id && <div className="h-2 w-2 rounded-full bg-brand" />}
+                                        </div>
+                                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{p.desc}</span>
+                                        <input type="hidden" name="payout_structure" value={JSON.stringify(p.value)} disabled={payoutStructure !== p.id} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Summary Box */}
-                        <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2">
+                        <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                            <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Service Fees</span>
+                                    <span className="text-xs text-zinc-300">5% Platform + 5% You (Creator)</span>
+                                </div>
+                                <span className="font-mono font-bold text-zinc-400">10% Total</span>
+                            </div>
+
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-400">Est. Total Pool</span>
+                                <span className="text-zinc-400 font-bold">Total Pot</span>
                                 <span className="font-mono font-bold text-white">
                                     ${(entryFee * (maxPlayers > 100 ? 10 : maxPlayers)).toLocaleString()}
-                                    {maxPlayers > 100 && <span className="text-xs text-zinc-500 ml-1">(based on 10 players)</span>}
+                                    {maxPlayers > 100 && <span className="text-[10px] text-zinc-500 ml-1">(est.)</span>}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-400">Est. Prize Pool (After Rake)</span>
-                                <span className="font-mono font-bold text-brand">
-                                    ${((entryFee * (maxPlayers > 100 ? 10 : maxPlayers)) * ((100 - rakePercent) / 100)).toLocaleString()}
+                                <span className="text-zinc-400 font-bold italic">Winner Payout Pool</span>
+                                <span className="font-mono font-bold text-brand italic">
+                                    ${((entryFee * (maxPlayers > 100 ? 10 : maxPlayers)) * 0.9).toLocaleString()}
                                 </span>
                             </div>
                         </div>

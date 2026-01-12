@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sportsService } from "@/lib/sports-service";
+import { cn, vibrate } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { calculatePayouts } from "@/lib/payout-service";
 
 // ... imports
 
@@ -760,7 +764,7 @@ export async function createTournament(formData: FormData) {
 
     // Standard Game Config
     const startingStack = 1000;
-    const rakePercent = 10;
+    const payoutStructure = formData.get("payout_structure") as string || JSON.stringify({ "1": 70, "2": 20, "3": 10 });
 
     const { data, error } = await supabase
         .from("tournaments")
@@ -769,11 +773,14 @@ export async function createTournament(formData: FormData) {
             description,
             entry_fee: entryFee,
             starting_stack: startingStack,
-            rake_percent: rakePercent,
+            rake_percent: 10,
+            platform_fee_percent: 5,
+            creator_fee_percent: 5,
+            payout_structure: payoutStructure,
             max_players: maxPlayers,
             status: 'ACTIVE',
             is_public: true,
-            owner_id: user.id // Explicitly set owner for User-Hosted
+            owner_id: user.id
         })
         .select("id")
         .single();
@@ -813,6 +820,9 @@ export async function createFeaturedTournament(formData: FormData) {
             entry_fee: entryFee,
             starting_stack: startingStack,
             rake_percent: 10,
+            platform_fee_percent: 5,
+            creator_fee_percent: 5,
+            payout_structure: JSON.stringify({ "1": 70, "2": 20, "3": 10 }),
             max_players: maxPlayers,
             status: 'ACTIVE',
             is_public: true,
@@ -850,6 +860,112 @@ export async function acceptTos(ip: string, region: string) {
 
     revalidatePath("/", "layout");
     return { success: true };
+}
+
+export async function settleTournament(tournamentId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Login required" };
+
+    const admin = createAdminClient();
+    const client = admin || supabase;
+
+    // 1. Fetch Tournament & Entries
+    const { data: tournament } = await client.from('tournaments').select('*').eq('id', tournamentId).single();
+    if (!tournament) return { error: "Tournament not found" };
+
+    // Check permissions (Only owner or system can settle)
+    if (tournament.owner_id && tournament.owner_id !== user.id) {
+        return { error: "Only the creator can settle this tournament" };
+    }
+
+    if (tournament.status === 'COMPLETED') return { error: "Already settled" };
+
+    const { data: entries } = await client
+        .from('tournament_entries')
+        .select('user_id, current_stack, paid')
+        .eq('tournament_id', tournamentId);
+
+    if (!entries || entries.length === 0) return { error: "No entries found" };
+
+    // 2. Calculate Payouts
+    const paidEntries = entries.filter(e => e.paid);
+    const totalPotCents = paidEntries.length * (tournament.entry_fee_cents || 0);
+
+    // Sort by stack to find winners
+    const rankedEntries = [...paidEntries]
+        .sort((a, b) => b.current_stack - a.current_stack)
+        .map(e => ({ userId: e.user_id, currentStack: e.current_stack }));
+
+    const calculation = calculatePayouts(
+        totalPotCents,
+        tournament.platform_fee_percent || 5,
+        tournament.creator_fee_percent || 5,
+        tournament.payout_structure || { "1": 100 },
+        rankedEntries
+    );
+
+    // 3. Apply Payouts (Atomic)
+    try {
+        // Platform Payout
+        if (calculation.platformCents > 0) {
+            // In a real app, this would go to a platform wallet. 
+            // For now, we log it in tournament_payouts.
+            await client.from('tournament_payouts').insert({
+                tournament_id: tournamentId,
+                user_id: '00000000-0000-0000-0000-000000000000', // System
+                amount_cents: calculation.platformCents,
+                type: 'PLATFORM',
+                status: 'COMPLETED'
+            });
+        }
+
+        // Creator Payout
+        if (calculation.creatorCents > 0 && tournament.owner_id) {
+            await client.rpc('increment_balance', {
+                p_user_id: tournament.owner_id,
+                p_amount: calculation.creatorCents / 100
+            });
+            await client.from('tournament_payouts').insert({
+                tournament_id: tournamentId,
+                user_id: tournament.owner_id,
+                amount_cents: calculation.creatorCents,
+                type: 'CREATOR',
+                status: 'COMPLETED'
+            });
+        }
+
+        // Winners Payout
+        for (const w of calculation.winners) {
+            if (w.amountCents > 0) {
+                await client.rpc('increment_balance', {
+                    p_user_id: w.userId,
+                    p_amount: w.amountCents / 100
+                });
+                await client.from('tournament_payouts').insert({
+                    tournament_id: tournamentId,
+                    user_id: w.userId,
+                    amount_cents: w.amountCents,
+                    type: 'WINNER',
+                    rank: w.rank,
+                    status: 'COMPLETED'
+                });
+            }
+        }
+
+        // 4. Mark Tournament as Completed
+        await client.from('tournaments')
+            .update({ status: 'COMPLETED' })
+            .eq('id', tournamentId);
+
+        revalidatePath(`/tournaments/${tournamentId}`);
+        revalidatePath("/profile");
+        return { success: true, calculation };
+    } catch (e: any) {
+        console.error("Settle Tournament Error:", e);
+        return { error: e.message };
+    }
 }
 
 export async function getUserTournamentEntries() {

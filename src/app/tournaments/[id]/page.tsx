@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import LiveLeaderboard from "@/components/tournament/live-leaderboard";
 import JoinButton from "@/components/tournament/join-button";
 import BetSlip from "@/components/feed/bet-slip";
+import SettleButton from "@/components/tournament/settle-button";
 
 export default async function TournamentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ success?: string; session_id?: string }> }) {
     const { id } = await params;
@@ -51,9 +52,12 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                         <div className="flex items-start justify-between">
                             <div>
                                 <div className="mb-2 flex items-center gap-2">
-                                    <span className="flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-brand">
+                                    <span className={cn(
+                                        "flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest",
+                                        tournament.status === 'COMPLETED' ? "bg-zinc-800 text-zinc-500" : "bg-brand/10 text-brand"
+                                    )}>
                                         <Trophy size={10} />
-                                        Active
+                                        {tournament.status === 'COMPLETED' ? 'Settled' : 'Active'}
                                     </span>
                                     <span className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
                                         <Users size={10} />
@@ -88,12 +92,27 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                                     </div>
                                 </div>
 
-                                <Link
-                                    href={`/?tournament=${id}`}
-                                    className="w-full py-4 bg-brand text-black font-black uppercase tracking-widest text-center rounded-xl shadow-lg shadow-brand/20 active:scale-[0.98] transition-all"
-                                >
-                                    Bet Now
-                                </Link>
+                                {tournament.status !== 'COMPLETED' && (
+                                    <Link
+                                        href={`/?tournament=${id}`}
+                                        className="w-full py-4 bg-brand text-black font-black uppercase tracking-widest text-center rounded-xl shadow-lg shadow-brand/20 active:scale-[0.98] transition-all"
+                                    >
+                                        Bet Now
+                                    </Link>
+                                )}
+
+                                {tournament.status === 'COMPLETED' && (
+                                    <div className="w-full py-4 bg-zinc-900 border border-white/5 text-zinc-500 font-black uppercase tracking-widest text-center rounded-xl">
+                                        Tournament Closed
+                                    </div>
+                                )}
+
+                                {/* Owner Controls */}
+                                {tournament.owner_id === currentUser?.id && tournament.status !== 'COMPLETED' && (
+                                    <div className="mt-2">
+                                        <SettleButton tournamentId={id} />
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="mt-6">
