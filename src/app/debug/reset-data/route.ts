@@ -22,7 +22,7 @@ export async function GET() {
     // 2. Fix Steelers vs Opponent -> Steelers vs Texans (Data Fix)
     const { error: fixError } = await supabase
         .from('predictions')
-        .update({ question: 'Will Steelers win against Texans?' })
+        .update({ question: 'Will Steelers win against Texans?', category: 'NFL' }) // Force Category Correction
         .ilike('question', '%Opponent%');
 
     return NextResponse.json({

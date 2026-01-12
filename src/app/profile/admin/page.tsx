@@ -28,7 +28,10 @@ export default function AdminPage() {
             window.location.href = '/profile';
             return;
         }
-        getPredictions().then(setPredictions);
+        getPredictions().then(probs => {
+            // Filter out resolved props to reduce clutter as requested
+            setPredictions(probs.filter((p: any) => !p.resolved));
+        });
         getAllTournaments().then(res => setTournaments(res.data || []));
     }, []);
 
