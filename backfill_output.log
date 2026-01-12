@@ -1,0 +1,5 @@
+Starting backfill for game_id...
+Error fetching predictions: {
+  message: 'Invalid API key',
+  hint: 'Double check your Supabase `anon` or `service_role` API key.'
+}

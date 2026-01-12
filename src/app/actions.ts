@@ -238,20 +238,20 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
 export async function getUpcomingGames() {
     const supabase = await createClient();
     // Fetch unique games from unresolved predictions
+    // Fetch ALL unresolved predictions (we'll extract game_id if naturally missing)
     const { data, error } = await supabase
         .from("predictions")
-        .select("game_id, question, category")
-        .eq("resolved", false)
-        .not("game_id", "is", null);
+        .select("game_id, question, category, external_id")
+        .eq("resolved", false);
 
     if (error) {
         console.error("[getUpcomingGames ERROR]", error);
         return [];
     }
-    console.log(`[getUpcomingGames] Found ${data?.length} unresolved predictions.`);
+
     if (data?.length > 0) {
         const categories = [...new Set(data.map(p => p.category))];
-        console.log(`[getUpcomingGames] Categories found:`, categories);
+        console.log(`[getUpcomingGames] Found ${data.length} unresolved. Categories: ${categories.join(', ')}`);
     }
 
     if (!data) return [];
@@ -259,7 +259,14 @@ export async function getUpcomingGames() {
     // Group by game_id to get one entry per match
     const gamesMap = new Map();
     data.forEach(p => {
-        if (!gamesMap.has(p.game_id)) {
+        // FLEXIBLE GAME ID: Use p.game_id if exists, otherwise extract from external_id
+        let activeGameId = p.game_id;
+        if (!activeGameId && p.external_id) {
+            const parts = p.external_id.split('-');
+            if (parts.length >= 2) activeGameId = parts[0];
+        }
+
+        if (activeGameId && !gamesMap.has(activeGameId)) {
             // Extract team names from question if possible
             const match = p.question.match(/Will (.+?) vs (.+?) go|Will (.+?) win against (.+?)\?|cover (.+?) vs (.+?)\?/i);
             let label = p.question;
@@ -281,15 +288,17 @@ export async function getUpcomingGames() {
                 if (!catLower.includes('nfl')) category = 'Soccer';
             }
 
-            gamesMap.set(p.game_id, {
-                id: p.game_id,
+            gamesMap.set(activeGameId, {
+                id: activeGameId,
                 label,
                 category: category
             });
         }
     });
 
-    return Array.from(gamesMap.values());
+    const result = Array.from(gamesMap.values());
+    console.log(`[getUpcomingGames] Returning ${result.length} unique games.`);
+    return result;
 }
 
 export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager: number, tournamentId?: string) {
