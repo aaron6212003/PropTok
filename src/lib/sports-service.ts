@@ -596,10 +596,19 @@ export const sportsService = {
                 }
 
                 // Update DB
-                await supabase.from("predictions").update({
-                    resolved: true,
-                    outcome: winner
-                }).eq("id", p.id);
+                // Update DB via RPC to ensure payouts match!
+                const { error: rpcError } = await supabase.rpc('resolve_prediction', {
+                    p_id: p.id,
+                    p_outcome: winner
+                });
+
+                if (rpcError) {
+                    logs.push(`ERROR resolving prop ${p.id}: ${rpcError.message}`);
+                } else {
+                    resolvedCount++;
+                    logs.push(`GRADED PROP: ${playerName} ${marketKey}: ${actualVal} vs ${line} -> ${winner}`);
+                }
+                continue;
 
                 resolvedCount++;
                 logs.push(`GRADED PROP: ${playerName} ${marketKey}: ${actualVal} vs ${line} -> ${winner}`);
