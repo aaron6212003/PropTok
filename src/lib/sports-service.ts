@@ -366,6 +366,14 @@ export const sportsService = {
                     const yesMultiplier = primaryOutcome.price;
                     const noMultiplier = secondaryOutcome.price;
 
+                    // FILTER: Skip extreme outliers (e.g. > 25x multiplier)
+                    // This prevents "Hat Trick" lines from cluttering the feed if users want standard lines
+                    if (yesMultiplier > 25 || noMultiplier > 25) {
+                        // logs.push(`Skipped extreme odds: ${question} (${yesMultiplier}x)`);
+                        skippedCount++;
+                        continue;
+                    }
+
                     // Normalize percentages (Implied Probability)
                     const impliedYes = 1 / yesMultiplier;
                     const impliedNo = 1 / noMultiplier;
