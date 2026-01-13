@@ -46,6 +46,7 @@ export async function GET() {
                 question,
                 category,
                 external_id: externalId,
+                game_id: gameId, // Attach to the game!
                 yes_multiplier: 1.85 + (Math.random() * 0.3),
                 no_multiplier: 1.85 + (Math.random() * 0.3),
                 resolved: false,
