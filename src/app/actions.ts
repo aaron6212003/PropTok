@@ -121,14 +121,15 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         .not('external_id', 'ilike', '%-player_%');
 
     if (onlyOpen) {
-        // const now = new Date().toISOString();
-        query = query
-            .eq("resolved", false);
-        // .gt("expires_at", now); // REMOVED: Allow "Live" games (started but not resolved) to show
+        const now = new Date().toISOString();
+        query = query.eq("resolved", false).gt("expires_at", now); // ACTIVE: Resolving games or games that haven't started
     }
 
     // Filter by Tournament Rules (League & Game Filtering)
+
+    // 2. Tournament Logic
     if (tournamentId) {
+        // ... (rest of function)
         const { data: t } = await supabase
             .from("tournaments")
             .select("allowed_leagues, allowed_game_ids")
@@ -307,7 +308,21 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
 
     if (!user) throw new Error("User not authenticated");
 
-    // 1. Check uniqueness (Optional, but good UX)
+    // 1. Fetch Prediction Data (Validation + Odds)
+    const { data: prediction } = await supabase
+        .from("predictions")
+        .select("id, expires_at, yes_percent, yes_multiplier, no_multiplier")
+        .eq("id", predictionId)
+        .single();
+
+    if (!prediction) return { error: "Prediction not found" };
+
+    // 2. Validate Expiration
+    if (new Date(prediction.expires_at) < new Date()) {
+        return { error: "Betting closed for this event" };
+    }
+
+    // 3. Check uniqueness
     const { data: existingVote } = await supabase
         .from("votes")
         .select("id")
@@ -317,15 +332,7 @@ export async function submitVote(predictionId: string, side: 'YES' | 'NO', wager
 
     if (existingVote) return { error: "Already voted on this prediction" };
 
-    // 2. Fetch Multiplier
-    const { data: prediction } = await supabase
-        .from("predictions")
-        .select("yes_percent, yes_multiplier, no_multiplier")
-        .eq("id", predictionId)
-        .single();
-
-    if (!prediction) return { error: "Prediction not found" };
-
+    // 4. Calculate Multiplier
     let multiplier: number;
     if (prediction.yes_multiplier && prediction.no_multiplier) {
         multiplier = side === 'YES' ? prediction.yes_multiplier : prediction.no_multiplier;
@@ -716,6 +723,19 @@ export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', m
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("User not authenticated");
+
+    // 1. Validate Expiry for ALL Legs
+    const predictionIds = legs.map(l => l.id);
+    const { data: predictions } = await supabase.from('predictions').select('id, expires_at').in('id', predictionIds);
+
+    if (predictions) {
+        const now = new Date();
+        for (const p of predictions) {
+            if (new Date(p.expires_at) < now) {
+                return { error: "One or more selections have expired" };
+            }
+        }
+    }
 
     // Calculate Multiplier
     const totalMultiplier = legs.reduce((acc, leg) => acc * leg.multiplier, 1);
