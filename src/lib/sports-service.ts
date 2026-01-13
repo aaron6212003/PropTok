@@ -293,9 +293,14 @@ export const sportsService = {
                 const outcomeGroups: Record<string, any[]> = {};
 
                 if (market.key.startsWith('player_')) {
-                    // Group by player name
+                    // Group by player name AND point (line) to capture distinct props
+                    // e.g. "McDavid Over 0.5" vs "McDavid Over 1.5"
                     market.outcomes.forEach((o: any) => {
-                        const key = o.description || 'Unknown Player';
+                        const description = o.description || 'Unknown Player';
+                        // Construct key: "PlayerName-Point"
+                        const point = o.point ? `-${o.point}` : '';
+                        const key = `${description}${point}`;
+
                         if (!outcomeGroups[key]) outcomeGroups[key] = [];
                         outcomeGroups[key].push(o);
                     });
