@@ -11,7 +11,6 @@ import {
     adminResetTournament,
     getAllTournaments,
     deletePrediction,
-    deletePrediction,
     getUpcomingGames,
     refreshOdds
 } from "@/app/actions";
