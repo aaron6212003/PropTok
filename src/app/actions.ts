@@ -165,7 +165,8 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
 
     // DIAGNOSTIC START
     // Actually, just execute query and log result size
-    const { data: rawData, error } = await query;
+    // AUTO-FIX: Increase limit to prevent truncating categories (Default is 1000)
+    const { data: rawData, error } = await query.limit(5000);
     console.log(`[getPredictions LOG] Called with onlyOpen=${onlyOpen}, tournamentId=${tournamentId}`);
     if (error) console.error(`[getPredictions ERROR]`, error);
     else console.log(`[getPredictions SUCCESS] Found ${rawData?.length} raw predictions.`);

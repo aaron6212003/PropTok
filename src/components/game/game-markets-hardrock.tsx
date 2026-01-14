@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import PropRow from "./prop-row";
+import PropCategoryAccordion from "./prop-category-accordion";
 
 // Types for the structured data
 type PropCategoryMap = Record<string, Record<string, Record<string, any[]>>>;
@@ -65,15 +66,14 @@ export default function GameMarketsHardrock({ gameLines, categorizedProps }: Gam
 
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                {Object.entries(playersData).map(([playerName, props]) => (
-                    <div key={playerName} className="bg-[#1C1C1E] rounded-xl overflow-hidden border border-white/5">
-                        <div className="bg-[#2C2C2E] px-4 py-2 flex items-center gap-2 border-b border-white/5">
-                            <div className="w-1 h-3 bg-[#8B5CF6] rounded-full" />
-                            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                                {playerName}
-                            </h3>
-                        </div>
-                        <div className="p-2 space-y-1">
+                {Object.entries(playersData).map(([playerName, props], index) => (
+                    <PropCategoryAccordion
+                        key={playerName}
+                        title={playerName}
+                        defaultExpanded={index === 0} // Expand first player only
+                        icon={<div className="w-1 h-3 bg-brand rounded-full" />}
+                    >
+                        <div className="space-y-1">
                             {props.sort((a: any, b: any) => {
                                 const lineA = parseFloat(a.question.match(/[\d.]+/)?.[0] || "0");
                                 const lineB = parseFloat(b.question.match(/[\d.]+/)?.[0] || "0");
@@ -90,7 +90,7 @@ export default function GameMarketsHardrock({ gameLines, categorizedProps }: Gam
                                 />
                             ))}
                         </div>
-                    </div>
+                    </PropCategoryAccordion>
                 ))}
             </div>
         );
@@ -117,7 +117,7 @@ export default function GameMarketsHardrock({ gameLines, categorizedProps }: Gam
                             >
                                 {tab}
                                 {isActive && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#8B5CF6] shadow-[0_0_10px_rgba(139,92,246,0.6)]" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand shadow-[0_0_10px_rgba(37,99,235,0.6)]" />
                                 )}
                             </button>
                         );
@@ -138,7 +138,7 @@ export default function GameMarketsHardrock({ gameLines, categorizedProps }: Gam
                                     className={cn(
                                         "px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
                                         isSubActive
-                                            ? "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                                            ? "bg-brand/20 border-brand text-brand shadow-[0_0_15px_rgba(37,99,235,0.1)]"
                                             : "bg-zinc-900 border-white/10 text-zinc-400 hover:bg-zinc-800"
                                     )}
                                 >
