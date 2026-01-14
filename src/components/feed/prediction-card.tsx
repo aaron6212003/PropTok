@@ -53,51 +53,70 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
     return (
         <>
             <div className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-black">
-                {/* Dynamic Background Gradient (Static for Performance) */}
+                {/* Dynamic Background Gradient (Hardware Accelerated) */}
                 <div
-                    className="absolute inset-0 opacity-20 transition-colors duration-1000"
+                    className="absolute inset-0 opacity-30 transition-colors duration-700 ease-in-out will-change-[background,opacity]"
                     style={{
-                        background: `radial-gradient(circle at center, ${homeTeam ? homeTeam.color : (CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default'])} 0%, #000000 90%)`
+                        background: `radial-gradient(circle at center, ${homeTeam ? homeTeam.color : (CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default'])} 0%, #000000 85%)`,
+                        transform: 'translateZ(0)' // Force GPU
                     }}
                 />
 
-                {/* Ambient Background Logos (Professional & Consistent) */}
+                {/* 3D Ambient Logistics (Sleek & Expensive) */}
                 {teams.length > 0 && (
-                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none perspective-[1000px]">
                         {/* 
-                           SYMMETRICAL WATERMARK LAYOUT:
-                           - Top Logo: Centered in upper third
-                           - Bottom Logo: Centered in lower third
-                           - Appearance: Fully contained, subtle watermark
+                           3D VERSUS LAYOUT:
+                           - Uses CSS 3D transforms to create a "Stadium" or "Arena" depth feel.
+                           - Logos are projected onto angled planes.
                         */}
 
-                        {/* Top Logo (First Team) */}
-                        <div className="absolute top-[15%] left-0 right-0 lg:top-[10%] flex justify-center">
-                            <div className="h-[300px] w-[300px] opacity-[0.06] flex items-center justify-center">
-                                <img
-                                    src={homeTeam.url}
-                                    alt={homeTeam.name}
-                                    className="max-h-full max-w-full object-contain grayscale"
-                                />
-                            </div>
+                        {/* Top/Left Plane (Home) - Angled "Inward" from left */}
+                        <div
+                            className="absolute top-[10%] -left-[10%] h-[400px] w-[400px] flex items-center justify-center opacity-[0.08]"
+                            style={{
+                                transform: 'rotateY(25deg) rotateX(10deg) translateZ(0)',
+                                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))'
+                            }}
+                        >
+                            <img
+                                src={homeTeam.url}
+                                alt={homeTeam.name}
+                                className="max-h-full max-w-full object-contain grayscale brightness-125"
+                            />
                         </div>
 
-                        {/* Bottom Logo (Second Team) */}
+                        {/* Bottom/Right Plane (Away) - Angled "Inward" from right */}
                         {awayTeam && (
-                            <div className="absolute bottom-[15%] left-0 right-0 lg:bottom-[10%] flex justify-center">
-                                <div className="h-[300px] w-[300px] opacity-[0.06] flex items-center justify-center">
-                                    <img
-                                        src={awayTeam.url}
-                                        alt={awayTeam.name}
-                                        className="max-h-full max-w-full object-contain grayscale"
-                                    />
-                                </div>
+                            <div
+                                className="absolute bottom-[15%] -right-[10%] h-[400px] w-[400px] flex items-center justify-center opacity-[0.08]"
+                                style={{
+                                    transform: 'rotateY(-25deg) rotateX(-10deg) translateZ(0)',
+                                    filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))'
+                                }}
+                            >
+                                <img
+                                    src={awayTeam.url}
+                                    alt={awayTeam.name}
+                                    className="max-h-full max-w-full object-contain grayscale brightness-125"
+                                />
                             </div>
                         )}
 
-                        {/* Single Logo Center (Fallback) */}
+                        {/* Center "VS" Energy Line (Optional 3D Element) */}
+                        {teams.length === 2 && (
+                            <div
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-sm"
+                                style={{ transform: 'rotate(-45deg) translateZ(-100px)' }}
+                            />
+                        )}
+
+                        {/* Fallback Single Logo - Floating Monolith */}
                         {teams.length === 1 && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[450px] w-[450px] opacity-[0.05] flex items-center justify-center">
+                            <div
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.04] flex items-center justify-center"
+                                style={{ transform: 'translateZ(-200px) rotateY(180deg)' }} // Slight depth
+                            >
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
