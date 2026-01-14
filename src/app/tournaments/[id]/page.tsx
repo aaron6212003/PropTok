@@ -53,6 +53,21 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
             console.log(`[TournamentPage] Admin Check: User ${currentUser.id} -> Found? ${!!entry}`);
         }
 
+        // Fallback: If Admin Client failed or didn't find it, try standard client (RLS constrained)
+        if (!myEntry) {
+            const { data: entries } = await supabase
+                .from("tournament_entries")
+                .select("current_stack, rank")
+                .eq("user_id", currentUser.id)
+                .eq("tournament_id", id)
+                .limit(1);
+
+            if (entries && entries.length > 0) {
+                myEntry = entries[0];
+                myRank = entries[0].rank;
+            }
+        }
+
         // Fetch Balance (Client is fine for this as checking own data usually works, but consistency is key)
         const { data: profile } = await supabase.from("users").select("cash_balance").eq("id", currentUser.id).single();
         userBalance = profile?.cash_balance || 0;
