@@ -287,14 +287,23 @@ export const tank01Service = {
         // Note: NFL endpoint might be getNFLGamesForDate 
         const url = `${TANK01_BASE_URL}/getNFLGamesForDate?gameDate=${gameDate}`;
 
-        if (!response.ok) return [];
-        const json = await response.json();
-        return json.body || [];
-    } catch(e) {
-        console.error("NFL Scoreboard Error:", e);
-        return [];
-    }
-},
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': RAPID_API_KEY,
+                    'X-RapidAPI-Host': host
+                }
+            });
+
+            if (!response.ok) return [];
+            const json = await response.json();
+            return json.body || [];
+        } catch (e) {
+            console.error("NFL Scoreboard Error:", e);
+            return [];
+        }
+    },
 
     async getNHLScoreboard(gameDate: string) {
         // NHL Host
@@ -319,7 +328,7 @@ export const tank01Service = {
         }
     },
 
-        normalizeName(name: string) {
-    return name.toLowerCase().replace(/[^a-z]/g, '');
-}
-        };
+    normalizeName(name: string) {
+        return name.toLowerCase().replace(/[^a-z]/g, '');
+    }
+};
