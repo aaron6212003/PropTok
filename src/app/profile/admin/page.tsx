@@ -57,7 +57,7 @@ export default function AdminPage() {
     };
 
     return (
-        <main className="h-full w-full overflow-y-auto bg-black p-4 sm:p-6 text-white pb-32 scrollbar-none">
+        <main className="h-full w-full overflow-y-auto overflow-x-hidden bg-black p-4 sm:p-6 text-white pb-32 scrollbar-none">
             <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-6">
                 <div className="flex items-center gap-4">
                     <a href="/" className="rounded-full bg-white/5 p-2 transition-colors hover:bg-white/10">
@@ -335,7 +335,7 @@ export default function AdminPage() {
                                         value={adminSelectedLeague}
                                         onChange={(e) => {
                                             setAdminSelectedLeague(e.target.value);
-                                            setAdminSelectedGameIds([]); // Clear games when league changes
+                                            // Do NOT clear games - allow multi-category selection
                                         }}
                                         className="w-full rounded-xl border border-white/10 bg-black p-3 text-sm font-bold text-white focus:border-emerald-500 focus:outline-none appearance-none"
                                     >

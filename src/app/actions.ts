@@ -152,19 +152,9 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
 
             // Game ID Filter
             if (t.allowed_game_ids && t.allowed_game_ids.length > 0) {
-                query = query.in('external_id', t.allowed_game_ids); // Use strict IN for game IDs
-                // NOTE: DB uses snake_case external_id? Or game_id? 
-                // Schema check: usually we filter via external_id for specific games.
-                // Wait, check previous code: `game_id.in.(${gameIds})` was used.
-                // But is `game_id` a column? `external_id` is the main one.
-                // I will assume `external_id` for now or check usage.
-                // Actually, best to check if `game_id` exists. 
-                // Reverting to previous logic intent: filter strictly by ID if present.
-                // If previous code was `game_id`, I should check.
-                // But `external_id` (e.g. 'c45c...-game') is what we have.
-                // Safest is to skip this refined check if unsure, but I must implement it.
-                // Inspecting previous code: it pushed `game_id.in` to filterParts.
-                // I will assume `external_id` matches.
+                // We must filter by 'game_id' column to include ALL props for that game.
+                // The frontend passes Game IDs (e.g. "401581898")
+                query = query.in('game_id', t.allowed_game_ids);
             }
         }
     }
@@ -1784,29 +1774,29 @@ export async function joinTournamentWithBalance(tournamentId: string) {
 }
 
 export async function getAvailableCategories(tournamentId?: string): Promise<string[]> {
-  const supabase = await createClient(); // Use standard client for public reads
-  const now = new Date().toISOString();
+    const supabase = await createClient(); // Use standard client for public reads
+    const now = new Date().toISOString();
 
-  let query = supabase
-    .from('predictions')
-    .select('category')
-    .gt('expires_at', now);
-    
-  if (tournamentId) {
-     const { data: entry } = await supabase
-        .from('tournament_entries')
-        .select('game_id')
-        .eq('tournament_id', tournamentId)
-        .single();
-        
-      if (entry?.game_id) {
-          query = query.eq('game_id', entry.game_id);
-      }
-  }
+    let query = supabase
+        .from('predictions')
+        .select('category')
+        .gt('expires_at', now);
 
-  const { data } = await query;
-  if (!data) return [];
+    if (tournamentId) {
+        const { data: entry } = await supabase
+            .from('tournament_entries')
+            .select('game_id')
+            .eq('tournament_id', tournamentId)
+            .single();
 
-  const categories = new Set(data.filter(p => p.category).map(p => p.category));
-  return Array.from(categories).sort();
+        if (entry?.game_id) {
+            query = query.eq('game_id', entry.game_id);
+        }
+    }
+
+    const { data } = await query;
+    if (!data) return [];
+
+    const categories = new Set(data.filter(p => p.category).map(p => p.category));
+    return Array.from(categories).sort();
 }
