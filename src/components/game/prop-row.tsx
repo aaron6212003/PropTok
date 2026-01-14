@@ -11,15 +11,20 @@ interface PropRowProps {
     noMultiplier: number;
     yesPercent: number;
     category?: string;
+    expiresAt?: string;
 }
 
-export default function PropRow({ id, question, yesMultiplier, noMultiplier, category = "Sports" }: PropRowProps) {
+export default function PropRow({ id, question, yesMultiplier, noMultiplier, category = "Sports", expiresAt }: PropRowProps) {
     const { items, toggleInSlip } = useBetSlip();
 
     const slipItem = items.find(i => i.predictionId === id);
     const selectedSide = slipItem?.side || null;
 
+    // Check expiration
+    const isExpired = expiresAt ? new Date(expiresAt) < new Date() : false;
+
     const handleAdd = (side: 'YES' | 'NO') => {
+        if (isExpired) return;
         toggleInSlip({
             predictionId: id,
             question,
@@ -41,54 +46,53 @@ export default function PropRow({ id, question, yesMultiplier, noMultiplier, cat
 
     // 3. Keep everything else (Line + Stat)
 
-    // Check if expired
-    // We don't have expiresAt passed here often, we rely on parent usually.
-    // BUT we need it for the lock. 
-    // Let's assume for now we trust the prediction feed validation, BUT user asked for a BLOCK.
-    // PropRow usually works in context of a game page which knows the expiry.
-    // We should pass `isLive` or `isExpired` prop.
-
-    // For now, let's update interface to accept `expiresAt` or `status`.
-    // Actually, `GameMarketsHardrock` has access to game data? No, it just receives lines.
-    // We need to pass expiresAt down.
-
-    // CRITICAL: We need to enable `expiresAt` prop.
-
     return (
         <div className={cn(
             "flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 border mb-1",
             selectedSide
                 ? "bg-white/[0.08] border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                : "bg-zinc-900/50 border-white/5 hover:border-white/10"
+                : "bg-zinc-900/50 border-white/5 hover:border-white/10",
+            isExpired && "opacity-60 grayscale pointer-events-none"
         )}>
-            <p className={cn(
-                "font-bold text-[11px] leading-tight transition-colors pr-2 flex-1",
-                selectedSide ? "text-white" : "text-zinc-400"
-            )} title={question}>{displayQuestion}</p>
+            <div className="flex-1 pr-2">
+                <p className={cn(
+                    "font-bold text-[11px] leading-tight transition-colors",
+                    selectedSide ? "text-white" : "text-zinc-400"
+                )} title={question}>{displayQuestion}</p>
+                {isExpired && (
+                    <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-red-500/20 text-red-500 text-[9px] font-black uppercase tracking-widest border border-red-500/20 animate-pulse">
+                        <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                        </span>
+                        Live • Suspended
+                    </span>
+                )}
+            </div>
 
             <div className="flex gap-1.5 shrink-0">
-                {/* 
-                   Ideally we disable here. But we need to pass the prop.
-                   I will update the interface next.
-                 */}
                 <button
                     onClick={() => handleAdd('YES')}
+                    disabled={isExpired}
                     className={cn(
                         "w-20 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all truncate",
                         selectedSide === 'YES'
                             ? "bg-[#00DC82] text-black shadow-[0_0_10px_rgba(0,220,130,0.4)]"
-                            : "bg-zinc-800 text-[#00DC82] border border-[#00DC82]/10 hover:bg-[#00DC82]/20"
+                            : "bg-zinc-800 text-[#00DC82] border border-[#00DC82]/10 hover:bg-[#00DC82]/20",
+                        isExpired && "bg-zinc-800/50 text-zinc-600 border-zinc-800 cursor-not-allowed hover:bg-zinc-800/50"
                     )}
                 >
                     {yesMultiplier}x
                 </button>
                 <button
                     onClick={() => handleAdd('NO')}
+                    disabled={isExpired}
                     className={cn(
                         "w-20 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all truncate",
                         selectedSide === 'NO'
                             ? "bg-[#FF2A6D] text-white shadow-[0_0_10px_rgba(255,42,109,0.4)]"
-                            : "bg-zinc-800 text-[#FF2A6D] border border-[#FF2A6D]/10 hover:bg-[#FF2A6D]/20"
+                            : "bg-zinc-800 text-[#FF2A6D] border border-[#FF2A6D]/10 hover:bg-[#FF2A6D]/20",
+                        isExpired && "bg-zinc-800/50 text-zinc-600 border-zinc-800 cursor-not-allowed hover:bg-zinc-800/50"
                     )}
                 >
                     {noMultiplier}x
