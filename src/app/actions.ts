@@ -121,8 +121,9 @@ export async function getPredictions(onlyOpen: boolean = false, tournamentId?: s
         .not('external_id', 'ilike', '%-player_%');
 
     if (onlyOpen) {
-        const now = new Date().toISOString();
-        query = query.eq("resolved", false).gt("expires_at", now); // ACTIVE: Resolving games or games that haven't started
+        const now = new Date();
+        const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString();
+        query = query.eq("resolved", false).gt("expires_at", fourHoursAgo); // Include LIVE games (started < 4h ago)
     }
 
     // Filter by Tournament Rules (League & Game Filtering)

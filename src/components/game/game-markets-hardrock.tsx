@@ -54,6 +54,7 @@ export default function GameMarketsHardrock({ gameLines, categorizedProps }: Gam
                     noMultiplier={p.no_multiplier}
                     yesPercent={p.yes_percent || 50}
                     category={p.category}
+                    expiresAt={p.expires_at}
                 />
             ))}
         </div>
@@ -87,6 +88,7 @@ export default function GameMarketsHardrock({ gameLines, categorizedProps }: Gam
                                     noMultiplier={p.no_multiplier}
                                     yesPercent={p.yes_percent || 50}
                                     category={p.category}
+                                    expiresAt={p.expires_at} // Pass standard expiration
                                 />
                             ))}
                         </div>

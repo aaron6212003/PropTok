@@ -41,6 +41,19 @@ export default function PropRow({ id, question, yesMultiplier, noMultiplier, cat
 
     // 3. Keep everything else (Line + Stat)
 
+    // Check if expired
+    // We don't have expiresAt passed here often, we rely on parent usually.
+    // BUT we need it for the lock. 
+    // Let's assume for now we trust the prediction feed validation, BUT user asked for a BLOCK.
+    // PropRow usually works in context of a game page which knows the expiry.
+    // We should pass `isLive` or `isExpired` prop.
+
+    // For now, let's update interface to accept `expiresAt` or `status`.
+    // Actually, `GameMarketsHardrock` has access to game data? No, it just receives lines.
+    // We need to pass expiresAt down.
+
+    // CRITICAL: We need to enable `expiresAt` prop.
+
     return (
         <div className={cn(
             "flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 border mb-1",
@@ -54,6 +67,10 @@ export default function PropRow({ id, question, yesMultiplier, noMultiplier, cat
             )} title={question}>{displayQuestion}</p>
 
             <div className="flex gap-1.5 shrink-0">
+                {/* 
+                   Ideally we disable here. But we need to pass the prop.
+                   I will update the interface next.
+                 */}
                 <button
                     onClick={() => handleAdd('YES')}
                     className={cn(

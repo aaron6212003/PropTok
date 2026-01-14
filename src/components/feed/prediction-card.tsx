@@ -187,16 +187,31 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                         {/* Buttons */}
                         <div className="grid grid-cols-2 gap-3">
+                            {/* LIVE / LOCKED OVERLAY */}
+                            {new Date(prediction.expiresAt) < new Date() && (
+                                <div className="col-span-2 flex items-center justify-center gap-2 py-2 mb-1 bg-red-500/10 border border-red-500/20 rounded-xl animate-pulse">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                    </span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
+                                        Live • Betting Suspended
+                                    </span>
+                                </div>
+                            )}
+
                             <motion.button
                                 id={`yes-btn-${prediction.id}`}
-                                onClick={() => handleOptionClick('YES')}
+                                onClick={() => new Date(prediction.expiresAt) > new Date() && handleOptionClick('YES')}
                                 whileTap={{ scale: 0.95 }}
+                                disabled={new Date(prediction.expiresAt) < new Date()}
                                 animate={selectedSide === 'YES' ? { scale: 1.02, borderColor: "rgba(0,220,130,0.8)" } : { scale: 1 }}
                                 className={cn(
                                     "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300",
                                     selectedSide === 'YES'
                                         ? "border-success bg-success text-black shadow-[0_0_30px_rgba(0,220,130,0.3)]"
-                                        : "border-white/10 bg-white/5 hover:border-success/40 hover:bg-success/5"
+                                        : "border-white/10 bg-white/5 hover:border-success/40 hover:bg-success/5",
+                                    new Date(prediction.expiresAt) < new Date() && "opacity-50 grayscale cursor-not-allowed hover:bg-white/5 hover:border-white/10"
                                 )}
                             >
                                 <span className="text-sm font-black uppercase tracking-widest italic">Yes</span>
@@ -207,14 +222,16 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                             <motion.button
                                 id={`no-btn-${prediction.id}`}
-                                onClick={() => handleOptionClick('NO')}
+                                onClick={() => new Date(prediction.expiresAt) > new Date() && handleOptionClick('NO')}
                                 whileTap={{ scale: 0.95 }}
+                                disabled={new Date(prediction.expiresAt) < new Date()}
                                 animate={selectedSide === 'NO' ? { scale: 1.02, borderColor: "rgba(255,42,109,0.8)" } : { scale: 1 }}
                                 className={cn(
                                     "group relative flex h-14 flex-col items-center justify-center rounded-2xl border transition-all duration-300",
                                     selectedSide === 'NO'
                                         ? "border-destructive bg-destructive text-white shadow-[0_0_30px_rgba(255,42,109,0.3)]"
-                                        : "border-white/10 bg-white/5 hover:border-destructive/40 hover:bg-destructive/5"
+                                        : "border-white/10 bg-white/5 hover:border-destructive/40 hover:bg-destructive/5",
+                                    new Date(prediction.expiresAt) < new Date() && "opacity-50 grayscale cursor-not-allowed hover:bg-white/5 hover:border-white/10"
                                 )}
                             >
                                 <span className="text-sm font-black uppercase tracking-widest italic">No</span>
