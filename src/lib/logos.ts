@@ -114,27 +114,187 @@ const TEAM_LOGOS: Record<string, string> = {
     "Knicks": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
 };
 
+
+// Map of Team Name -> Primary Color Hex
+export const TEAM_COLORS: Record<string, string> = {
+    // NFL
+    "Arizona Cardinals": "#97233F",
+    "Atlanta Falcons": "#A71930",
+    "Baltimore Ravens": "#241773",
+    "Buffalo Bills": "#00338D",
+    "Carolina Panthers": "#0085CA",
+    "Chicago Bears": "#0B162A",
+    "Cincinnati Bengals": "#FB4F14",
+    "Cleveland Browns": "#311D00",
+    "Dallas Cowboys": "#003594",
+    "Denver Broncos": "#FB4F14",
+    "Detroit Lions": "#0076B6",
+    "Green Bay Packers": "#203731",
+    "Houston Texans": "#03202F",
+    "Indianapolis Colts": "#002C5F",
+    "Jacksonville Jaguars": "#006778",
+    "Kansas City Chiefs": "#E31837",
+    "Las Vegas Raiders": "#000000",
+    "Los Angeles Chargers": "#0080C6",
+    "Los Angeles Rams": "#003594",
+    "Miami Dolphins": "#008E97",
+    "Minnesota Vikings": "#4F2683",
+    "New England Patriots": "#002244",
+    "New Orleans Saints": "#D3BC8D",
+    "New York Giants": "#0B2265",
+    "New York Jets": "#125740",
+    "Philadelphia Eagles": "#004C54",
+    "Pittsburgh Steelers": "#FFB612",
+    "San Francisco 49ers": "#AA0000",
+    "Seattle Seahawks": "#002244",
+    "Tampa Bay Buccaneers": "#D50A0A",
+    "Tennessee Titans": "#0C2340",
+    "Washington Commanders": "#5A1414",
+
+    // NBA (Selected)
+    "Boston Celtics": "#007A33",
+    "Brooklyn Nets": "#000000",
+    "New York Knicks": "#F58426",
+    "Philadelphia 76ers": "#006BB6",
+    "Toronto Raptors": "#CE1141",
+    "Golden State Warriors": "#1D428A",
+    "Los Angeles Lakers": "#552583",
+    "Phoenix Suns": "#1D428A",
+    "Chicago Bulls": "#CE1141",
+    "Cleveland Cavaliers": "#860038",
+    "Detroit Pistons": "#C8102E",
+    "Indiana Pacers": "#002D62",
+    "Milwaukee Bucks": "#00471B",
+    "Atlanta Hawks": "#E03A3E",
+    "Charlotte Hornets": "#1D1160",
+    "Miami Heat": "#98002E",
+    "Orlando Magic": "#0077C0",
+    "Washington Wizards": "#002B5C",
+    "Denver Nuggets": "#0E2240",
+    "Minnesota Timberwolves": "#0C2340",
+    "Oklahoma City Thunder": "#007AC1",
+    "Portland Trail Blazers": "#E03A3E",
+    "Utah Jazz": "#002B5C",
+    "Dallas Mavericks": "#00538C",
+    "Houston Rockets": "#CE1141",
+    "Memphis Grizzlies": "#5D76A9",
+    "New Orleans Pelicans": "#0C2340",
+    "San Antonio Spurs": "#C4CED4",
+    "Sacramento Kings": "#5A2D81",
+    "LA Clippers": "#C8102E",
+};
+
+// Expanded Nickname Mapping to Full Name Keys for Logo/Color Lookup
+const NICKNAME_MAP: Record<string, string> = {
+    "Cardinals": "Arizona Cardinals",
+    "Falcons": "Atlanta Falcons",
+    "Ravens": "Baltimore Ravens",
+    "Bills": "Buffalo Bills",
+    "Panthers": "Carolina Panthers",
+    "Bears": "Chicago Bears",
+    "Bengals": "Cincinnati Bengals",
+    "Browns": "Cleveland Browns",
+    "Cowboys": "Dallas Cowboys",
+    "Broncos": "Denver Broncos",
+    "Lions": "Detroit Lions",
+    "Packers": "Green Bay Packers",
+    "Texans": "Houston Texans",
+    "Colts": "Indianapolis Colts",
+    "Jaguars": "Jacksonville Jaguars",
+    "Chiefs": "Kansas City Chiefs",
+    "Raiders": "Las Vegas Raiders",
+    "Chargers": "Los Angeles Chargers",
+    "Rams": "Los Angeles Rams",
+    "Dolphins": "Miami Dolphins",
+    "Vikings": "Minnesota Vikings",
+    "Patriots": "New England Patriots",
+    "Saints": "New Orleans Saints",
+    "Giants": "New York Giants",
+    "Jets": "New York Jets",
+    "Eagles": "Philadelphia Eagles",
+    "Steelers": "Pittsburgh Steelers",
+    "49ers": "San Francisco 49ers",
+    "Seahawks": "Seattle Seahawks",
+    "Buccaneers": "Tampa Bay Buccaneers",
+    "Titans": "Tennessee Titans",
+    "Commanders": "Washington Commanders",
+    "Celtics": "Boston Celtics",
+    "Nets": "Brooklyn Nets",
+    "Knicks": "New York Knicks",
+    "76ers": "Philadelphia 76ers",
+    "Raptors": "Toronto Raptors",
+    "Warriors": "Golden State Warriors",
+    "Lakers": "Los Angeles Lakers",
+    "Suns": "Phoenix Suns",
+    "Bulls": "Chicago Bulls",
+    "Cavaliers": "Cleveland Cavaliers",
+    "Pistons": "Detroit Pistons",
+    "Pacers": "Indiana Pacers",
+    "Bucks": "Milwaukee Bucks",
+    "Hawks": "Atlanta Hawks",
+    "Hornets": "Charlotte Hornets",
+    "Heat": "Miami Heat",
+    "Magic": "Orlando Magic",
+    "Wizards": "Washington Wizards",
+    "Nuggets": "Denver Nuggets",
+    "Timberwolves": "Minnesota Timberwolves",
+    "Thunder": "Oklahoma City Thunder",
+    "Blazers": "Portland Trail Blazers",
+    "Jazz": "Utah Jazz",
+    "Mavericks": "Dallas Mavericks",
+    "Rockets": "Houston Rockets",
+    "Grizzlies": "Memphis Grizzlies",
+    "Pelicans": "New Orleans Pelicans",
+    "Spurs": "San Antonio Spurs",
+    "Kings": "Sacramento Kings",
+    "Clippers": "LA Clippers"
+};
+
 /**
- * Extracts team logos from a question string.
+ * Extracts team logos and colors from a question string.
  * Example: "Will Detroit Red Wings win against Carolina Hurricanes?"
- * Returns an array of logo URLs found.
+ * Returns an array of objects linking logo and color.
  */
-export function getTeamLogos(question: string): string[] {
+export function getTeamLogos(question: string): { url: string, color: string, name: string }[] {
     if (!question) return [];
 
-    const foundLogos: string[] = [];
+    const found: { url: string, color: string, name: string }[] = [];
+    const text = question.toLowerCase();
 
-    // Create a priority list of team names (longer names first to avoid partial matches)
+    // 1. Check Full Names
     const teamNames = Object.keys(TEAM_LOGOS).sort((a, b) => b.length - a.length);
-
     for (const team of teamNames) {
-        if (question.toLowerCase().includes(team.toLowerCase())) {
-            foundLogos.push(TEAM_LOGOS[team]);
-            // If we found 2 logos, we're likely done (home vs away)
-            if (foundLogos.length >= 2) break;
+        if (text.includes(team.toLowerCase())) {
+            found.push({
+                url: TEAM_LOGOS[team],
+                color: TEAM_COLORS[team] || '#ffffff',
+                name: team
+            });
+            if (found.length >= 2) break;
         }
     }
 
-    // Deduplicate in case of shorthand vs full name
-    return [...new Set(foundLogos)];
+    // 2. If < 2 found, Check Nicknames
+    // Only check nicknames if we haven't found the team yet (to avoid duplicates)
+    if (found.length < 2) {
+        const nicknames = Object.keys(NICKNAME_MAP).sort((a, b) => b.length - a.length);
+        for (const nick of nicknames) {
+            // Ensure it matches as a whole word or significant part to avoid "Bears" matching inside "Bearsden"
+            // Simple includes is usually fine for game context
+            if (text.includes(nick.toLowerCase())) {
+                const fullName = NICKNAME_MAP[nick];
+                // Check if already found
+                if (!found.some(f => f.name === fullName)) {
+                    found.push({
+                        url: TEAM_LOGOS[fullName],
+                        color: TEAM_COLORS[fullName] || '#ffffff',
+                        name: fullName
+                    });
+                }
+                if (found.length >= 2) break;
+            }
+        }
+    }
+
+    return found.slice(0, 2); // Limit to 2
 }
