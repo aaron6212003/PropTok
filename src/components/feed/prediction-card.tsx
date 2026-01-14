@@ -65,39 +65,43 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 {teams.length > 0 && (
                     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                         {/* 
-                           SYMMETRICAL LAYOUT:
-                           - Home Team: Bottom Right Corner
-                           - Away Team: Top Left Corner
-                           - Sizing: Fixed 400x400 to match
+                           SYMMETRICAL WATERMARK LAYOUT:
+                           - Top Logo: Centered in upper third
+                           - Bottom Logo: Centered in lower third
+                           - Appearance: Fully contained, subtle watermark
                         */}
 
-                        {/* Home/First Team - Bottom Right */}
-                        <div className="absolute -bottom-20 -right-20 h-[400px] w-[400px] opacity-[0.08] flex items-center justify-center p-4">
-                            <img
-                                src={homeTeam.url}
-                                alt={homeTeam.name}
-                                className="max-h-full max-w-full object-contain"
-                            />
+                        {/* Top Logo (First Team) */}
+                        <div className="absolute top-[15%] left-0 right-0 lg:top-[10%] flex justify-center">
+                            <div className="h-[300px] w-[300px] opacity-[0.06] flex items-center justify-center">
+                                <img
+                                    src={homeTeam.url}
+                                    alt={homeTeam.name}
+                                    className="max-h-full max-w-full object-contain grayscale"
+                                />
+                            </div>
                         </div>
 
-                        {/* Away/Second Team - Top Left */}
+                        {/* Bottom Logo (Second Team) */}
                         {awayTeam && (
-                            <div className="absolute -top-20 -left-20 h-[400px] w-[400px] opacity-[0.08] flex items-center justify-center p-4">
-                                <img
-                                    src={awayTeam.url}
-                                    alt={awayTeam.name}
-                                    className="max-h-full max-w-full object-contain"
-                                />
+                            <div className="absolute bottom-[15%] left-0 right-0 lg:bottom-[10%] flex justify-center">
+                                <div className="h-[300px] w-[300px] opacity-[0.06] flex items-center justify-center">
+                                    <img
+                                        src={awayTeam.url}
+                                        alt={awayTeam.name}
+                                        className="max-h-full max-w-full object-contain grayscale"
+                                    />
+                                </div>
                             </div>
                         )}
 
-                        {/* If only one logo, center huge but straight */}
+                        {/* Single Logo Center (Fallback) */}
                         {teams.length === 1 && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.06] flex items-center justify-center">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[450px] w-[450px] opacity-[0.05] flex items-center justify-center">
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
-                                    className="max-h-full max-w-full object-contain"
+                                    className="max-h-full max-w-full object-contain grayscale"
                                 />
                             </div>
                         )}
