@@ -19,7 +19,11 @@ interface PredictionCardProps {
 
 export default function PredictionCard({ prediction, isActive, bankroll }: PredictionCardProps) {
     const [showComments, setShowComments] = useState(false);
-    const logos = getTeamLogos(prediction.question);
+    // Search both Question and Description for maximum hit rate
+    const searchString = `${prediction.question} ${prediction.description || ''}`;
+    const teams = getTeamLogos(searchString);
+    const homeTeam = teams[0];
+    const awayTeam = teams[1];
 
     // Bet Slip Integration
     const { items, toggleInSlip } = useBetSlip();
