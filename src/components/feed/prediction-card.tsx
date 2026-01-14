@@ -53,6 +53,42 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     }}
                 />
 
+                {/* Ambient Background Logos */}
+                {logos.length > 0 && (
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                        {/* Home/First Team - Bottom Left */}
+                        <div className="absolute -bottom-20 -left-20 h-[400px] w-[400px] opacity-[0.15] blur-2xl animate-pulse">
+                            <img
+                                src={logos[0]}
+                                alt="Background Logo 1"
+                                className="h-full w-full object-contain rotate-12 grayscale contrast-125"
+                            />
+                        </div>
+
+                        {/* Away/Second Team - Top Right */}
+                        {logos[1] && (
+                            <div className="absolute -top-20 -right-20 h-[400px] w-[400px] opacity-[0.15] blur-2xl animate-pulse delay-700">
+                                <img
+                                    src={logos[1]}
+                                    alt="Background Logo 2"
+                                    className="h-full w-full object-contain -rotate-12 grayscale contrast-125"
+                                />
+                            </div>
+                        )}
+
+                        {/* If only one logo, center huge */}
+                        {logos.length === 1 && (
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.10] blur-3xl">
+                                <img
+                                    src={logos[0]}
+                                    alt="Background Logo Center"
+                                    className="h-full w-full object-contain"
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Content Layer */}
                 <div className="relative z-10 flex h-full flex-col p-6 pt-24 pb-40 font-sans text-white h-full justify-center">
 
@@ -112,23 +148,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                     {/* Main Content Area - Centered */}
                     <div className="flex flex-col flex-1 justify-center items-center my-auto w-full max-w-xs mx-auto gap-6 pt-12 text-center pointer-events-none">
-                        {/* Team Logos */}
-                        {logos.length > 0 && (
-                            <div className="flex items-center justify-center -space-x-4 mb-4 z-30 pointer-events-auto">
-                                {logos.map((logo, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="h-20 w-20 rounded-full border-4 border-black bg-zinc-900 shadow-2xl overflow-hidden flex items-center justify-center p-2 group-hover:scale-110 transition-transform duration-500"
-                                        style={{
-                                            transform: `translateX(${idx === 0 ? '-10px' : '10px'}) rotate(${idx === 0 ? '-5deg' : '5deg'})`
-                                        }}
-                                    >
-                                        <img src={logo} alt="Team Logo" className="h-full w-full object-contain filter drop-shadow-md" />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
                         {/* Category Badge - Centered above question */}
                         <div className="rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 shadow-lg mb-2 pointer-events-auto z-30">
                             <span className={cn(
