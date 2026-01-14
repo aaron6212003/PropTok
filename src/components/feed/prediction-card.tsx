@@ -61,32 +61,32 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     }}
                 />
 
-                {/* Ambient Background Logos (ULTRA-OPTIMIZED: No Blur, No Drop-Shadow) */}
+                {/* Ambient Background Logos (Straight & Neater) */}
                 {teams.length > 0 && (
                     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                        {/* Home/First Team - Bottom Left */}
-                        <div className="absolute -bottom-10 -left-16 h-[500px] w-[500px] opacity-[0.15]">
+                        {/* Home/First Team - Bottom Left (Just nice and straight) */}
+                        <div className="absolute -bottom-10 -left-10 h-[500px] w-[500px] opacity-[0.12]">
                             <img
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
-                                className="h-full w-full object-contain rotate-12"
+                                className="h-full w-full object-contain"
                             />
                         </div>
 
-                        {/* Away/Second Team - Top Right */}
+                        {/* Away/Second Team - Top Right (Just nice and straight) */}
                         {awayTeam && (
-                            <div className="absolute -top-10 -right-16 h-[500px] w-[500px] opacity-[0.15]">
+                            <div className="absolute -top-10 -right-10 h-[500px] w-[500px] opacity-[0.12]">
                                 <img
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
-                                    className="h-full w-full object-contain -rotate-12"
+                                    className="h-full w-full object-contain"
                                 />
                             </div>
                         )}
 
-                        {/* If only one logo, center huge */}
+                        {/* If only one logo, center huge but straight */}
                         {teams.length === 1 && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] opacity-[0.10]">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.10]">
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
@@ -99,8 +99,8 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                 {/* DEBUG FOOTER: Visible in screenshots to debug logo issues */}
                 <div className="absolute bottom-1 left-0 w-full text-center z-50 pointer-events-none">
-                    <span className="text-[10px] text-white/40 font-mono shadow-md">
-                        LOGOS: {teams.map(t => t.name).join(', ') || 'NONE'} | Q-Clean: {prediction.question.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20)}...
+                    <span className="text-[10px] text-white/10 font-mono">
+                        {teams.map(t => t.name).join(' vs ') || ''}
                     </span>
                 </div>
 
@@ -115,13 +115,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             <button
                                 onClick={() => {
                                     vibrate(5);
-                                    // Dispatch custom event or callback? 
-                                    // For now, let's make it just a visual placeholder if we can't easily bubble up, 
-                                    // BUT ideally we pass a prop. 
-                                    // Since I can't easily change the parent prop in this single step without breaking build,
-                                    // I'll emit a custom window event or use a global store. 
-                                    // actually, let's just dispatch a click to the hidden filter button? No that's hacky.
-                                    // CORRECT FIX: Update the interface in next step.
                                     document.dispatchEvent(new CustomEvent('toggle-filter'));
                                 }}
                                 className="group flex h-12 w-12 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-all hover:bg-brand/20 hover:scale-110 active:scale-95"
@@ -184,8 +177,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 Tap to view more lines
                             </div>
                         </Link>
-
-                        {/* Removed Old Horizontal Buttons */}
                     </div>
 
                     {/* Voting Area */}
