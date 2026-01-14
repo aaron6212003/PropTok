@@ -167,24 +167,31 @@ export const sportsService = {
         // Expanded Sports List (Prioritized by Seasonality)
         const sports = [
             "americanfootball_nfl", // Playoffs
+            "americanfootball_ncaaf", // CFP / Championship
             "basketball_nba",       // Peak Season
             "icehockey_nhl",        // Peak Season
-            "basketball_ncaab",     // Conference play
-            "soccer_epl",
-            "soccer_uefa_champions_league"
+            "basketball_ncaab",     // Conference play (Filtered to Top 25)
         ];
 
         const sportCategoryMap: Record<string, string> = {
             "americanfootball_nfl": "NFL",
             "basketball_nba": "NBA",
             "icehockey_nhl": "NHL",
-            "soccer_epl": "Soccer",
-            "soccer_uefa_champions_league": "Soccer",
             "basketball_ncaab": "NCAAB",
             "americanfootball_ncaaf": "NCAAF"
         };
 
         const allFetchedGames: any[] = [];
+
+        // Manual "Top 25" Watchlist for NCAAB (Approximation of AP Poll + Traditional Powers)
+        // Updated: Jan 2026 Season Context
+        const TOP_NCAAB_TEAMS = [
+            "Duke", "North Carolina", "Kansas", "Connecticut", "UConn", "Purdue", "Houston",
+            "Alabama", "Tennessee", "Arizona", "Marquette", "Illinois", "Kentucky", "Auburn",
+            "Creighton", "Baylor", "Gonzaga", "Iowa State", "BYU", "Texas Tech", "Wisconsin",
+            "Clemson", "San Diego State", "Dayton", "Utah State", "Saint Mary's", "Michigan State",
+            "Villanova", "Virginia", "Texas"
+        ];
 
         // 1. FETCH SCHEDULE & BASIC PROPS
         for (const sport of sports) {
@@ -196,6 +203,17 @@ export const sportsService = {
                     logs.push(`${sport} Error: ${res.error}`);
                 } else if (res.data) {
                     let games = res.data;
+
+                    // FILTER: NCAAB Top 25 Only
+                    if (sport === 'basketball_ncaab') {
+                        games = games.filter((g: any) => {
+                            // Flexible matching
+                            const isHomeTop = TOP_NCAAB_TEAMS.some(t => g.home_team.includes(t));
+                            const isAwayTop = TOP_NCAAB_TEAMS.some(t => g.away_team.includes(t));
+                            return isHomeTop || isAwayTop;
+                        });
+                        logs.push(`Filtered NCAAB to ${games.length} games (Top 25 match)`);
+                    }
 
                     // 2. HYDRATE WITH PLAYER PROPS (Two-Step Fetch)
                     // Only for major prop sports
@@ -209,17 +227,12 @@ export const sportsService = {
                         logs.push(msg);
                         console.log(`[sportsService] ${msg}`); // FORCE LOG TO CONSOLE
 
-                        // Limit to first 10 games to avoid hitting rate limits instantly if list is huge
+                        // Limit to first 15 games to avoid hitting rate limits instantly if list is huge
                         const gamesToHydrate = games.slice(0, 15);
 
                         await Promise.all(gamesToHydrate.map(async (game: any) => {
                             const propData = await this.fetchEventProps(sport, game.id, propMarkets);
                             if (propData && propData.bookmakers) {
-                                // Merge prop bookmakers into existing bookmakers
-                                // We want to append detailed markets to the bookmakers list
-                                // Actually, The Odds API returns a similar bookmaker structure.
-                                // We should merge markets for matching bookies.
-
                                 propData.bookmakers.forEach((propBookie: any) => {
                                     const existingBookie = game.bookmakers.find((b: any) => b.key === propBookie.key);
                                     if (existingBookie) {
@@ -263,7 +276,13 @@ export const sportsService = {
             const now = Date.now();
             const hoursDiff = (gameTime - now) / (1000 * 60 * 60);
 
-            if (hoursDiff > 168) {
+            // Special Case: Allow Championship games (usually futures-like IDs) further out? 
+            // Actually, for Championship, verify time. usually active lines appear 1-2 weeks out.
+            // Let's relax the filter for NCAAF.
+            const isChampionship = game.sport_key === 'americanfootball_ncaaf';
+            const limit = isChampionship ? 336 : 168; // 14 days for Championship, 72h -> 168h (1 week) for others? 168 is safer.
+
+            if (hoursDiff > limit) {
                 // logs.push(`SKIPPED (Too far out): ${game.home_team} vs ${game.away_team} (${Math.round(hoursDiff)}h away)`);
                 skippedCount++;
                 continue;
