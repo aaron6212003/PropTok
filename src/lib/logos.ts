@@ -259,12 +259,16 @@ export function getTeamLogos(question: string): { url: string, color: string, na
     if (!question) return [];
 
     const found: { url: string, color: string, name: string }[] = [];
-    const text = question.toLowerCase();
+    // Normalize text: remove everything except letters, numbers vs spaces to be safe? 
+    // Actually, just remove non-alphanumeric and compare 'clean' strings to handle weird spaces/punctuation
+    const cleanText = question.toLowerCase().replace(/[^a-z0-9]/g, '');
 
     // 1. Check Full Names
     const teamNames = Object.keys(TEAM_LOGOS).sort((a, b) => b.length - a.length);
     for (const team of teamNames) {
-        if (text.includes(team.toLowerCase())) {
+        // clean team name too
+        const cleanTeam = team.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanText.includes(cleanTeam)) {
             found.push({
                 url: TEAM_LOGOS[team],
                 color: TEAM_COLORS[team] || '#ffffff',
@@ -281,7 +285,8 @@ export function getTeamLogos(question: string): { url: string, color: string, na
         for (const nick of nicknames) {
             // Ensure it matches as a whole word or significant part to avoid "Bears" matching inside "Bearsden"
             // Simple includes is usually fine for game context
-            if (text.includes(nick.toLowerCase())) {
+            const cleanNick = nick.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (cleanText.includes(cleanNick)) {
                 const fullName = NICKNAME_MAP[nick];
                 // Check if already found
                 if (!found.some(f => f.name === fullName)) {
