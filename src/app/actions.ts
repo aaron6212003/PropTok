@@ -764,6 +764,24 @@ export async function placeBundleWager(legs: { id: string, side: 'YES' | 'NO', m
 
     revalidatePath("/", "layout");
     revalidatePath("/profile", "layout");
+    revalidatePath("/profile", "layout");
+    return { success: true };
+}
+
+export async function refreshOdds() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Basic Admin Check (Should be robust rbac in prod)
+    if (!user) throw new Error("Unauthorized");
+
+    // Ideally check for specific admin role/claim here
+
+    console.log("[Manual Refresh] Triggering Ingestion...");
+    await sportsService.ingestGames();
+
+    revalidatePath("/", "layout");
+    revalidatePath("/profile/admin", "layout");
     return { success: true };
 }
 

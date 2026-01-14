@@ -200,9 +200,9 @@ export const sportsService = {
                     // 2. HYDRATE WITH PLAYER PROPS (Two-Step Fetch)
                     // Only for major prop sports
                     let propMarkets = "";
-                    if (sport.includes("nba")) propMarkets = "player_points,player_assists,player_rebounds,player_threes,player_blocks,player_steals";
-                    else if (sport.includes("nfl")) propMarkets = "player_pass_tds,player_pass_yds,player_rush_yds,player_reception_yds,player_pass_attempts,player_pass_completions,player_receptions";
-                    else if (sport.includes("nhl")) propMarkets = "player_points,player_goals,player_assists,player_shots_on_goal";
+                    if (sport.includes("nba")) propMarkets = "player_points,player_assists,player_rebounds,player_threes,player_blocks,player_steals,player_turnovers,player_points_assists,player_points_rebounds,player_rebounds_assists,player_points_rebounds_assists";
+                    else if (sport.includes("nfl")) propMarkets = "player_pass_tds,player_pass_yds,player_rush_yds,player_reception_yds,player_pass_attempts,player_pass_completions,player_receptions,player_rush_attempts,player_anytime_touchdown";
+                    else if (sport.includes("nhl")) propMarkets = "player_points,player_goals,player_assists,player_shots_on_goal,player_power_play_points,player_blocked_shots";
 
                     if (propMarkets && games.length > 0) {
                         const msg = `Hydrating ${games.length} ${sport} games with props...`;
@@ -279,10 +279,23 @@ export const sportsService = {
             for (const market of bookie.markets) {
                 // Expanded support to include player props
                 const supportedMarkets = [
-                    'h2h', 'spreads', 'totals',
-                    'player_points', 'player_assists', 'player_rebounds', 'player_threes', 'player_blocks', 'player_steals',
-                    'player_pass_tds', 'player_pass_yds', 'player_rush_yds', 'player_reception_yds', 'player_pass_attempts', 'player_pass_completions', 'player_receptions',
-                    'player_goals', 'player_shots_on_goal'
+                    // Game Lines
+                    'h2h', 'spreads', 'totals', 'alternate_spreads', 'alternate_totals',
+
+                    // NBA Player Props
+                    'player_points', 'player_assists', 'player_rebounds', 'player_threes',
+                    'player_blocks', 'player_steals', 'player_turnovers',
+                    'player_points_assists', 'player_points_rebounds', 'player_rebounds_assists',
+                    'player_points_rebounds_assists', 'player_double_double', 'player_triple_double',
+
+                    // NFL Player Props
+                    'player_pass_tds', 'player_pass_yds', 'player_rush_yds', 'player_reception_yds',
+                    'player_pass_attempts', 'player_pass_completions', 'player_receptions',
+                    'player_rush_attempts', 'player_anytime_touchdown',
+
+                    // NHL Player Props
+                    'player_points', 'player_goals', 'player_assists', 'player_shots_on_goal',
+                    'player_power_play_points', 'player_blocked_shots'
                 ];
 
                 if (!supportedMarkets.includes(market.key)) continue;

@@ -11,7 +11,9 @@ import {
     adminResetTournament,
     getAllTournaments,
     deletePrediction,
-    getUpcomingGames
+    deletePrediction,
+    getUpcomingGames,
+    refreshOdds
 } from "@/app/actions";
 import { Terminal, Users, Trophy, Settings, ShieldAlert, BadgeDollarSign, Trash2, Plus, GripVertical, RotateCcw, Wand2, Zap, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -96,6 +98,23 @@ export default function AdminPage() {
                             </div>
                         )}
                     </div>
+
+                    {/* REFRESH ODDS BUTTON */}
+                    <button
+                        onClick={() => {
+                            toast.promise(async () => {
+                                await refreshOdds();
+                            }, {
+                                loading: "Refreshing Odds (this may take 10s)...",
+                                success: "Odds Refreshed!",
+                                error: "Failed to refresh"
+                            });
+                        }}
+                        className="flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-xs font-bold text-black hover:bg-brand/90 transition-colors"
+                    >
+                        <RotateCcw size={14} />
+                        <span>Refresh Odds</span>
+                    </button>
 
                     {/* DELETE ACTION BUTTON */}
                     <button
