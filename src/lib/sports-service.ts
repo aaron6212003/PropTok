@@ -170,7 +170,7 @@ export const sportsService = {
             "americanfootball_ncaaf", // CFP / Championship
             "basketball_nba",       // Peak Season
             "icehockey_nhl",        // Peak Season
-            "basketball_ncaab",     // Conference play (Filtered to Top 25)
+            // "basketball_ncaab",     // Disabled per user request (Jan 14)
         ];
 
         const sportCategoryMap: Record<string, string> = {
