@@ -256,42 +256,75 @@ export async function getUpcomingGames() {
 
     // Group by game_id to get one entry per match
     const gamesMap = new Map();
+
+    // 1. First pass: Group all props by ID to find the best label
+    const gameGroups: Record<string, any[]> = {};
+
     data.forEach(p => {
-        // FLEXIBLE GAME ID: Use p.game_id if exists, otherwise extract from external_id
         let activeGameId = p.game_id;
         if (!activeGameId && p.external_id) {
             const parts = p.external_id.split('-');
             if (parts.length >= 2) activeGameId = parts[0];
         }
 
-        if (activeGameId && !gamesMap.has(activeGameId)) {
-            // Extract team names from question if possible
-            const match = p.question.match(/Will (.+?) vs (.+?) go|Will (.+?) win against (.+?)\?|cover (.+?) vs (.+?)\?/i);
-            let label = p.question;
-            if (match) {
-                const teams = match.slice(1).filter(Boolean);
-                if (teams.length >= 2) label = `${teams[0]} vs ${teams[1]}`;
-            }
-
-            // Normalize category to match filter keys (NFL, NBA, NHL, MLB, Soccer)
-            let category = p.category || 'Sports';
-            const catLower = category.toLowerCase();
-
-            if (catLower.includes('nfl') || catLower.includes('american football')) category = 'NFL';
-            else if (catLower.includes('nba') || catLower.includes('basketball')) category = 'NBA';
-            else if (catLower.includes('nhl') || catLower.includes('hockey')) category = 'NHL';
-            else if (catLower.includes('mlb') || catLower.includes('baseball')) category = 'MLB';
-            else if (catLower.includes('soccer') || catLower.includes('football')) {
-                // Keep 'NFL' check first so American Football doesn't match 'Soccer' if we use 'football'
-                if (!catLower.includes('nfl')) category = 'Soccer';
-            }
-
-            gamesMap.set(activeGameId, {
-                id: activeGameId,
-                label,
-                category: category
-            });
+        if (activeGameId) {
+            if (!gameGroups[activeGameId]) gameGroups[activeGameId] = [];
+            gameGroups[activeGameId].push(p);
         }
+    });
+
+    // 2. Second pass: Determine best label for each group
+    Object.keys(gameGroups).forEach(gameId => {
+        const props = gameGroups[gameId];
+        // Priority 1: Look for "Team vs Team" in questions
+        let bestLabel = "";
+        let category = "Sports";
+
+        for (const p of props) {
+            // Set Category form any prop (usually consistent)
+            if (!category || category === 'Sports') {
+                // Normalize category
+                let Cat = p.category || 'Sports';
+                const catLower = Cat.toLowerCase();
+                if (catLower.includes('nfl')) Cat = 'NFL';
+                else if (catLower.includes('nba')) Cat = 'NBA';
+                else if (catLower.includes('nhl')) Cat = 'NHL';
+                else if (catLower.includes('mlb') || catLower.includes('baseball')) Cat = 'MLB';
+                else if (catLower.includes('soccer')) Cat = 'Soccer';
+                category = Cat;
+            }
+
+            // Try to find a nice VS label
+            const match = p.question.match(/Will (.+?) (?:vs|win against|cover) (.+?)(?:\?| go| \d)/i);
+            if (match) {
+                const t1 = match[1].replace(/the /i, '').trim();
+                const t2 = match[2].replace(/the /i, '').trim();
+                // Simple check to avoid "Aaron Rodgers vs Pass Attempts" type false positives
+                // Teams usually don't have numbers (unless 76ers etc, handle later) 
+                // and reasonable length.
+                if (t1.length < 30 && t2.length < 30) {
+                    bestLabel = `${t1} vs ${t2}`;
+                    break; // Found a good one
+                }
+            }
+        }
+
+        // Priority 2: If no "vs" found, look for "Game Lines" or use the first prop's question but truncated
+        if (!bestLabel) {
+            // Try to find a prop that isn't a player prop
+            const mainProp = props.find(p => !p.question.includes('record') && !p.question.includes('score'));
+            if (mainProp) {
+                bestLabel = mainProp.question; // Better than nothing
+            } else {
+                bestLabel = props[0].question; // Fallback
+            }
+        }
+
+        gamesMap.set(gameId, {
+            id: gameId,
+            label: bestLabel,
+            category: category
+        });
     });
 
     const result = Array.from(gamesMap.values());
