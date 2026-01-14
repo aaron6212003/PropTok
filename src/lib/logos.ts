@@ -250,23 +250,73 @@ const NICKNAME_MAP: Record<string, string> = {
     "Clippers": "LA Clippers"
 };
 
+// League Mapping for Strict Filtering
+const LEAGUE_TEAMS: Record<string, string[]> = {
+    'NFL': [
+        "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills", "Carolina Panthers", "Chicago Bears",
+        "Cincinnati Bengals", "Cleveland Browns", "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
+        "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs", "Las Vegas Raiders",
+        "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins", "Minnesota Vikings", "New England Patriots",
+        "New Orleans Saints", "New York Giants", "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers",
+        "San Francisco 49ers", "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
+    ],
+    'NBA': [
+        "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls", "Cleveland Cavaliers",
+        "Dallas Mavericks", "Denver Nuggets", "Detroit Pistons", "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
+        "LA Clippers", "Los Angeles Lakers", "Memphis Grizzlies", "Miami Heat", "Milwaukee Bucks", "Minnesota Timberwolves",
+        "New Orleans Pelicans", "New York Knicks", "Oklahoma City Thunder", "Orlando Magic", "Philadelphia 76ers",
+        "Phoenix Suns", "Portland Trail Blazers", "Sacramento Kings", "San Antonio Spurs", "Toronto Raptors", "Utah Jazz",
+        "Washington Wizards"
+    ],
+    'NHL': [
+        "Anaheim Ducks", "Arizona Coyotes", "Boston Bruins", "Buffalo Sabres", "Calgary Flames", "Carolina Hurricanes",
+        "Chicago Blackhawks", "Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars", "Detroit Red Wings",
+        "Edmonton Oilers", "Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montreal Canadiens",
+        "Nashville Predators", "New Jersey Devils", "New York Islanders", "New York Rangers", "Ottawa Senators",
+        "Philadelphia Flyers", "Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken", "St Louis Blues",
+        "Tampa Bay Lightning", "Toronto Maple Leafs", "Vancouver Canucks", "Vegas Golden Knights", "Washington Capitals",
+        "Winnipeg Jets"
+    ]
+};
+
 /**
  * Extracts team logos and colors from a question string.
  * Example: "Will Detroit Red Wings win against Carolina Hurricanes?"
  * Returns an array of objects linking logo and color.
+ * 
+ * @param question The full question text to search
+ * @param category Optional category to enforce strict league matching (e.g. 'NFL', 'NCAAB')
  */
-export function getTeamLogos(question: string): { url: string, color: string, name: string }[] {
+export function getTeamLogos(question: string, category?: string): { url: string, color: string, name: string }[] {
     if (!question) return [];
 
     const found: { url: string, color: string, name: string }[] = [];
-    // Normalize text: remove everything except letters, numbers vs spaces to be safe? 
-    // Actually, just remove non-alphanumeric and compare 'clean' strings to handle weird spaces/punctuation
     const cleanText = question.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+    // Determine allowed leagues based on category
+    // If category is NCAAB/NCAAF, we currently HAVE NO LOGOS, so we should return empty to avoid mismatch.
+    let allowedLeagues: string[] = ['NFL', 'NBA', 'NHL']; // Default to all if no category
+
+    if (category) {
+        if (category === 'NCAAB' || category === 'NCAAF') {
+            // We do not have college logos yet. 
+            // Return empty to prevent "Mercer Bears" matching "Chicago Bears"
+            return [];
+        }
+        if (category === 'NFL') allowedLeagues = ['NFL'];
+        if (category === 'NBA') allowedLeagues = ['NBA'];
+        if (category === 'NHL') allowedLeagues = ['NHL'];
+    }
+
+    // Flatten allowed teams for quick lookup
+    const allowedTeams = new Set<string>();
+    for (const league of allowedLeagues) {
+        LEAGUE_TEAMS[league]?.forEach(t => allowedTeams.add(t));
+    }
+
     // 1. Check Full Names
-    const teamNames = Object.keys(TEAM_LOGOS).sort((a, b) => b.length - a.length);
+    const teamNames = Object.keys(TEAM_LOGOS).filter(t => allowedTeams.has(t)).sort((a, b) => b.length - a.length);
     for (const team of teamNames) {
-        // clean team name too
         const cleanTeam = team.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cleanText.includes(cleanTeam)) {
             found.push({
@@ -279,16 +329,16 @@ export function getTeamLogos(question: string): { url: string, color: string, na
     }
 
     // 2. If < 2 found, Check Nicknames
-    // Only check nicknames if we haven't found the team yet (to avoid duplicates)
     if (found.length < 2) {
         const nicknames = Object.keys(NICKNAME_MAP).sort((a, b) => b.length - a.length);
         for (const nick of nicknames) {
-            // Ensure it matches as a whole word or significant part to avoid "Bears" matching inside "Bearsden"
-            // Simple includes is usually fine for game context
+            const fullName = NICKNAME_MAP[nick];
+
+            // STRICT CHECK: Ensure the nickname maps to an ALLOWED team
+            if (!allowedTeams.has(fullName)) continue;
+
             const cleanNick = nick.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (cleanText.includes(cleanNick)) {
-                const fullName = NICKNAME_MAP[nick];
-                // Check if already found
                 if (!found.some(f => f.name === fullName)) {
                     found.push({
                         url: TEAM_LOGOS[fullName],
@@ -301,5 +351,5 @@ export function getTeamLogos(question: string): { url: string, color: string, na
         }
     }
 
-    return found.slice(0, 2); // Limit to 2
+    return found.slice(0, 2);
 }

@@ -22,12 +22,13 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
     // Search both Question and Description for maximum hit rate
     const searchString = `${prediction.question} ${prediction.description || ''}`;
-    const teams = getTeamLogos(searchString);
+    // Strictly filter logos by category to avoid "Bears" matching "Chicago Bears" in NCAAB
+    const teams = getTeamLogos(searchString, prediction.category);
     const homeTeam = teams[0];
     const awayTeam = teams[1];
 
     // DEBUG: temporary log to find out why logos are missing
-    console.log(`[PredictionCard] "${prediction.question}" -> Found:`, teams);
+    // console.log(`[PredictionCard] "${prediction.question}" -> Found:`, teams);
 
     // Bet Slip Integration
     const { items, toggleInSlip } = useBetSlip();
@@ -54,9 +55,8 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
         <>
             <div className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-black">
                 {/* Dynamic Background Gradient (Hardware Accelerated) */}
-                {/* Dynamic Background Gradient (Hardware Accelerated) */}
                 <div
-                    className="absolute inset-0 opacity-40 transition-colors duration-700 ease-in-out will-change-[background,opacity]"
+                    className="absolute inset-0 opacity-40 transition-colors duration-700 ease-in-out will-change-[background]"
                     style={{
                         background: `radial-gradient(circle at center, ${homeTeam ? homeTeam.color : (CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default'])} 0%, #000000 85%)`,
                         transform: 'translateZ(0)' // Force GPU
@@ -75,7 +75,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                         {/* Top/Right Plane (Home) */}
                         <div
-                            className="absolute -top-[5%] -right-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-30 mix-blend-screen"
+                            className="absolute -top-[5%] -right-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-20"
                             style={{
                                 transform: 'translateZ(-100px) rotateY(-15deg) rotateZ(10deg)',
                                 willChange: 'transform'
@@ -84,6 +84,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             <img
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
+                                loading="lazy"
                                 className="max-h-full max-w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                             />
                         </div>
@@ -91,7 +92,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                         {/* Bottom/Left Plane (Away) */}
                         {awayTeam && (
                             <div
-                                className="absolute -bottom-[5%] -left-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-30 mix-blend-screen"
+                                className="absolute -bottom-[5%] -left-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-20"
                                 style={{
                                     transform: 'translateZ(-100px) rotateY(15deg) rotateZ(-10deg)',
                                     willChange: 'transform'
@@ -100,6 +101,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 <img
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
+                                    loading="lazy"
                                     className="max-h-full max-w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                                 />
                             </div>
@@ -108,12 +110,13 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                         {/* Fallback Single Logo - Centered but Deep */}
                         {teams.length === 1 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[60vh] w-[60vh] opacity-10 flex items-center justify-center mix-blend-screen"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[60vh] w-[60vh] opacity-10 flex items-center justify-center"
                                 style={{ transform: 'translateZ(-300px)' }}
                             >
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
+                                    loading="lazy"
                                     className="max-h-full max-w-full object-contain"
                                 />
                             </div>
