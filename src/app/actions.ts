@@ -1782,3 +1782,31 @@ export async function joinTournamentWithBalance(tournamentId: string) {
     revalidatePath("/"); // Update wallet header
     return { success: true };
 }
+
+export async function getAvailableCategories(tournamentId?: string): Promise<string[]> {
+  const supabase = await createClient(); // Use standard client for public reads
+  const now = new Date().toISOString();
+
+  let query = supabase
+    .from('predictions')
+    .select('category')
+    .gt('expires_at', now);
+    
+  if (tournamentId) {
+     const { data: entry } = await supabase
+        .from('tournament_entries')
+        .select('game_id')
+        .eq('tournament_id', tournamentId)
+        .single();
+        
+      if (entry?.game_id) {
+          query = query.eq('game_id', entry.game_id);
+      }
+  }
+
+  const { data } = await query;
+  if (!data) return [];
+
+  const categories = new Set(data.filter(p => p.category).map(p => p.category));
+  return Array.from(categories).sort();
+}

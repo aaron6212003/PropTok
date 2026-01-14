@@ -14,11 +14,12 @@ interface PredictionFeedProps {
     initialPredictions: any[];
     bankroll: number;
     tournamentId?: string;
+    allCategories: string[];
 }
 
 type SortOption = 'trending' | 'ending' | 'new';
 
-export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
+export default function PredictionFeed({ initialPredictions, bankroll, tournamentId, allCategories = [] }: PredictionFeedProps) {
     const [sortBy, setSortBy] = useState<SortOption>('trending');
     const searchParams = useSearchParams();
     const activeCategory = searchParams.get('category');
@@ -33,14 +34,8 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     const router = useRouter();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Get unique categories from predictions
-    const availableCategories = useMemo(() => {
-        const cats = new Set<string>();
-        initialPredictions.forEach(p => {
-            if (p.category) cats.add(p.category);
-        });
-        return Array.from(cats).sort();
-    }, [initialPredictions]);
+    // Using passed categories instead of deriving from potentially filtered list
+    const availableCategories = allCategories;
 
     const toggleCategory = (cat: string) => {
         const newCat = selectedCategory === cat ? null : cat;

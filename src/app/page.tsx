@@ -1,7 +1,7 @@
 import Link from "next/link";
 import BottomNavBar from "@/components/layout/bottom-nav";
 import PredictionFeed from "@/components/feed/prediction-feed";
-import { getPredictions, getUserTournamentEntries } from "./actions";
+import { getPredictions, getUserTournamentEntries, getAvailableCategories } from "./actions";
 import { createClient } from "@/lib/supabase/server";
 import { Coins, Trophy as TrophyIcon, ChevronDown } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
@@ -15,7 +15,13 @@ export const revalidate = 0;
 export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string; category?: string }> }) {
   noStore();
   const { tournament: tournamentId, category } = await searchParams;
-  const predictions = await getPredictions(true, tournamentId, category);
+
+  // Parallel fetch: Predictions (Filtered) AND All Categories (Unfiltered)
+  const [predictions, availableCategories] = await Promise.all([
+    getPredictions(true, tournamentId, category),
+    getAvailableCategories(tournamentId)
+  ]);
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -38,9 +44,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   }
 
   const tournamentEntries = user ? (await getUserTournamentEntries() || []) : [];
+
   // Use tournamentStack if tournament is active, otherwise use cash_balance (Real) or fallback to bankroll (Play)
-  // Actually, Main Feed "Bankroll" usually implies the betting power. 
-  // If NO tournament, it should be Real Cash.
   const activeBankroll = tournamentId ? (tournamentStack || 0) : (profile?.cash_balance || 0);
 
   return (
@@ -64,6 +69,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
         initialPredictions={predictions}
         bankroll={activeBankroll}
         tournamentId={tournamentId}
+        allCategories={availableCategories}
       />
 
       <BetSlip cashBalance={profile?.cash_balance || 0} />
