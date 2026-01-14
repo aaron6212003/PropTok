@@ -1,5 +1,5 @@
 
-const RAPID_API_KEY = "67cd4cf762msh10e868e1591f6b4p10531ba0af1";
+const RAPID_API_KEY = process.env.RAPID_API_KEY || "67cd4cf762msh10e868e1591f6b4p10531ba0af1";
 const TANK01_BASE_URL = "https://tank01-nba-live-in-game-real-time-statistics.p.rapidapi.com";
 
 // Mapping of our internal prop types to Tank01 stats keys

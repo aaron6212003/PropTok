@@ -592,50 +592,103 @@ export const sportsService = {
 
             const marketKey = parts[1]; // e.g., 'h2h', 'spreads', 'totals', 'player_points'
 
-            // --- A. PLAYER PROPS RESOLUTION (New) ---
-            if (marketKey.startsWith('player_')) {
-                // external_id structure: "GameID-marketKey-PlayerName-Outcome-Line"
-                // Example: "12345-player_points-LeBron James-Over-25.5"
-                // Note: uniqueIdentifier in ingest was: `${description}-${name}-${point}`
+            // --- A. PLAYER PROPS RESOLUTION ---
+            let isPlayerProp = marketKey.startsWith('player_');
+            let statType = marketKey;
 
-                // Let's re-parse carefully.
-                // We stored uniqueIdentifier in parts[2] onwards? 
-                // ingest: const externalId = `${game.id}-${market.key}-${uniqueIdentifier}`
-                // uniqueIdentifier = "LeBron James-Over-25.5"
-                // So externalId = "gameid-player_points-LeBron James-Over-25.5"
+            // Handle "player-rebounds" case (split by hyphen)
+            if (marketKey === 'player' && parts[2]) {
+                isPlayerProp = true;
+                statType = `player_${parts[2]}`;
+            }
 
-                // Reconstruct the pieces
-                const remaining = p.external_id.substring(gameId.length + marketKey.length + 2);
-                // "LeBron James-Over-25.5"
-                // This split is risky if name has hyphens. 
+            if (isPlayerProp) {
+                // external_id: "gameId-player-rebounds-First-Last-Over-5-5" or "...-Over-5.5"
+                // It's unreliable to split by hyphen for name.
+                // Regex strategy: Match "-Over-Line" or "-Under-Line" at the end.
 
-                // Better approach: We know the format ends with "-Over-25.5" or "-Under-25.5"
-                // Let's use regex to extract the Line and Type
-                const match = remaining.match(/(.*)-(Over|Under)-([0-9.]+)/i);
+                const idBody = p.external_id;
+                // Regex pattern: 
+                // 1. Any characters (Name)
+                // 2. -(Over|Under)-
+                // 3. Number (Line), allowing for "2.5" or "2-5" or "2"
+                const match = idBody.match(/(.+)-(Over|Under)-([\d\.\-]+)$/i);
+
                 if (!match) continue;
 
-                const playerName = match[1].replace(/-/g, ' '); // Revert hyphens to spaces? ingest replaced non-alphanum with '-'
-                // Ingest: .replace(/[^a-z0-9]/gi, '-').toLowerCase()
-                // So "LeBron James" -> "lebron-james"
+                const fullPrefix = match[1]; // "GameID-player-rebounds-LeBron-James"
+                const type = match[2]; // "Over"
+                let lineStr = match[3]; // "5.5" or "5-5"
+                const line = parseFloat(lineStr.replace(/-/g, '.')); // Convert "5-5" to "5.5"
 
-                const type = match[2]; // Over/Under
-                const line = parseFloat(match[3]);
+                // Extract Player Name
+                // We know it starts after GameID and MarketKey
+                // GameID is variable length.
+                // But we parsed GameID at start.
+                let nameStart = gameId.length + 1; // skip hyphen
+
+                // Skip Market Key
+                if (statType === 'player_points') nameStart += "player_points".length + 1; // Check exact string in ID? No, ID might be "player-points"
+                else if (statType === 'player_assists') nameStart += "player_assists".length + 1;
+                // Using regex for parts is safer.
+
+                // Alternative: Remove GameID from fullPrefix.
+                let nameAndMarket = fullPrefix.substring(gameId.length + 1); // "player-rebounds-LeBron-James"
+
+                // Remove Market Key part prefix
+                // If it starts with "player-rebounds-", remove it.
+                // Helper to normalize valid market keys
+                const validKeys = [
+                    "player_points", "player-points",
+                    "player_assists", "player-assists",
+                    "player_rebounds", "player-rebounds",
+                    "player_threes", "player-threes",
+                    "player_blocks", "player-blocks",
+                    "player_steals", "player-steals",
+                    "player_turnovers", "player-turnovers"
+                ];
+
+                let marketPrefix = "";
+                for (const k of validKeys) {
+                    if (nameAndMarket.startsWith(k)) {
+                        marketPrefix = k;
+                        break;
+                    }
+                }
+
+                if (!marketPrefix) continue; // Unknown market
+
+                let playerName = nameAndMarket.substring(marketPrefix.length + 1); // "LeBron-James"
+                playerName = playerName.replace(/-/g, ' '); // "LeBron James"
+
+                // --- TANK01 STAT MAPPING ---
+                const STAT_MAP: Record<string, string> = {
+                    'player_points': 'pts',
+                    'player-points': 'pts',
+                    'player_assists': 'ast',
+                    'player-assists': 'ast',
+                    'player_rebounds': 'reb',
+                    'player-rebounds': 'reb',
+                    'player_threes': 'tptfgm', // 3PM
+                    'player-threes': 'tptfgm',
+                    'player_blocks': 'blk',
+                    'player-blocks': 'blk',
+                    'player_steals': 'stl',
+                    'player-steals': 'stl',
+                    'player_turnovers': 'TOV',
+                    'player-turnovers': 'TOV'
+                };
+
+                const targetStat = STAT_MAP[statType] || STAT_MAP[marketPrefix];
+                if (!targetStat) continue;
 
                 // Call Tank01
                 const gameDate = new Date(p.expires_at).toISOString().split('T')[0];
                 const stats = await tank01Service.getPlayerStats(playerName, "", gameDate);
 
-                // We need the Game Date from the Prediction!
-                // We can't get it from external_id. We might need to query prediction.expires_at?
-                // Or just use "today" if we run this cron daily.
-
                 if (!stats) continue;
 
-                // Map Market to Stat Key
-                // 'player_points' -> 'pts'
-                const statKey = marketKey.replace('player_', ''); // simpler mapping needed
-                // We need a robust mapper in the service.
-                const actualVal = parseFloat(stats[statKey] || "0");
+                const actualVal = parseFloat(stats[targetStat] || "0");
 
                 let winner = null;
                 if (type === 'Over') {
@@ -645,7 +698,6 @@ export const sportsService = {
                 }
 
                 // Update DB
-                // Update DB via RPC to ensure payouts match!
                 const { error: rpcError } = await supabase.rpc('resolve_prediction', {
                     p_id: p.id,
                     p_outcome: winner
@@ -655,12 +707,8 @@ export const sportsService = {
                     logs.push(`ERROR resolving prop ${p.id}: ${rpcError.message}`);
                 } else {
                     resolvedCount++;
-                    logs.push(`GRADED PROP: ${playerName} ${marketKey}: ${actualVal} vs ${line} -> ${winner}`);
+                    logs.push(`GRADED PROP: ${playerName} ${targetStat}: ${actualVal} vs ${line} -> ${winner}`);
                 }
-                continue;
-
-                resolvedCount++;
-                logs.push(`GRADED PROP: ${playerName} ${marketKey}: ${actualVal} vs ${line} -> ${winner}`);
                 continue;
             }
 
