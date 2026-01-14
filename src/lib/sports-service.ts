@@ -538,7 +538,10 @@ export const sportsService = {
             .from("predictions")
             .select("*")
             .eq("resolved", false)
-            .not("external_id", "is", null);
+            .not("external_id", "is", null)
+            .lt("expires_at", new Date().toISOString())
+            .order("expires_at", { ascending: false })
+            .limit(1000);
 
         if (fetchError || !predictions || predictions.length === 0) {
             logs.push("No unresolved sports predictions found.");
