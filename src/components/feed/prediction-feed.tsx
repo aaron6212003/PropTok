@@ -196,7 +196,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                 )}
             </AnimatePresence>
 
-            <div ref={scrollRef} className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar pt-12">
+            <div ref={scrollRef} className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar touch-pan-y">
                 {filteredAndSortedPredictions.map((prediction: any) => {
                     const fallbackYesMultiplier = Number((0.95 / Math.max(0.01, (prediction.yes_percent || 50) / 100)).toFixed(2));
                     const fallbackNoMultiplier = Number((0.95 / Math.max(0.01, 1 - (prediction.yes_percent || 50) / 100)).toFixed(2));

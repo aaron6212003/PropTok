@@ -44,7 +44,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
     return (
         <>
-            <div className="relative h-full w-full snap-start overflow-hidden bg-black">
+            <div className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-black">
                 {/* Dynamic Background Gradient */}
                 <div
                     className="absolute inset-0 opacity-40 transition-colors duration-700"
