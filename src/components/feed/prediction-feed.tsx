@@ -1,18 +1,14 @@
 "use client";
 
 import { useRef, useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PullToRefresh from '../ui/pull-to-refresh';
 import PredictionCard from './prediction-card';
-import { useScroll, useTransform } from 'framer-motion';
-import { Prediction } from "@/lib/types";
-import { Flame, Clock, Sparkles } from 'lucide-react';
+import { Flame, Clock, Sparkles, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CATEGORY_COLORS, CATEGORY_TEXT_COLORS } from '@/lib/constants';
+import { CATEGORY_COLORS } from '@/lib/constants';
 import EmptyState from '../ui/empty-state';
-import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Filter, Check, ChevronDown, X } from 'lucide-react';
 
 interface PredictionFeedProps {
     initialPredictions: any[];
@@ -24,7 +20,15 @@ type SortOption = 'trending' | 'ending' | 'new';
 
 export default function PredictionFeed({ initialPredictions, bankroll, tournamentId }: PredictionFeedProps) {
     const [sortBy, setSortBy] = useState<SortOption>('trending');
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const searchParams = useSearchParams();
+    const activeCategory = searchParams.get('category');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(activeCategory);
+
+    // Sync state if URL changes externally
+    useEffect(() => {
+        setSelectedCategory(activeCategory);
+    }, [activeCategory]);
+
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const router = useRouter();
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -39,11 +43,16 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     }, [initialPredictions]);
 
     const toggleCategory = (cat: string) => {
-        setSelectedCategories(prev =>
-            prev.includes(cat)
-                ? prev.filter(c => c !== cat)
-                : [...prev, cat]
-        );
+        const newCat = selectedCategory === cat ? null : cat;
+        // Optimistic UI
+        setSelectedCategory(newCat);
+
+        // Navigation
+        const params = new URLSearchParams(searchParams.toString());
+        if (newCat) params.set('category', newCat);
+        else params.delete('category');
+
+        router.push(`/?${params.toString()}`);
     };
 
     // Listen for custom filter toggle events from children
@@ -57,11 +66,6 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     const filteredAndSortedPredictions = useMemo(() => {
         let filtered = [...initialPredictions];
 
-        // Apply Category Filter
-        if (selectedCategories.length > 0) {
-            filtered = filtered.filter(p => selectedCategories.includes(p.category));
-        }
-
         // Apply Sorting
         switch (sortBy) {
             case 'trending':
@@ -73,7 +77,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
             default:
                 return filtered;
         }
-    }, [initialPredictions, sortBy, selectedCategories]);
+    }, [initialPredictions, sortBy]);
 
     const handleRefresh = async () => {
         router.refresh();
@@ -144,18 +148,24 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => {
-                                                setSelectedCategories([]);
+                                                toggleCategory('ALL'); // Helper to clear (technically passing 'ALL' works as non-match, but cleaner to implement clear)
+                                                // Actually, handleToggle logic handles string.
+                                                // Let's manually trigger logic:
+                                                const params = new URLSearchParams(searchParams.toString());
+                                                params.delete('category');
+                                                setSelectedCategory(null);
+                                                router.push(`/?${params.toString()}`);
                                                 if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
                                             }}
                                             className={cn(
                                                 "col-span-2 flex items-center justify-between px-4 py-3 rounded-xl transition-all border",
-                                                selectedCategories.length === 0
+                                                !selectedCategory
                                                     ? "bg-white text-black border-white font-bold"
                                                     : "bg-white/5 border-transparent hover:bg-white/10 text-zinc-400"
                                             )}
                                         >
                                             <span className="text-xs font-bold uppercase tracking-wider">All Sports</span>
-                                            {selectedCategories.length === 0 && <Check size={16} className="text-black" />}
+                                            {!selectedCategory && <Check size={16} className="text-black" />}
                                         </button>
 
                                         {availableCategories.map(cat => (
@@ -167,7 +177,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                                                 }}
                                                 className={cn(
                                                     "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border",
-                                                    selectedCategories.includes(cat)
+                                                    selectedCategory === cat
                                                         ? "bg-white/10 border-white/20 text-white"
                                                         : "bg-transparent border-transparent hover:bg-white/5 text-zinc-400"
                                                 )}
@@ -177,7 +187,7 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                                                     style={{ backgroundColor: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'], color: CATEGORY_COLORS[cat] || CATEGORY_COLORS['Default'] }}
                                                 />
                                                 <span className="text-xs font-bold uppercase tracking-wider">{cat}</span>
-                                                {selectedCategories.includes(cat) && <Check size={12} className="ml-auto text-success" />}
+                                                {selectedCategory === cat && <Check size={12} className="ml-auto text-success" />}
                                             </button>
                                         ))}
                                     </div>

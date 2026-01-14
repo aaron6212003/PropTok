@@ -12,10 +12,10 @@ import { unstable_noStore as noStore } from "next/cache";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ tournament?: string; category?: string }> }) {
   noStore();
-  const { tournament: tournamentId } = await searchParams;
-  const predictions = await getPredictions(true, tournamentId);
+  const { tournament: tournamentId, category } = await searchParams;
+  const predictions = await getPredictions(true, tournamentId, category);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
