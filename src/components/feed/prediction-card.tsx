@@ -61,11 +61,11 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     }}
                 />
 
-                {/* Ambient Background Logos (Straight & Neater) */}
+                {/* Ambient Background Logos (Symmetrical & Clean) */}
                 {teams.length > 0 && (
                     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                        {/* Home/First Team - Bottom Left (Just nice and straight) */}
-                        <div className="absolute -bottom-10 -left-10 h-[500px] w-[500px] opacity-[0.12]">
+                        {/* Home/First Team - EXACTLY SYMMETRICAL: Bottom Right */}
+                        <div className="absolute -bottom-12 -right-12 h-[500px] w-[500px] opacity-[0.10]">
                             <img
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
@@ -73,9 +73,9 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             />
                         </div>
 
-                        {/* Away/Second Team - Top Right (Just nice and straight) */}
+                        {/* Away/Second Team - EXACTLY SYMMETRICAL: Top Left */}
                         {awayTeam && (
-                            <div className="absolute -top-10 -right-10 h-[500px] w-[500px] opacity-[0.12]">
+                            <div className="absolute -top-12 -left-12 h-[500px] w-[500px] opacity-[0.10]">
                                 <img
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
@@ -86,7 +86,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                         {/* If only one logo, center huge but straight */}
                         {teams.length === 1 && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.10]">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] opacity-[0.08]">
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
@@ -97,9 +97,9 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     </div>
                 )}
 
-                {/* DEBUG FOOTER: Visible in screenshots to debug logo issues */}
-                <div className="absolute bottom-1 left-0 w-full text-center z-50 pointer-events-none">
-                    <span className="text-[10px] text-white/10 font-mono">
+                {/* DEBUG FOOTER: Minimally invasive */}
+                <div className="absolute bottom-1 left-0 w-full text-center z-50 pointer-events-none opacity-50">
+                    <span className="text-[9px] text-white/10 font-mono">
                         {teams.map(t => t.name).join(' vs ') || ''}
                     </span>
                 </div>
