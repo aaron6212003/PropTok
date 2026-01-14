@@ -62,125 +62,109 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
         <main className="flex h-[100dvh] w-full flex-col bg-black text-white overflow-hidden">
             {/* SCROLLABLE CONTENT */}
             <div className="flex-1 overflow-y-auto pb-32 scrollbar-none">
-                {/* Header */}
+                {/* Header & Stats Dashboard */}
                 <div className="relative border-b border-white/10 bg-zinc-900/50 pb-8 pt-6">
                     <div className="absolute inset-0 bg-brand/5 blur-3xl pointer-events-none" />
 
-                    <div className="px-6">
-                        <Link href="/tournaments" className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white">
+                    <div className="px-6 relative z-10">
+                        <Link href="/tournaments" className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
                             <ArrowLeft size={16} />
                             Back
                         </Link>
 
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="mb-2 flex items-center gap-2">
-                                    <span className={cn(
-                                        "flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest",
-                                        tournament.status === 'COMPLETED' ? "bg-zinc-800 text-zinc-500" : "bg-brand/10 text-brand"
-                                    )}>
-                                        <Trophy size={10} />
-                                        {tournament.status === 'COMPLETED' ? 'Settled' : 'Active'}
-                                    </span>
-                                    <span className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                                        <Users size={10} />
-                                        {leaderboard.length} Players
-                                    </span>
-                                    {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 && (
-                                        <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                                            Entry: ${(tournament.entry_fee_cents / 100).toFixed(2)}
-                                        </span>
-                                    )}
-                                    <span className="flex items-center gap-1 rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-purple-400">
-                                        Payout: {
-                                            (() => {
-                                                try {
-                                                    const structure = typeof tournament.payout_structure === 'string'
-                                                        ? JSON.parse(tournament.payout_structure)
-                                                        : tournament.payout_structure;
-                                                    return Object.entries(structure || {})
-                                                        .sort(([a], [b]) => Number(a) - Number(b))
-                                                        .map(([_, val]) => `${val}%`)
-                                                        .join(" / ");
-                                                } catch (e) {
-                                                    return "Top Heavy";
-                                                }
-                                            })()
-                                        }
-                                    </span>
-                                    {tournament.allowed_leagues && tournament.allowed_leagues.length > 0 && (
-                                        <span className="flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-blue-400">
-                                            {tournament.allowed_leagues.join(", ")} Only
-                                        </span>
-                                    )}
-                                    {tournament.allowed_game_ids && tournament.allowed_game_ids.length > 0 && (
-                                        <span className="flex items-center gap-1 rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-orange-400">
-                                            Matchup Restricted
-                                        </span>
-                                    )}
+                        <div className="mb-6">
+                            <h1 className="text-3xl font-black italic tracking-tighter text-white mb-2">
+                                {tournament.name}
+                            </h1>
+                            <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
+                                {tournament.description}
+                            </p>
+                        </div>
+
+                        {/* KPIS Grid */}
+                        <div className="grid grid-cols-3 gap-3 mb-8">
+                            {/* 1. Prize Pool */}
+                            <div className="flex flex-col gap-1 rounded-2xl bg-white/5 p-3 border border-white/10">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Prize Pool</span>
+                                <span className="text-xl font-black text-brand text-glow">
+                                    ${((tournament.entry_fee_cents || 0) * leaderboard.length / 100).toLocaleString()}
+                                </span>
+                            </div>
+
+                            {/* 2. Players */}
+                            <div className="flex flex-col gap-1 rounded-2xl bg-white/5 p-3 border border-white/10">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Entrants</span>
+                                <div className="flex items-center gap-1">
+                                    <Users size={14} className="text-zinc-400" />
+                                    <span className="text-xl font-bold text-white">{leaderboard.length}</span>
                                 </div>
-                                <h1 className="text-3xl font-black italic tracking-tighter text-white">
-                                    {tournament.name}
-                                </h1>
-                                <p className="mt-2 max-w-md text-sm text-zinc-400">
-                                    {tournament.description}
-                                </p>
+                            </div>
+
+                            {/* 3. Status/Entry */}
+                            <div className="flex flex-col gap-1 rounded-2xl bg-white/5 p-3 border border-white/10">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Entry</span>
+                                <span className="text-xl font-bold text-white">
+                                    {(tournament.entry_fee_cents || 0) > 0
+                                        ? `$${((tournament.entry_fee_cents || 0) / 100).toFixed(0)}`
+                                        : 'Free'}
+                                </span>
                             </div>
                         </div>
 
-                        {/* My Stats or Join CTA */}
+                        {/* Action Area */}
                         {myEntry ? (
-                            <div className="mt-6 flex flex-col gap-4">
-                                <div className="flex items-center justify-between rounded-xl bg-white/5 p-4 border border-white/10">
+                            <div className="flex flex-col gap-4 p-4 rounded-3xl bg-gradient-to-br from-brand/10 to-transparent border border-brand/20">
+                                <div className="flex items-center justify-between">
                                     <div>
-                                        <span className="block text-xs text-zinc-500">Your Rank</span>
-                                        <span className="text-2xl font-black text-white">#{myRank}</span>
+                                        <span className="block text-[10px] font-black uppercase tracking-widest text-brand">Your Status</span>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-3xl font-black text-white">#{myRank}</span>
+                                            <span className="text-xs font-bold text-zinc-500">of {leaderboard.length}</span>
+                                        </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="block text-xs text-zinc-500">Your Stack</span>
-                                        <span className="text-2xl font-black text-brand">${myEntry.current_stack.toLocaleString()}</span>
+                                        <span className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Chip Stack</span>
+                                        <span className="text-2xl font-black text-white">${myEntry.current_stack.toLocaleString()}</span>
                                     </div>
                                 </div>
 
-                                {tournament.status !== 'COMPLETED' && (
+                                {tournament.status !== 'COMPLETED' ? (
                                     <Link
                                         href={`/?tournament=${id}`}
-                                        className="w-full py-4 bg-brand text-black font-black uppercase tracking-widest text-center rounded-xl shadow-lg shadow-brand/20 active:scale-[0.98] transition-all"
+                                        className="w-full flex items-center justify-center gap-2 py-4 bg-brand text-black font-black uppercase tracking-widest rounded-xl shadow-lg shadow-brand/20 active:scale-[0.98] transition-all hover:brightness-110"
                                     >
-                                        Bet Now
+                                        Place Bets
                                     </Link>
-                                )}
-
-                                {tournament.status === 'COMPLETED' && (
-                                    <div className="w-full py-4 bg-zinc-900 border border-white/5 text-zinc-500 font-black uppercase tracking-widest text-center rounded-xl">
-                                        Tournament Closed
+                                ) : (
+                                    <div className="w-full py-3 bg-zinc-800 text-zinc-500 font-bold uppercase tracking-widest text-center rounded-xl">
+                                        Tournament Ended
                                     </div>
                                 )}
 
-                                {/* Owner Controls */}
                                 {tournament.owner_id === currentUser?.id && tournament.status !== 'COMPLETED' && (
-                                    <div className="mt-2">
-                                        <SettleButton tournamentId={id} />
-                                    </div>
+                                    <SettleButton tournamentId={id} />
                                 )}
                             </div>
                         ) : (
-                            <div className="mt-6">
-                                {/* Success Handler from Stripe Redirect */}
+                            <div className="glass rounded-3xl p-4 border-white/10">
+                                {/* Success Handler */}
                                 {searchParamsObj.success === 'true' ? (
-                                    <div className="w-full py-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-bold uppercase tracking-widest rounded-xl text-center animate-pulse">
-                                        Processing Entry...
-                                        <span className="block text-[10px] text-zinc-500 normal-case mt-1">
-                                            Your payment was successful. We are confirming with the bank. Refresh in 10s.
+                                    <div className="w-full py-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-bold uppercase tracking-widest rounded-2xl text-center animate-pulse flex flex-col items-center justify-center gap-2">
+                                        <span>Payment Successful</span>
+                                        <span className="text-[10px] text-zinc-400 normal-case bg-black/40 px-3 py-1 rounded-full">
+                                            Creating your entry...
                                         </span>
                                     </div>
                                 ) : (
-                                    <>
-                                        {/* Only show Pay Button if there is a fee */}
+                                    <div className="pt-2">
+                                        {/* Entry CTA */}
+                                        <div className="mb-4 text-center">
+                                            <span className="text-xs font-bold text-zinc-400">Join the competition</span>
+                                        </div>
                                         {tournament.entry_fee_cents && tournament.entry_fee_cents > 0 ? (
                                             <JoinButton
                                                 tournamentId={id}
-                                                entryFeeCents={Math.round(tournament.entry_fee_cents)} // Ensure Cents
+                                                entryFeeCents={Math.round(tournament.entry_fee_cents)}
                                                 isLoggedIn={!!currentUser}
                                                 userBalance={userBalance}
                                             />
@@ -189,7 +173,7 @@ export default async function TournamentDetailPage({ params, searchParams }: { p
                                                 Free Entry (Coming Soon)
                                             </button>
                                         )}
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         )}
