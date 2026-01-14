@@ -19,11 +19,15 @@ interface PredictionCardProps {
 
 export default function PredictionCard({ prediction, isActive, bankroll }: PredictionCardProps) {
     const [showComments, setShowComments] = useState(false);
+
     // Search both Question and Description for maximum hit rate
     const searchString = `${prediction.question} ${prediction.description || ''}`;
     const teams = getTeamLogos(searchString);
     const homeTeam = teams[0];
     const awayTeam = teams[1];
+
+    // DEBUG: temporary log to find out why logos are missing
+    console.log(`[PredictionCard] "${prediction.question}" -> Found:`, teams);
 
     // Bet Slip Integration
     const { items, toggleInSlip } = useBetSlip();
@@ -49,40 +53,40 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
     return (
         <>
             <div className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-black">
-                {/* Dynamic Background Gradient (Team Color Pulse) */}
+                {/* Dynamic Background Gradient (Static for Performance) */}
                 <div
-                    className="absolute inset-0 opacity-30 transition-colors duration-700 animate-pulse"
+                    className="absolute inset-0 opacity-20 transition-colors duration-1000"
                     style={{
                         background: `radial-gradient(circle at center, ${homeTeam ? homeTeam.color : (CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default'])} 0%, #000000 90%)`
                     }}
                 />
 
-                {/* Ambient Background Logos */}
+                {/* Ambient Background Logos (Optimized: No Pulse, Reduced Blur) */}
                 {teams.length > 0 && (
                     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                        {/* Home/First Team - Bottom Left (Huge & Colored) */}
-                        <div className="absolute -bottom-10 -left-16 h-[500px] w-[500px] opacity-[0.25] blur-[60px] animate-pulse">
+                        {/* Home/First Team - Bottom Left */}
+                        <div className="absolute -bottom-10 -left-16 h-[500px] w-[500px] opacity-[0.2] blur-3xl">
                             <img
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
-                                className="h-full w-full object-contain rotate-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                                className="h-full w-full object-contain rotate-12 drop-shadow-md"
                             />
                         </div>
 
-                        {/* Away/Second Team - Top Right (Huge & Colored) */}
+                        {/* Away/Second Team - Top Right */}
                         {awayTeam && (
-                            <div className="absolute -top-10 -right-16 h-[500px] w-[500px] opacity-[0.25] blur-[60px] animate-pulse delay-1000">
+                            <div className="absolute -top-10 -right-16 h-[500px] w-[500px] opacity-[0.2] blur-3xl delay-1000">
                                 <img
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
-                                    className="h-full w-full object-contain -rotate-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                                    className="h-full w-full object-contain -rotate-12 drop-shadow-md"
                                 />
                             </div>
                         )}
 
                         {/* If only one logo, center huge */}
                         {teams.length === 1 && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] opacity-[0.2] blur-[80px]">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] opacity-[0.15] blur-3xl">
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
