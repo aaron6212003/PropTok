@@ -63,21 +63,14 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     }}
                 />
 
-                {/* 3D Ambient Logistics (Sleek & Expensive - NO OVERLAP) */}
+                {/* 3D Ambient Logistics (Premium & Optimized) */}
                 {teams.length > 0 && (
-                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none perspective-[1200px]">
-                        {/* 
-                           THE "TITAN CLASH" LAYOUT:
-                           - Home Team: Looming from Top-Right
-                           - Away Team: Rising from Bottom-Left
-                           - Full Color, No Overlap, Deep Z-Space
-                        */}
-
-                        {/* Top/Right Plane (Home) */}
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                        {/* Home Team (Top Right) */}
                         <div
-                            className="absolute -top-[5%] -right-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-20"
+                            className="absolute top-[5%] -right-[5%] h-56 w-56 flex items-center justify-center opacity-30"
                             style={{
-                                transform: 'translateZ(-100px) rotateY(-15deg) rotateZ(10deg)',
+                                transform: 'rotate(-10deg)',
                                 willChange: 'transform'
                             }}
                         >
@@ -85,16 +78,16 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
                                 loading="lazy"
-                                className="max-h-full max-w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                                className="max-h-full max-w-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                             />
                         </div>
 
-                        {/* Bottom/Left Plane (Away) */}
+                        {/* Away Team (Bottom Left) */}
                         {awayTeam && (
                             <div
-                                className="absolute -bottom-[5%] -left-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-20"
+                                className="absolute bottom-[5%] -left-[5%] h-56 w-56 flex items-center justify-center opacity-30"
                                 style={{
-                                    transform: 'translateZ(-100px) rotateY(15deg) rotateZ(-10deg)',
+                                    transform: 'rotate(10deg)',
                                     willChange: 'transform'
                                 }}
                             >
@@ -102,16 +95,15 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
                                     loading="lazy"
-                                    className="max-h-full max-w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                                    className="max-h-full max-w-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                                 />
                             </div>
                         )}
 
-                        {/* Fallback Single Logo - Centered but Deep */}
+                        {/* Fallback Single Logo (Center Watermark) */}
                         {teams.length === 1 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[60vh] w-[60vh] opacity-10 flex items-center justify-center"
-                                style={{ transform: 'translateZ(-300px)' }}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 opacity-10 flex items-center justify-center"
                             >
                                 <img
                                     src={homeTeam.url}

@@ -8,6 +8,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
     'Tennis': '#eab308', // yellow-500
     'Golf': '#16a34a', // green-600
     'Soccer': '#10b981', // emerald-500
+    'NCAAF': '#4f46e5', // indigo-600
+    'NCAAB': '#f59e0b', // amber-500
 
     'Crypto': '#f97316', // orange-500
     'Bitcoin': '#f97316',
@@ -30,6 +32,8 @@ export const CATEGORY_TEXT_COLORS: Record<string, string> = {
     'MLB': 'text-red-500',
     'NHL': 'text-cyan-500',
     'UFC': 'text-red-500',
+    'NCAAF': 'text-indigo-500',
+    'NCAAB': 'text-amber-500',
 
     'Crypto': 'text-orange-500',
     'Bitcoin': 'text-orange-500',
