@@ -6,7 +6,7 @@ import Link from 'next/link';
 import BottomNavBar from '@/components/layout/bottom-nav';
 import PropRow from '@/components/game/prop-row';
 import BackButton from '@/components/layout/back-button';
-import GameMarketsView from '@/components/game/game-markets-view';
+import GameMarketsHardrock from '@/components/game/game-markets-hardrock';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,52 +113,61 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     const categorizedProps: Record<string, Record<string, Record<string, any[]>>> = {};
 
     const CATEGORY_MAP: Record<string, string> = {
-        "player_pass_tds": "Passing",
-        "player_pass_yds": "Passing",
-        "player_pass_attempts": "Passing",
-        "player_pass_completions": "Passing",
-        "player_pass_interceptions": "Passing",
-        "player_rush_yds": "Rushing & Receiving",
-        "player_reception_yds": "Rushing & Receiving",
-        "player_receptions": "Rushing & Receiving",
-        "player_rush_attempts": "Rushing & Receiving",
-        "player_anytime_scorer": "Touchdowns",
-        "player_points": "Points & Stats",
-        "player_assists": "Points & Stats",
-        "player_rebounds": "Points & Stats",
-        "player_threes": "Points & Stats",
-        "player_blocks": "Defense",
-        "player_steals": "Defense",
-        "player_goals": "Scoring",
-        "player_shots_on_goal": "Stats"
+        // Force everything into "PLAYER PROPS" to match the UI Design
+        // The component expects categorizedProps["PLAYER PROPS"] to exist
+        "default": "PLAYER PROPS"
     };
 
     const SUB_CATEGORY_MAP: Record<string, string> = {
-        "player_pass_tds": "Passing Touchdowns",
-        "player_pass_yds": "Passing Yards",
-        "player_rush_yds": "Rushing Yards",
-        "player_reception_yds": "Receiving Yards",
-        "player_points": "Player Points",
-        "player_anytime_scorer": "Anytime Touchdown"
+        "player_pass_tds": "PASSING TDS",
+        "player_pass_yds": "PASSING YARDS",
+        "player_pass_attempts": "PASSING ATTEMPTS",
+        "player_pass_completions": "PASSING COMP",
+        "player_rush_yds": "RUSHING YARDS",
+        "player_rush_attempts": "RUSHING ATTEMPTS",
+        "player_reception_yds": "RECEIVING YARDS",
+        "player_receptions": "RECEPTIONS",
+        "player_anytime_touchdown": "TD SCORERS", // Hardrock style name
+        "player_points": "POINTS",
+        "player_assists": "ASSISTS",
+        "player_rebounds": "REBOUNDS",
+        "player_threes": "THREES",
+        "player_blocks": "BLOCKS",
+        "player_steals": "STEALS",
+        "player_points_assists": "PTS + AST",
+        "player_points_rebounds": "PTS + REB",
+        "player_rebounds_assists": "REB + AST",
+        "player_points_rebounds_assists": "PTS + REB + AST",
+        "player_double_double": "DOUBLE DOUBLE",
+        "player_triple_double": "TRIPLE DOUBLE",
+        "player_goals": "GOALS",
+        "player_shots_on_goal": "SHOTS ON GOAL",
+        "player_power_play_points": "POWER PLAY PTS",
+        "player_blocked_shots": "BLOCKED SHOTS"
     };
 
     playerPropList.forEach(p => {
         const eid = p.external_id || "";
         const parts = eid.split('-');
         // Format: gameId - marketKey - playerName - OverUnder - Line
-        // Market key is usually parts[1]
         const marketKey = parts[1] || "other";
-        const category = CATEGORY_MAP[marketKey] || "Other Props";
+
+        // EVERYTHING goes to "PLAYER PROPS" top level bucket
+        const category = "PLAYER PROPS";
+
         const subCategory = SUB_CATEGORY_MAP[marketKey] || marketKey.replace('player_', '').replace(/_/g, ' ').toUpperCase();
 
         // Extract Player Name from question if possible (more reliable for UI)
-        // "Will LeBron James record Over 25.5 PLAYER POINTS?" -> "LeBron James"
         let playerName = "Player";
         const match = p.question.match(/Will (.*) record/);
         if (match && match[1]) playerName = match[1];
         else if (p.question.includes("score a Touchdown")) {
             const tdMatch = p.question.match(/Will (.*) score/);
             if (tdMatch) playerName = tdMatch[1];
+        } else if (p.question.includes("score a Goal") || p.question.includes("score over")) { // NHL
+            // Try to find name before "record" or "score"
+            const looseMatch = p.question.split(" record ")[0].replace("Will ", "");
+            if (looseMatch && looseMatch.length < 30) playerName = looseMatch;
         }
 
         if (!categorizedProps[category]) categorizedProps[category] = {};
@@ -176,7 +185,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="p-6 pt-24">
-                <GameMarketsView
+                <GameMarketsHardrock
                     gameLines={gameLines}
                     categorizedProps={categorizedProps}
                 />
