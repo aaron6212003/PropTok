@@ -249,7 +249,77 @@ export const tank01Service = {
         }
     },
 
-    normalizeName(name: string) {
-        return name.toLowerCase().replace(/[^a-z]/g, '');
+    async getNBAScoreboard(gameDate: string) {
+        // Use Cache if available (reuse getNBAGamesForDate cache)
+        const cacheKey = `games-${gameDate}`;
+        const cached = this._gamesCache.get(cacheKey);
+
+        if (cached && (Date.now() - cached.ts < this.CACHE_TTL)) {
+            return cached.data;
+        }
+
+        const url = `${TANK01_BASE_URL}/getNBAGamesForDate?gameDate=${gameDate}`;
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': RAPID_API_KEY,
+                    'X-RapidAPI-Host': 'tank01-nba-live-in-game-real-time-statistics.p.rapidapi.com'
+                }
+            });
+
+            if (!response.ok) return [];
+            const json = await response.json();
+            const games = json.body || [];
+
+            // Cache it
+            this._gamesCache.set(cacheKey, { ts: Date.now(), data: games });
+            return games;
+        } catch (e) {
+            console.error("NBA Scoreboard Error:", e);
+            return [];
+        }
+    },
+
+    async getNFLScoreboard(gameDate: string) { // Date or Week? Date is safer for daily ticker
+        // NFL Host
+        const host = 'tank01-nfl-live-in-game-real-time-statistics.p.rapidapi.com';
+        // Note: NFL endpoint might be getNFLGamesForDate 
+        const url = `${TANK01_BASE_URL}/getNFLGamesForDate?gameDate=${gameDate}`;
+
+        if (!response.ok) return [];
+        const json = await response.json();
+        return json.body || [];
+    } catch(e) {
+        console.error("NFL Scoreboard Error:", e);
+        return [];
     }
-};
+},
+
+    async getNHLScoreboard(gameDate: string) {
+        // NHL Host
+        const host = 'tank01-nhl-live-in-game-real-time-statistics-nhl.p.rapidapi.com';
+        const url = `${TANK01_BASE_URL}/getNHLGamesForDate?gameDate=${gameDate}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': RAPID_API_KEY,
+                    'X-RapidAPI-Host': host
+                }
+            });
+
+            if (!response.ok) return [];
+            const json = await response.json();
+            return json.body || [];
+        } catch (e) {
+            console.error("NHL Scoreboard Error:", e);
+            return [];
+        }
+    },
+
+        normalizeName(name: string) {
+    return name.toLowerCase().replace(/[^a-z]/g, '');
+}
+        };

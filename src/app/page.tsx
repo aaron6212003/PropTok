@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Coins, Trophy as TrophyIcon, ChevronDown } from "lucide-react";
 import BetSlip from "@/components/feed/bet-slip";
 import WalletToggle from "@/components/layout/wallet-toggle";
+import { LiveScoreboard } from "@/components/feed/live-scoreboard";
 
 import { unstable_noStore as noStore } from "next/cache";
 
