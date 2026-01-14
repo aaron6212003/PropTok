@@ -54,73 +54,67 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
         <>
             <div className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-black">
                 {/* Dynamic Background Gradient (Hardware Accelerated) */}
+                {/* Dynamic Background Gradient (Hardware Accelerated) */}
                 <div
-                    className="absolute inset-0 opacity-30 transition-colors duration-700 ease-in-out will-change-[background,opacity]"
+                    className="absolute inset-0 opacity-40 transition-colors duration-700 ease-in-out will-change-[background,opacity]"
                     style={{
                         background: `radial-gradient(circle at center, ${homeTeam ? homeTeam.color : (CATEGORY_COLORS[prediction.category] || CATEGORY_COLORS['Default'])} 0%, #000000 85%)`,
                         transform: 'translateZ(0)' // Force GPU
                     }}
                 />
 
-                {/* 3D Ambient Logistics (Sleek & Expensive) */}
+                {/* 3D Ambient Logistics (Sleek & Expensive - NO OVERLAP) */}
                 {teams.length > 0 && (
-                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none perspective-[1000px]">
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none perspective-[1200px]">
                         {/* 
-                           3D VERSUS LAYOUT:
-                           - Uses CSS 3D transforms to create a "Stadium" or "Arena" depth feel.
-                           - Logos are projected onto angled planes.
+                           THE "TITAN CLASH" LAYOUT:
+                           - Home Team: Looming from Top-Right
+                           - Away Team: Rising from Bottom-Left
+                           - Full Color, No Overlap, Deep Z-Space
                         */}
 
-                        {/* Top/Left Plane (Home) - Angled "Inward" from left */}
+                        {/* Top/Right Plane (Home) */}
                         <div
-                            className="absolute top-[10%] -left-[10%] h-[400px] w-[400px] flex items-center justify-center opacity-[0.08]"
+                            className="absolute -top-[5%] -right-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-30 mix-blend-screen"
                             style={{
-                                transform: 'rotateY(25deg) rotateX(10deg) translateZ(0)',
-                                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))'
+                                transform: 'translateZ(-100px) rotateY(-15deg) rotateZ(10deg)',
+                                willChange: 'transform'
                             }}
                         >
                             <img
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
-                                className="max-h-full max-w-full object-contain grayscale brightness-125"
+                                className="max-h-full max-w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                             />
                         </div>
 
-                        {/* Bottom/Right Plane (Away) - Angled "Inward" from right */}
+                        {/* Bottom/Left Plane (Away) */}
                         {awayTeam && (
                             <div
-                                className="absolute bottom-[15%] -right-[10%] h-[400px] w-[400px] flex items-center justify-center opacity-[0.08]"
+                                className="absolute -bottom-[5%] -left-[15%] h-[45vh] w-[45vh] flex items-center justify-center opacity-30 mix-blend-screen"
                                 style={{
-                                    transform: 'rotateY(-25deg) rotateX(-10deg) translateZ(0)',
-                                    filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))'
+                                    transform: 'translateZ(-100px) rotateY(15deg) rotateZ(-10deg)',
+                                    willChange: 'transform'
                                 }}
                             >
                                 <img
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
-                                    className="max-h-full max-w-full object-contain grayscale brightness-125"
+                                    className="max-h-full max-w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                                 />
                             </div>
                         )}
 
-                        {/* Center "VS" Energy Line (Optional 3D Element) */}
-                        {teams.length === 2 && (
-                            <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-sm"
-                                style={{ transform: 'rotate(-45deg) translateZ(-100px)' }}
-                            />
-                        )}
-
-                        {/* Fallback Single Logo - Floating Monolith */}
+                        {/* Fallback Single Logo - Centered but Deep */}
                         {teams.length === 1 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.04] flex items-center justify-center"
-                                style={{ transform: 'translateZ(-200px) rotateY(180deg)' }} // Slight depth
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[60vh] w-[60vh] opacity-10 flex items-center justify-center mix-blend-screen"
+                                style={{ transform: 'translateZ(-300px)' }}
                             >
                                 <img
                                     src={homeTeam.url}
                                     alt="Background Logo Center"
-                                    className="max-h-full max-w-full object-contain grayscale"
+                                    className="max-h-full max-w-full object-contain"
                                 />
                             </div>
                         )}
