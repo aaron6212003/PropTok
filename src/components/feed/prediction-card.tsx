@@ -63,39 +63,39 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                     }}
                 />
 
-                {/* 3D Ambient Logistics (Premium & Optimized) */}
+                {/* 3D Ambient Logistics (Premium & Optimized: Straight & Balanced) */}
                 {teams.length > 0 && (
                     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                        {/* Home Team (Top Right) */}
+                        {/* Home Team (Top Right - Balanced) */}
                         <div
-                            className="absolute top-[5%] -right-[5%] h-56 w-56 flex items-center justify-center opacity-30"
+                            className="absolute top-[15%] right-[5%] h-32 w-32 flex items-center justify-center opacity-40"
                             style={{
-                                transform: 'rotate(-10deg)',
-                                willChange: 'transform'
+                                transform: 'translateZ(0)', // Force GPU
+                                willChange: 'opacity'
                             }}
                         >
                             <img
                                 src={homeTeam.url}
                                 alt={homeTeam.name}
                                 loading="lazy"
-                                className="max-h-full max-w-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                                className="max-h-full max-w-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
                             />
                         </div>
 
-                        {/* Away Team (Bottom Left) */}
+                        {/* Away Team (Bottom Left - Balanced) */}
                         {awayTeam && (
                             <div
-                                className="absolute bottom-[5%] -left-[5%] h-56 w-56 flex items-center justify-center opacity-30"
+                                className="absolute bottom-[20%] left-[5%] h-32 w-32 flex items-center justify-center opacity-40"
                                 style={{
-                                    transform: 'rotate(10deg)',
-                                    willChange: 'transform'
+                                    transform: 'translateZ(0)', // Force GPU
+                                    willChange: 'opacity'
                                 }}
                             >
                                 <img
                                     src={awayTeam.url}
                                     alt={awayTeam.name}
                                     loading="lazy"
-                                    className="max-h-full max-w-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                                    className="max-h-full max-w-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
                                 />
                             </div>
                         )}
@@ -103,7 +103,7 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                         {/* Fallback Single Logo (Center Watermark) */}
                         {teams.length === 1 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 opacity-10 flex items-center justify-center"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 opacity-20 flex items-center justify-center"
                             >
                                 <img
                                     src={homeTeam.url}
