@@ -619,7 +619,9 @@ export const sportsService = {
                 const line = parseFloat(match[3]);
 
                 // Call Tank01
-                const stats = await tank01Service.getPlayerStats(playerName, "", "2024-02-11"); // TODO: Need real Date
+                const gameDate = new Date(p.expires_at).toISOString().split('T')[0];
+                const stats = await tank01Service.getPlayerStats(playerName, "", gameDate);
+
                 // We need the Game Date from the Prediction!
                 // We can't get it from external_id. We might need to query prediction.expires_at?
                 // Or just use "today" if we run this cron daily.
