@@ -263,7 +263,7 @@ export const sportsService = {
             const now = Date.now();
             const hoursDiff = (gameTime - now) / (1000 * 60 * 60);
 
-            if (hoursDiff > 72) {
+            if (hoursDiff > 168) {
                 // logs.push(`SKIPPED (Too far out): ${game.home_team} vs ${game.away_team} (${Math.round(hoursDiff)}h away)`);
                 skippedCount++;
                 continue;
