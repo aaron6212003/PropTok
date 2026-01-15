@@ -943,20 +943,30 @@ export async function getTournamentLeaderboard(tournamentId: string) {
 
         // 2. Bundles
         // Check bundles where at least one leg is live
+        // 2. Bundles (Parlays)
+        // Check bundles where at least one leg is live (unresolved and expired)
         const { data: liveBundles } = await supabase
             .from('bundles')
             .select('user_id, legs:bundle_legs!inner(prediction:predictions!inner(expires_at, resolved))')
             .in('user_id', userIds)
-            .eq('resolved', false)
-        // Deep filtering is tricky.
-        // Simplified: Just rely on votes for MVP or check simple unresolved bundles created recently?
-        // Let's rely on votes for now to ensure speed, or do a simpler check.
-        // Actually, "In Play" usually means recently expired but not resolved.
-        // Let's stick to Votes for stability unless I want to enable complex RLS-heavy join.
-        // I'll skip bundles deep check for this specific badge to keep leaderboard fast.
-        // Users usually have single bets anyway.
+            .eq('resolved', false);
 
-        const liveUserSet = new Set(liveVotes?.map((v: any) => v.user_id) || []);
+        let bundleUserIds = new Set<string>();
+        if (liveBundles) {
+            liveBundles.forEach((b: any) => {
+                // Check if any leg is "in play"
+                const hasLiveLeg = b.legs.some((leg: any) =>
+                    !leg.prediction.resolved &&
+                    new Date(leg.prediction.expires_at).getTime() < new Date().getTime()
+                );
+                if (hasLiveLeg) bundleUserIds.add(b.user_id);
+            });
+        }
+
+        const liveUserSet = new Set([
+            ...(liveVotes?.map((v: any) => v.user_id) || []),
+            ...Array.from(bundleUserIds)
+        ]);
 
         return data.map((entry: any) => ({
             ...entry,

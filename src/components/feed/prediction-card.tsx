@@ -231,32 +231,6 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
 
                         {/* Buttons */}
                         <div className="grid grid-cols-2 gap-3">
-                            {/* LIVE / LOCKED OVERLAY */}
-                            {new Date(prediction.expiresAt) < new Date() && (
-                                <div className="col-span-2 flex flex-col items-center justify-center gap-1.5 py-3 mb-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl shadow-inner">
-                                    {/* Score Display (If Available) */}
-                                    {(prediction.status === 'live' || prediction.status === 'final' || (prediction.homeScore !== undefined)) && (
-                                        <div className="flex items-center gap-6 text-3xl font-black italic tracking-tighter">
-                                            <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{prediction.homeScore || 0}</span>
-                                            <span className="text-zinc-600 text-lg font-bold not-italic">-</span>
-                                            <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{prediction.awayScore || 0}</span>
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center gap-2">
-                                        <span className="relative flex h-2 w-2">
-                                            {prediction.status !== 'final' && (
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                            )}
-                                            <span className={cn("relative inline-flex rounded-full h-2 w-2", prediction.status === 'final' ? "bg-zinc-500" : "bg-red-500")}></span>
-                                        </span>
-                                        <span className={cn("text-[10px] font-black uppercase tracking-widest", prediction.status === 'final' ? "text-zinc-500" : "text-red-500")}>
-                                            {prediction.status === 'final' ? 'Final Result' : 'Live • Betting Suspended'}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
                             <motion.button
                                 id={`yes-btn-${prediction.id}`}
                                 onClick={() => new Date(prediction.expiresAt) > new Date() && handleOptionClick('YES')}
@@ -297,6 +271,32 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                                 </span>
                             </motion.button>
                         </div>
+
+                        {/* LIVE / LOCKED OVERLAY (Moved Below Buttons) */}
+                        {new Date(prediction.expiresAt) < new Date() && (
+                            <div className="flex flex-col items-center justify-center gap-1.5 py-3 mb-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl shadow-inner w-full">
+                                {/* Score Display (If Available) */}
+                                {(prediction.status === 'live' || prediction.status === 'final' || (prediction.homeScore !== undefined)) && (
+                                    <div className="flex items-center gap-6 text-3xl font-black italic tracking-tighter">
+                                        <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{prediction.homeScore || 0}</span>
+                                        <span className="text-zinc-600 text-lg font-bold not-italic">-</span>
+                                        <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{prediction.awayScore || 0}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-2">
+                                    <span className="relative flex h-2 w-2">
+                                        {prediction.status !== 'final' && (
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        )}
+                                        <span className={cn("relative inline-flex rounded-full h-2 w-2", prediction.status === 'final' ? "bg-zinc-500" : "bg-red-500")}></span>
+                                    </span>
+                                    <span className={cn("text-[10px] font-black uppercase tracking-widest", prediction.status === 'final' ? "text-zinc-500" : "text-red-500")}>
+                                        {prediction.status === 'final' ? 'Final Result' : 'Live • Betting Suspended'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
