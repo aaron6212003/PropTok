@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getTournamentLeaderboard } from "@/app/actions";
 import { cn } from "@/lib/utils";
+import { Flame } from "lucide-react";
 
 interface LiveLeaderboardProps {
     tournamentId: string;
@@ -55,9 +56,17 @@ export default function LiveLeaderboard({ tournamentId, initialData, currentUser
                                     )}
                                 </div>
                                 <div>
-                                    <p className={cn("font-bold text-sm", isMe ? "text-brand" : "text-white")}>
-                                        {entry.users?.username || "Anonymous"}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className={cn("font-bold text-sm", isMe ? "text-brand" : "text-white")}>
+                                            {entry.users?.username || "Anonymous"}
+                                        </p>
+                                        {(entry.has_live_bets) && (
+                                            <div className="flex items-center gap-1 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded text-[8px] font-black text-red-500 uppercase tracking-wider animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                                                <Flame size={8} className="fill-red-500" />
+                                                Live
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
