@@ -66,9 +66,9 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                 {/* 3D Ambient Logistics (Premium & Optimized: Straight & Balanced) */}
                 {teams.length > 0 && (
                     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                        {/* Home Team (Top Right - Balanced) */}
+                        {/* Home Team (Centered Above Text) */}
                         <div
-                            className="absolute top-[15%] right-[5%] h-32 w-32 flex items-center justify-center opacity-40"
+                            className="absolute top-[18%] left-1/2 -translate-x-1/2 h-32 w-32 flex items-center justify-center opacity-40"
                             style={{
                                 transform: 'translateZ(0)', // Force GPU
                                 willChange: 'opacity'
@@ -82,10 +82,10 @@ export default function PredictionCard({ prediction, isActive, bankroll }: Predi
                             />
                         </div>
 
-                        {/* Away Team (Bottom Left - Balanced) */}
+                        {/* Away Team (Centered Below Text) */}
                         {awayTeam && (
                             <div
-                                className="absolute bottom-[20%] left-[5%] h-32 w-32 flex items-center justify-center opacity-40"
+                                className="absolute bottom-[28%] left-1/2 -translate-x-1/2 h-32 w-32 flex items-center justify-center opacity-40"
                                 style={{
                                     transform: 'translateZ(0)', // Force GPU
                                     willChange: 'opacity'
