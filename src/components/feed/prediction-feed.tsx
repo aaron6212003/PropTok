@@ -237,7 +237,10 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
                                 expiresAt: prediction.expires_at,
                                 createdAt: prediction.created_at,
                                 imageUrl: prediction.image_url,
-                                description: prediction.description
+                                description: prediction.description,
+                                homeScore: prediction.home_score,
+                                awayScore: prediction.away_score,
+                                status: prediction.status
                             }}
                             isActive={true}
                             bankroll={bankroll}

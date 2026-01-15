@@ -1,0 +1,18 @@
+[dotenv@17.2.3] injecting env (7) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+Forcing Resolution...
+[sportsService] Starting Resolution Process...
+[sportsService] Found 1000 predictions to check.
+[sportsService] Fetched 2 completed games for americanfootball_nfl
+[sportsService] Fetched 21 completed games for basketball_nba
+[sportsService] Fetched 23 completed games for icehockey_nhl
+[sportsService] Fetched 0 completed games for soccer_epl
+[sportsService] Fetched 55 completed games for basketball_ncaab
+[sportsService] Fetched 0 completed games for americanfootball_ncaaf
+
+--- RESOLUTION LOGS ---
+
+Fetched scores for 101 finished games.
+Resolution Complete. Resolved 0 games.
+
+-----------------------
+

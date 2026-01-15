@@ -524,22 +524,73 @@ export const sportsService = {
         if (!apiKey) return { error: "API Key Missing", data: [] };
 
         try {
-            // Fetch scores for completed games
+            // Fetch scores (live and completed)
             const url = `${BASE_URL}/${sport}/scores/?apiKey=${apiKey}&daysFrom=${daysFrom}&dateFormat=iso`;
             const response = await fetch(url);
 
             if (!response.ok) return { error: `API Error ${response.status}`, data: [] };
 
             const data = await response.json();
-            // Filter for completed games only
-            const completed = Array.isArray(data) ? data.filter((g: any) => g.completed) : [];
+            // Return ALL games (Live + Completed) so we can display live scores
+            const games = Array.isArray(data) ? data : [];
 
-            console.log(`[sportsService] Fetched ${completed.length} completed games for ${sport}`);
-            return { data: completed };
+            console.log(`[sportsService] Fetched ${games.length} score events for ${sport}`);
+            return { data: games };
         } catch (error: any) {
             console.error(`[sportsService] Score fetch error for ${sport}:`, error);
             return { error: error.message, data: [] };
         }
+    },
+
+    async syncLiveScores() {
+        console.log("[sportsService] Syncing Live Scores...");
+        const supabase = createAdminClient();
+        if (!supabase) return;
+
+        const sports = [
+            "americanfootball_nfl",
+            "basketball_nba",
+            "icehockey_nhl",
+            "basketball_ncaab",
+            "americanfootball_ncaaf"
+        ];
+
+        let updatedCount = 0;
+
+        for (const sport of sports) {
+            // Fetch scores from last 2 days to catch live and recently finished
+            const { data: games } = await this.fetchScores(sport, 2);
+            if (!games) continue;
+
+            for (const game of games) {
+                // Determine scores
+                if (!game.scores || game.scores.length < 2) continue;
+
+                const homeTeamParams = game.scores.find((s: any) => s.name === game.home_team);
+                const awayTeamParams = game.scores.find((s: any) => s.name === game.away_team);
+
+                if (!homeTeamParams || !awayTeamParams) continue;
+
+                const homeScore = parseInt(homeTeamParams.score || '0');
+                const awayScore = parseInt(awayTeamParams.score || '0');
+                const status = game.completed ? 'final' : 'live';
+
+                // Update DB
+                // We use game_id which is mapped to TheOddsAPI game id
+                const { error } = await supabase
+                    .from('predictions')
+                    .update({
+                        home_score: homeScore,
+                        away_score: awayScore,
+                        status: status
+                    })
+                    .eq('game_id', game.id)
+                    .neq('status', 'final'); // Don't churn final games unnecessary, though scores might update final correction
+
+                if (!error) updatedCount++;
+            }
+        }
+        console.log(`[sportsService] Live Scores Synced. Operations: ${updatedCount}`);
     },
 
     async resolveGames() {

@@ -33,6 +33,11 @@ export interface Prediction {
 
     // Social
     commentCount?: number;
+
+    // Live Scores
+    homeScore?: number;
+    awayScore?: number;
+    status?: 'scheduled' | 'live' | 'final';
 }
 
 export interface Comment {

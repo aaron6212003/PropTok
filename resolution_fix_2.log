@@ -1,0 +1,98 @@
+[dotenv@17.2.3] injecting env (7) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Forcing Resolution...
+[sportsService] Starting Resolution Process...
+[sportsService] Found 1000 predictions to check.
+[sportsService] Fetched 2 completed games for americanfootball_nfl
+[sportsService] Fetched 21 completed games for basketball_nba
+[sportsService] Fetched 23 completed games for icehockey_nhl
+[sportsService] Fetched 0 completed games for soccer_epl
+[sportsService] Fetched 55 completed games for basketball_ncaab
+[sportsService] Fetched 0 completed games for americanfootball_ncaaf
+
+--- RESOLUTION LOGS ---
+
+Fetched scores for 101 finished games.
+RESOLVED: Will Golden State Warriors vs Portland Trail Blazers go OVER 226 points? -> NO (Score: 119-97)
+RESOLVED: Will Golden State Warriors win against Portland Trail Blazers? -> YES (Score: 119-97)
+RESOLVED: Will Golden State Warriors cover -10.5 vs Portland Trail Blazers? -> YES (Score: 119-97)
+RESOLVED: Will Golden State Warriors cover -11 vs Portland Trail Blazers? -> YES (Score: 119-97)
+RESOLVED: Will Golden State Warriors cover -10 vs Portland Trail Blazers? -> YES (Score: 119-97)
+RESOLVED: Will Golden State Warriors vs Portland Trail Blazers go OVER 226.5 points? -> NO (Score: 119-97)
+RESOLVED: Will Golden State Warriors vs Portland Trail Blazers go OVER 225.5 points? -> NO (Score: 119-97)
+RESOLVED: Will San Francisco Dons cover +6 vs Saint Mary's Gaels? -> NO (Score: 68-82)
+RESOLVED: Will San Francisco Dons win against Saint Mary's Gaels? -> NO (Score: 68-82)
+RESOLVED: Will UNLV Rebels win against Boise State Broncos? -> YES (Score: 89-85)
+RESOLVED: Will San Francisco Dons vs Saint Mary's Gaels go OVER 142 points? -> YES (Score: 68-82)
+RESOLVED: Will San Francisco Dons cover +7 vs Saint Mary's Gaels? -> NO (Score: 68-82)
+RESOLVED: Will UNLV Rebels vs Boise State Broncos go OVER 147 points? -> YES (Score: 89-85)
+RESOLVED: Will San Francisco Dons vs Saint Mary's Gaels go OVER 140.5 points? -> YES (Score: 68-82)
+RESOLVED: Will UNLV Rebels vs Boise State Broncos go OVER 149.5 points? -> YES (Score: 89-85)
+RESOLVED: Will UNLV Rebels vs Boise State Broncos go OVER 148.5 points? -> YES (Score: 89-85)
+RESOLVED: Will San Francisco Dons vs Saint Mary's Gaels go OVER 141 points? -> YES (Score: 68-82)
+RESOLVED: Will San Francisco Dons cover +6.5 vs Saint Mary's Gaels? -> NO (Score: 68-82)
+RESOLVED: Will San Francisco Dons vs Saint Mary's Gaels go OVER 141.5 points? -> YES (Score: 68-82)
+RESOLVED: Will UNLV Rebels cover +2.5 vs Boise State Broncos? -> YES (Score: 89-85)
+RESOLVED: Will UNLV Rebels vs Boise State Broncos go OVER 149 points? -> YES (Score: 89-85)
+RESOLVED: Will UNLV Rebels cover +4 vs Boise State Broncos? -> YES (Score: 89-85)
+RESOLVED: Will Los Angeles Lakers vs Atlanta Hawks go OVER 233 points? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers vs Atlanta Hawks go OVER 234 points? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers cover -1 vs Atlanta Hawks? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers vs Atlanta Hawks go OVER 233.5 points? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers cover -1.5 vs Atlanta Hawks? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers vs Atlanta Hawks go OVER 234.5 points? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers cover +3 vs Atlanta Hawks? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers win against Atlanta Hawks? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers cover +2.5 vs Atlanta Hawks? -> YES (Score: 141-116)
+RESOLVED: Will Los Angeles Lakers vs Atlanta Hawks go OVER 231.5 points? -> YES (Score: 141-116)
+RESOLVED: Will USC Trojans cover -10 vs Maryland Terrapins? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans vs Maryland Terrapins go OVER 151 points? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans win against Maryland Terrapins? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans cover -9.5 vs Maryland Terrapins? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans vs Maryland Terrapins go OVER 149.5 points? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans vs Maryland Terrapins go OVER 149 points? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans vs Maryland Terrapins go OVER 150 points? -> YES (Score: 88-71)
+RESOLVED: Will USC Trojans vs Maryland Terrapins go OVER 150.5 points? -> YES (Score: 88-71)
+RESOLVED: Will Utah Mammoth vs Toronto Maple Leafs go OVER 6.5 points? -> YES (Score: 6-1)
+RESOLVED: Will Utah Mammoth vs Toronto Maple Leafs go OVER 5.5 points? -> YES (Score: 6-1)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 126.5 points? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 129 points? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 125.5 points? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 128.5 points? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans cover -3.5 vs Air Force Falcons? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 123.5 points? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans cover -4.5 vs Air Force Falcons? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans cover -5.5 vs Air Force Falcons? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 124.5 points? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans cover -6.5 vs Air Force Falcons? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans cover -9 vs Air Force Falcons? -> NO (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 132.5 points? -> NO (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 132 points? -> NO (Score: 70-62)
+RESOLVED: Will San José St Spartans win against Air Force Falcons? -> YES (Score: 70-62)
+RESOLVED: Will San José St Spartans vs Air Force Falcons go OVER 134 points? -> NO (Score: 70-62)
+RESOLVED: Will Kansas Jayhawks cover -13.5 vs Iowa State Cyclones? -> YES (Score: 84-63)
+RESOLVED: Will Kansas Jayhawks cover -12.5 vs Iowa State Cyclones? -> YES (Score: 84-63)
+RESOLVED: Will Kansas Jayhawks vs Iowa State Cyclones go OVER 148.5 points? -> NO (Score: 84-63)
+RESOLVED: Will Kansas Jayhawks cover -11.5 vs Iowa State Cyclones? -> YES (Score: 84-63)
+RESOLVED: Will Kansas Jayhawks vs Iowa State Cyclones go OVER 144.5 points? -> YES (Score: 84-63)
+RESOLVED: Will Kansas Jayhawks vs Iowa State Cyclones go OVER 146.5 points? -> YES (Score: 84-63)
+RESOLVED: Will Mississippi St Bulldogs cover +5.5 vs Alabama Crimson Tide? -> NO (Score: 82-97)
+RESOLVED: Will Mississippi St Bulldogs vs Alabama Crimson Tide go OVER 158.5 points? -> YES (Score: 82-97)
+RESOLVED: Will Mississippi St Bulldogs vs Alabama Crimson Tide go OVER 157.5 points? -> YES (Score: 82-97)
+RESOLVED: Will Mississippi St Bulldogs cover +3.5 vs Alabama Crimson Tide? -> NO (Score: 82-97)
+RESOLVED: Will Oklahoma St Cowboys vs Baylor Bears go OVER 183.5 points? -> NO (Score: 79-94)
+RESOLVED: Will Oklahoma St Cowboys cover +13.5 vs Baylor Bears? -> NO (Score: 79-94)
+RESOLVED: Will Oklahoma St Cowboys vs Baylor Bears go OVER 182.5 points? -> NO (Score: 79-94)
+RESOLVED: Will Oklahoma St Cowboys cover +14.5 vs Baylor Bears? -> NO (Score: 79-94)
+RESOLVED: Will Oklahoma St Cowboys cover +15.5 vs Baylor Bears? -> YES (Score: 79-94)
+RESOLVED: Will Oklahoma St Cowboys vs Baylor Bears go OVER 181.5 points? -> NO (Score: 79-94)
+RESOLVED: Will Nebraska Cornhuskers vs Oregon Ducks go OVER 148.5 points? -> NO (Score: 90-55)
+RESOLVED: Will Nebraska Cornhuskers cover -19.5 vs Oregon Ducks? -> YES (Score: 90-55)
+RESOLVED: Will Nebraska Cornhuskers vs Oregon Ducks go OVER 150.5 points? -> NO (Score: 90-55)
+RESOLVED: Will Nebraska Cornhuskers vs Oregon Ducks go OVER 149.5 points? -> NO (Score: 90-55)
+RESOLVED: Will Nebraska Cornhuskers cover -18.5 vs Oregon Ducks? -> YES (Score: 90-55)
+RESOLVED: Will Nebraska Cornhuskers cover -17.5 vs Oregon Ducks? -> YES (Score: 90-55)
+RESOLVED: Will New Mexico Lobos cover -9.5 vs Grand Canyon Antelopes? -> YES (Score: 87-64)
+Resolution Complete. Resolved 80 games.
+
+-----------------------
+
