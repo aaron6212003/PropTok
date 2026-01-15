@@ -61,14 +61,28 @@ export default function PredictionFeed({ initialPredictions, bankroll, tournamen
     const filteredAndSortedPredictions = useMemo(() => {
         let filtered = [...initialPredictions];
 
-        // Apply Sorting
+        const now = Date.now();
+        const oneDay = 24 * 60 * 60 * 1000;
+        const twoDays = 48 * 60 * 60 * 1000;
+
+        // Apply Logic based on Tab
         switch (sortBy) {
             case 'trending':
+                // Show ALL, sorted by popularity (volume)
                 return filtered.sort((a, b) => (b.volume || 0) - (a.volume || 0));
+
             case 'ending':
-                return filtered.sort((a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime());
+                // Show games ending within 48 hours, sorted nearest first
+                return filtered
+                    .filter(p => new Date(p.expires_at).getTime() - now < twoDays)
+                    .sort((a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime());
+
             case 'new':
-                return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                // Show games created within the last 24 hours, sorted newest first
+                return filtered
+                    .filter(p => now - new Date(p.created_at).getTime() < oneDay)
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
             default:
                 return filtered;
         }
