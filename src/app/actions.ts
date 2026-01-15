@@ -658,8 +658,21 @@ export async function getUserVotes(limit: number = 50, onlyUnacknowledged: boole
         return [];
     }
 
-    // JS-side filter to be resilient to missing columns during migration
-    return (data || []).filter((v: any) => v.hidden_by_user !== true);
+    const now = Date.now();
+    const twoDays = 48 * 60 * 60 * 1000;
+
+    // JS-side filter to be resilient to missing columns during migration AND hide stale pending bets
+    return (data || []).filter((v: any) => {
+        if (v.hidden_by_user === true) return false;
+
+        // Hide Stale Pending: Unresolved + Expired > 48h ago
+        if (v.predictions && !v.predictions.resolved && v.predictions.expires_at) {
+            const expiry = new Date(v.predictions.expires_at).getTime();
+            if (expiry < now - twoDays) return false;
+        }
+
+        return true;
+    });
 }
 
 export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boolean = false) {
@@ -683,7 +696,8 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
                     question,
                     category,
                     resolved,
-                    outcome
+                    outcome,
+                    expires_at
                 )
             )
         `)
@@ -705,8 +719,29 @@ export async function getUserBundles(limit: number = 50, onlyUnacknowledged: boo
         return [];
     }
 
-    // JS-side filter to be resilient to missing columns during migration
-    return (data || []).filter((b: any) => b.hidden_by_user !== true);
+    const now = Date.now();
+    const twoDays = 48 * 60 * 60 * 1000;
+
+    // JS-side filter to be resilient to missing columns during migration AND hide stale pending bundles
+    return (data || []).filter((b: any) => {
+        if (b.hidden_by_user === true) return false;
+
+        // Check for ANY stale leg
+        const hasStaleLeg = b.legs?.some((leg: any) => {
+            const p = leg.prediction;
+            if (!p || p.resolved) return false;
+            // If unresolved, check expiry
+            if (p.expires_at) {
+                const expiry = new Date(p.expires_at).getTime();
+                if (expiry < now - twoDays) return true;
+            }
+            return false;
+        });
+
+        if (hasStaleLeg) return false;
+
+        return true;
+    });
 }
 
 export async function acknowledgeResults() {
